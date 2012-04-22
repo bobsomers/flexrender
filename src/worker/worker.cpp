@@ -1,5 +1,8 @@
 #include <cstdlib>
 
+#include "glm/glm.hpp"
+
+#include "types.hpp"
 #include "utils.hpp"
 
 int main(int argc, char *argv[]) {
