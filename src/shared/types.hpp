@@ -4,6 +4,7 @@
 #include "types/local_geometry.hpp"
 #include "types/material.hpp"
 #include "types/mesh.hpp"
+#include "types/ray.hpp"
 #include "types/shader.hpp"
 #include "types/strong_hit.hpp"
 #include "types/texture.hpp"

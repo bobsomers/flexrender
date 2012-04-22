@@ -67,6 +67,13 @@ int main(int argc, char *argv[]) {
     config.buffers.push_back("volumes");
     TOUTLN(ToString(config, "\t"));
 
+    fr::Ray ray1(fr::Ray::Kind::INTERSECT, 42, 69);
+    TOUTLN(ToString(ray1));
+
+    fr::Ray ray2(fr::Ray::Kind::LIGHT, 69, 42);
+    ray2.next = &ray1;
+    TOUTLN(ToString(ray2));
+
     TOUTLN("FlexWorker done.");
     return EXIT_SUCCESS;
 }

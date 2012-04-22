@@ -79,7 +79,6 @@ struct Texture {
 
 inline std::string ToString(const Texture& tex, const std::string& indent = "") {
     std::stringstream stream;
-    std::string pad = indent + "  ";
     stream << "Texture {" << std::endl <<
      indent << "| id = " << tex.id << std::endl;
     switch (tex.kind) {
