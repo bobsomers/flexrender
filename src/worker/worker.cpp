@@ -5,12 +5,12 @@
 #include "types.hpp"
 #include "utils.hpp"
 
-static float data[12] = {
-    1.0f, 2.0f, 3.0f,
-    4.0f, 5.0f, 6.0f,
-    7.0f, 8.0f, 9.0f,
-    10.0f, 11.0f, 12.0f
-};
+//static float data[12] = {
+//    1.0f, 2.0f, 3.0f,
+//    4.0f, 5.0f, 6.0f,
+//    7.0f, 8.0f, 9.0f,
+//    10.0f, 11.0f, 12.0f
+//};
 
 int main(int argc, char *argv[]) {
     // TODO: check args
@@ -38,6 +38,15 @@ int main(int argc, char *argv[]) {
 
     //TOUTLN(ToString(tex1, "\t"));
     //TOUTLN(ToString(tex2, "\t"));
+
+    //fr::Shader shader(42, "function awesome(x)\n\tprint(x)\nend");
+    //TOUTLN(ToString(shader, "\t"));
+    
+    //fr::Material mat(42, 69);
+    //mat.textures["awesome"] = 12;
+    //mat.textures["possum"] = 25;
+
+    //TOUTLN(ToString(mat, "\t"));
 
     TOUTLN("FlexWorker done.");
     return EXIT_SUCCESS;

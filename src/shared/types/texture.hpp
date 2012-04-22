@@ -51,7 +51,7 @@ struct Texture {
      height(0),
      code(""),
      image() {
-        std::numeric_limits<uint64_t>::max();
+        id = std::numeric_limits<uint64_t>::max();
     }
 
     /// Resource ID of the texture.
