@@ -45,10 +45,10 @@ solution "flexrender"
         targetdir "bin"
         targetname "flexrender"
         files {
-            "src/render/**.h",
-            "src/render/**.c",
-            "src/shared/**.h",
-            "src/shared/**.c"
+            "src/render/**.hpp",
+            "src/render/**.cpp",
+            "src/shared/**.hpp",
+            "src/shared/**.cpp"
         }
         includedirs {
             "src/render",
@@ -71,10 +71,10 @@ solution "flexrender"
         targetdir "bin"
         targetname "flexworker"
         files {
-            "src/worker/**.h",
-            "src/worker/**.c",
-            "src/shared/**.h",
-            "src/shared/**.c"
+            "src/worker/**.hpp",
+            "src/worker/**.cpp",
+            "src/shared/**.hpp",
+            "src/shared/**.cpp"
         }
         includedirs {
             "src/worker",
