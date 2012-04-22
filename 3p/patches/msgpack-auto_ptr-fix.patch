@@ -1,0 +1,14 @@
+diff -Naur msgpack-0.5.7/src/msgpack/unpack.hpp msgpack-0.5.7-patch/src/msgpack/unpack.hpp
+--- msgpack-0.5.7/src/msgpack/unpack.hpp	2011-04-23 07:19:15.000000000 -0700
++++ msgpack-0.5.7-patch/src/msgpack/unpack.hpp	2011-11-21 23:43:39.073677014 -0800
+@@ -307,7 +307,10 @@
+ 		const char* data, size_t len, size_t* offset)
+ {
+ 	msgpack::object obj;
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+ 	std::auto_ptr<msgpack::zone> z(new zone());
++#pragma GCC diagnostic pop
+ 
+ 	unpack_return ret = (unpack_return)msgpack_unpack(
+ 			data, len, offset, z.get(),

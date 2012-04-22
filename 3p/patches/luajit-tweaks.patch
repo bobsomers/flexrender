@@ -1,0 +1,25 @@
+diff -Naur LuaJIT-2.0.0-beta9/src/Makefile LuaJIT-2.0.0-beta9-patch/src/Makefile
+--- LuaJIT-2.0.0-beta9/src/Makefile	2011-12-14 06:15:00.000000000 -0800
++++ LuaJIT-2.0.0-beta9-patch/src/Makefile	2012-04-07 18:36:32.985795458 -0700
+@@ -50,7 +50,7 @@
+ # the binaries to a different machine you could also use: -march=native
+ #
+ CCOPT_X86= -march=i686
+-CCOPT_X64=
++CCOPT_X64= -march=native
+ CCOPT_ARM=
+ CCOPT_PPC=
+ CCOPT_PPCSPE=
+@@ -72,10 +72,10 @@
+ # as dynamic mode.
+ #
+ # Mixed mode creates a static + dynamic library and a statically linked luajit.
+-BUILDMODE= mixed
++#BUILDMODE= mixed
+ #
+ # Static mode creates a static library and a statically linked luajit.
+-#BUILDMODE= static
++BUILDMODE= static
+ #
+ # Dynamic mode creates a dynamic library and a dynamically linked luajit.
+ # Note: this executable will only run when the library is installed!
