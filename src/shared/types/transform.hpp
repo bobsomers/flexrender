@@ -70,19 +70,19 @@ inline std::string ToString(const Transform& xform, const std::string& indent = 
             break;
         
         case Transform::Kind::ROTATE:
-            stream << indent << "  kind = ROTATE" << std::endl;
-            stream << indent << "  scalar = " << xform.scalar << std::endl;
-            stream << indent << "  vec = " << ToString(xform.vec) << std::endl;
+            stream << indent << "  kind = ROTATE" << std::endl <<
+             indent << "  scalar = " << xform.scalar << std::endl <<
+             indent << "  vec = " << ToString(xform.vec) << std::endl;
             break;
 
         case Transform::Kind::SCALE:
-            stream << indent << "  kind = SCALE" << std::endl;
-            stream << indent << "  vec = " << ToString(xform.vec) << std::endl;
+            stream << indent << "  kind = SCALE" << std::endl <<
+             indent << "  vec = " << ToString(xform.vec) << std::endl;
             break;
 
         case Transform::Kind::TRANSLATE:
-            stream << indent << "  kind = TRANSLATE" << std::endl;
-            stream << indent << "  vec = " << ToString(xform.vec) << std::endl;
+            stream << indent << "  kind = TRANSLATE" << std::endl <<
+             indent << "  vec = " << ToString(xform.vec) << std::endl;
             break;
 
         default:
