@@ -1,0 +1,92 @@
+solution "flexrender"
+    configurations {
+        "debug",
+        "release"
+    }
+
+    configuration "debug"
+        defines {
+            "DEBUG"
+        }
+        flags {
+            "Symbols",
+            "ExtraWarnings",
+            "EnableSSE",
+            "EnableSSE2"
+        }
+
+    configuration "release"
+        defines {
+            "NDEBUG"
+        }
+        flags {
+            "Symbols",
+            "OptimizeSpeed",
+            "ExtraWarnings",
+            "EnableSSE",
+            "EnableSSE2"
+        }
+
+    configuration {"linux", "gmake"}
+        buildoptions {
+            "`PKG_CONFIG_PATH=3p/build/lib/pkgconfig pkg-config --cflags luajit`",
+            "`PKG_CONFIG_PATH=3p/build/lib/pkgconfig pkg-config --cflags IlmBase`",
+            "`PKG_CONFIG_PATH=3p/build/lib/pkgconfig pkg-config --cflags OpenEXR`"
+        }
+        linkoptions {
+            "`PKG_CONFIG_PATH=3p/build/lib/pkgconfig pkg-config --libs --static luajit`",
+            "`PKG_CONFIG_PATH=3p/build/lib/pkgconfig pkg-config --libs --static IlmBase`",
+            "`PKG_CONFIG_PATH=3p/build/lib/pkgconfig pkg-config --libs --static OpenEXR`"
+        }
+
+    project "flexrender"
+        kind "ConsoleApp"
+        language "C++"
+        targetdir "bin"
+        targetname "flexrender"
+        files {
+            "src/render/**.h",
+            "src/render/**.c",
+            "src/shared/**.h",
+            "src/shared/**.c"
+        }
+        includedirs {
+            "src/render",
+            "src/shared",
+            "3p/build/include",
+        }
+        libdirs {
+            "3p/build/lib"
+        }
+        links {
+            "uv"
+        }
+        defines {
+            "FR_RENDER"
+        }
+
+    project "flexworker"
+        kind "ConsoleApp"
+        language "C++"
+        targetdir "bin"
+        targetname "flexworker"
+        files {
+            "src/worker/**.h",
+            "src/worker/**.c",
+            "src/shared/**.h",
+            "src/shared/**.c"
+        }
+        includedirs {
+            "src/worker",
+            "src/shared",
+            "3p/build/include",
+        }
+        libdirs {
+            "3p/build/lib"
+        }
+        links {
+            "uv"
+        }
+        defines {
+            "FR_WORKER"
+        }
