@@ -29,6 +29,7 @@ solution "flexrender"
 
     configuration {"linux", "gmake"}
         buildoptions {
+            "-std=c++11",
             "`PKG_CONFIG_PATH=3p/build/lib/pkgconfig pkg-config --cflags luajit`",
             "`PKG_CONFIG_PATH=3p/build/lib/pkgconfig pkg-config --cflags IlmBase`",
             "`PKG_CONFIG_PATH=3p/build/lib/pkgconfig pkg-config --cflags OpenEXR`"
