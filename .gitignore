@@ -1,3 +1,6 @@
 # Generated build scripts.
 /Makefile
 /*.make
+
+# Profiling results.
+/profile.txt
