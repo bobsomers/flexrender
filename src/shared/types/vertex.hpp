@@ -73,11 +73,10 @@ struct Vertex {
 
 inline std::string ToString(const Vertex& vert, const std::string& indent = "") {
     std::stringstream stream;
-    std::string pad = indent + "  ";
     stream << "Vertex {" << std::endl <<
-     indent << "  v = " << ToString(vert.v) << std::endl <<
-     indent << "  n = " << ToString(vert.n) << std::endl <<
-     indent << "  t = " << ToString(vert.t) << std::endl <<
+     indent << "| v = " << ToString(vert.v) << std::endl <<
+     indent << "| n = " << ToString(vert.n) << std::endl <<
+     indent << "| t = " << ToString(vert.t) << std::endl <<
      indent << "}";
     return stream.str();
 }

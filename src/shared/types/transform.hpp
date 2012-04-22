@@ -66,27 +66,27 @@ inline std::string ToString(const Transform& xform, const std::string& indent = 
     stream << "Transform {" << std::endl;
     switch (xform.kind) {
         case Transform::Kind::NONE:
-            stream << indent << "  kind = NONE" << std::endl;
+            stream << indent << "| kind = NONE" << std::endl;
             break;
         
         case Transform::Kind::ROTATE:
-            stream << indent << "  kind = ROTATE" << std::endl <<
-             indent << "  scalar = " << xform.scalar << std::endl <<
-             indent << "  vec = " << ToString(xform.vec) << std::endl;
+            stream << indent << "| kind = ROTATE" << std::endl <<
+             indent << "| scalar = " << xform.scalar << std::endl <<
+             indent << "| vec = " << ToString(xform.vec) << std::endl;
             break;
 
         case Transform::Kind::SCALE:
-            stream << indent << "  kind = SCALE" << std::endl <<
-             indent << "  vec = " << ToString(xform.vec) << std::endl;
+            stream << indent << "| kind = SCALE" << std::endl <<
+             indent << "| vec = " << ToString(xform.vec) << std::endl;
             break;
 
         case Transform::Kind::TRANSLATE:
-            stream << indent << "  kind = TRANSLATE" << std::endl <<
-             indent << "  vec = " << ToString(xform.vec) << std::endl;
+            stream << indent << "| kind = TRANSLATE" << std::endl <<
+             indent << "| vec = " << ToString(xform.vec) << std::endl;
             break;
 
         default:
-            stream << indent << "  kind = ?" << std::endl;
+            stream << indent << "| kind = ?" << std::endl;
             break;
     }
     stream << indent << "}";

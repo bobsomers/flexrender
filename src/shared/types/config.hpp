@@ -1,13 +1,15 @@
 #pragma once
 
 #include <cstdint>
-
 #include <vector>
 #include <string>
 #include <limits>
 
 #include "glm/glm.hpp"
 #include "msgpack.hpp"
+
+#include "utils/tostring.hpp"
+#include "utils/printers.hpp"
 
 namespace fr {
 
@@ -53,6 +55,32 @@ struct Config {
     std::vector<std::string> buffers;
 
     MSGPACK_DEFINE(width, height, min, max, antialiasing, name, workers, buffers);
+
+    TOSTRINGABLE(Config);
 };
+
+inline std::string ToString(const Config& config, const std::string& indent = "") {
+    std::stringstream stream;
+    std::string pad = indent + "| | ";
+    stream << "Config {" << std::endl <<
+     indent << "| width = " << config.width << std::endl <<
+     indent << "| height = " << config.height << std::endl <<
+     indent << "| min = " << ToString(config.min) << std::endl <<
+     indent << "| max = " << ToString(config.max) << std::endl <<
+     indent << "| antialiasing = " << config.antialiasing << std::endl <<
+     indent << "| name = " << config.name << std::endl <<
+     indent << "| workers = {" << std::endl;
+    for (const auto& worker : config.workers) {
+        stream << pad << worker << std::endl;
+    }
+    stream << indent << "| }" << std::endl <<
+     indent << "| buffers = {" << std::endl;
+    for (const auto& buffer : config.buffers) {
+        stream << pad << buffer << std::endl;
+    }
+    stream << indent << "| }" << std::endl <<
+     indent << "}" << std::endl;
+    return stream.str();
+}
 
 } // namespace fr

@@ -52,14 +52,14 @@ struct Material {
 inline std::string ToString(const Material& mat, const std::string& indent = "") {
     std::stringstream stream;
     stream << "Material {" << std::endl <<
-     indent << "  id = " << mat.id << std::endl <<
-     indent << "  shader = " << mat.shader << std::endl <<
-     indent << "  textures = {" << std::endl;
+     indent << "| id = " << mat.id << std::endl <<
+     indent << "| shader = " << mat.shader << std::endl <<
+     indent << "| textures = {" << std::endl;
     for (const auto& binding : mat.textures) {
-        stream << indent << "    " << binding.first << " -> " << binding.second << std::endl;
+        stream << indent << "| | " << binding.first << " -> " << binding.second << std::endl;
     }
-    stream << indent << "  }" << std::endl <<
-     indent << "  emissive = " << (mat.emissive ? "true" : "false") << std::endl <<
+    stream << indent << "| }" << std::endl <<
+     indent << "| emissive = " << (mat.emissive ? "true" : "false") << std::endl <<
      indent << "}";
     return stream.str();
 }

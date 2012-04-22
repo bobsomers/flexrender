@@ -2,6 +2,7 @@
 
 #include "types/config.hpp"
 #include "types/material.hpp"
+#include "types/mesh.hpp"
 #include "types/shader.hpp"
 #include "types/texture.hpp"
 #include "types/transform.hpp"

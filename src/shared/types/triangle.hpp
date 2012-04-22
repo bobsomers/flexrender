@@ -31,11 +31,11 @@ struct Triangle {
 
 inline std::string ToString(const Triangle& tri, const std::string& indent = "") {
     std::stringstream stream;
-    std::string pad = indent + "  ";
+    std::string pad = indent + "| ";
     stream << "Triangle {" << std::endl <<
-     indent << "  v1 = " << ToString(tri.verts[0], pad) << std::endl << 
-     indent << "  v2 = " << ToString(tri.verts[1], pad) << std::endl <<
-     indent << "  v3 = " << ToString(tri.verts[2], pad) << std::endl <<
+     indent << "| v1 = " << ToString(tri.verts[0], pad) << std::endl << 
+     indent << "| v2 = " << ToString(tri.verts[1], pad) << std::endl <<
+     indent << "| v3 = " << ToString(tri.verts[2], pad) << std::endl <<
      indent << "}";
     return stream.str();
 }

@@ -81,25 +81,25 @@ inline std::string ToString(const Texture& tex, const std::string& indent = "") 
     std::stringstream stream;
     std::string pad = indent + "  ";
     stream << "Texture {" << std::endl <<
-     indent << "  id = " << tex.id << std::endl;
+     indent << "| id = " << tex.id << std::endl;
     switch (tex.kind) {
         case Texture::Kind::NONE:
-            stream << indent << "  kind = NONE" << std::endl;
+            stream << indent << "| kind = NONE" << std::endl;
             break;
 
         case Texture::Kind::PROCEDURAL:
-            stream << indent << "  kind = PROCEDURAL" << std::endl <<
-             indent << "  code = ..." << std::endl <<
+            stream << indent << "| kind = PROCEDURAL" << std::endl <<
+             indent << "| code = ..." << std::endl <<
 "======================================================================" << std::endl <<
 tex.code << std::endl <<
 "======================================================================" << std::endl;
             break;
 
         case Texture::Kind::IMAGE:
-            stream << indent << "  kind = IMAGE" << std::endl <<
-             indent << "  width = " << tex.width << std::endl <<
-             indent << "  height = " << tex.height << std::endl <<
-             indent << "  image = ..." << std::endl <<
+            stream << indent << "| kind = IMAGE" << std::endl <<
+             indent << "| width = " << tex.width << std::endl <<
+             indent << "| height = " << tex.height << std::endl <<
+             indent << "| image = ..." << std::endl <<
 "======================================================================" << std::endl;
             for (int16_t y = 0; y < tex.height; y++) {
                 if (y > 0) {
@@ -118,7 +118,7 @@ tex.code << std::endl <<
             break;
 
         default:
-            stream << indent << "  kind = ?" << std::endl;
+            stream << indent << "| kind = ?" << std::endl;
             break;
     }
     stream << indent << "}";

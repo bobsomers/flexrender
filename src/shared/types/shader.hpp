@@ -39,8 +39,8 @@ struct Shader {
 inline std::string ToString(const Shader& shader, const std::string& indent = "") {
     std::stringstream stream;
     stream << "Shader {" << std::endl <<
-     indent << "  id = " << shader.id << std::endl <<
-     indent << "  code = ..." << std::endl <<
+     indent << "| id = " << shader.id << std::endl <<
+     indent << "| code = ..." << std::endl <<
 "======================================================================" << std::endl <<
 shader.code << std::endl <<
 "======================================================================" << std::endl <<
