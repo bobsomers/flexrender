@@ -16,5 +16,4 @@ render {
     antialiasing = 1,
     min = {-100, -100, -100},
     max = {100, 100, 100},
-    steady_state = 5
 }

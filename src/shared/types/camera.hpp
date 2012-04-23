@@ -5,19 +5,19 @@
 #include "glm/glm.hpp"
 #include "msgpack.hpp"
 
+#include "types/config.hpp"
 #include "utils/tostring.hpp"
 #include "utils/printers.hpp"
 
 namespace fr {
 
-struct Config;
 struct Ray;
 
 struct Camera {
-    explicit Camera(Config* config) :
+    explicit Camera(const Config* config) :
      up(0.0f, 1.0f, 0.0f),
      rotation(0.0f),
-     ratio(4.0f / 3.0f),
+     ratio(static_cast<float>(_config->width) / static_cast<float>(_config->height)),
      _config(config) {
         eye.x = std::numeric_limits<float>::quiet_NaN();
         eye.y = std::numeric_limits<float>::quiet_NaN();
@@ -63,7 +63,7 @@ struct Camera {
 
     TOSTRINGABLE(Camera);
 
-    inline void SetConfig(Config* config) { _config = config; }
+    inline void SetConfig(const Config* config) { _config = config; }
 
     /**
      * Generates a single primary ray based on the passed config and the
@@ -74,7 +74,7 @@ struct Camera {
     bool GeneratePrimary(Ray &ray);
 
 private:
-    Config* _config;
+    const Config* _config;
 };
 
 inline std::string ToString(const Camera& camera, const std::string& indent = "") {

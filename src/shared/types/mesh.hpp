@@ -15,6 +15,17 @@
 namespace fr {
 
 struct Mesh {
+    explicit Mesh(uint64_t id) :
+     id(id),
+     tris(),
+     xforms() {
+        material = std::numeric_limits<uint64_t>::max();
+
+        centroid.x = std::numeric_limits<float>::quiet_NaN();
+        centroid.y = std::numeric_limits<float>::quiet_NaN();
+        centroid.z = std::numeric_limits<float>::quiet_NaN();
+    }
+
     explicit Mesh(uint64_t id, uint64_t material) :
      id(id),
      material(material),

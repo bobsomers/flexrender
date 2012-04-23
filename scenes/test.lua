@@ -25,7 +25,6 @@ material {
 }
 
 mesh {
-    name = "awesome",
     material = "brushed metal",
     transforms = {
         rotate(math.pi, {1, 2, 3}),

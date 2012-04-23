@@ -11,6 +11,13 @@
 namespace fr {
 
 struct Material {
+    explicit Material(uint64_t id) :
+     id(id),
+     textures(),
+     emissive(false) {
+        shader = std::numeric_limits<uint64_t>::max();
+    }
+
     explicit Material(uint64_t id, uint64_t shader) :
      id(id),
      shader(shader),

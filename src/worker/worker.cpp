@@ -4,6 +4,7 @@
 
 #include "types.hpp"
 #include "utils.hpp"
+#include "scripting.hpp"
 
 static float data[12] = {
     1.0f, 2.0f, 3.0f,
