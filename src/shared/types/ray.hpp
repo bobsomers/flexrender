@@ -150,8 +150,8 @@ inline std::string ToString(const Ray& ray, const std::string& indent = "") {
              indent << "| origin = " << ToString(ray.origin) << std::endl <<
              indent << "| direction = " << ToString(ray.direction) << std::endl <<
              indent << "| transmittance = " << ray.transmittance << std::endl <<
-             indent << "| weak = " << ToString(ray.weak, pad) <<
-             indent << "| strong = " << ToString(ray.strong, pad) <<
+             indent << "| weak = " << ToString(ray.weak, pad) << std::endl <<
+             indent << "| strong = " << ToString(ray.strong, pad) << std::endl <<
              indent << "| next = " << std::hex << std::showbase << ray.next << std::endl;
             break;
 
@@ -163,8 +163,8 @@ inline std::string ToString(const Ray& ray, const std::string& indent = "") {
              indent << "| direction = " << ToString(ray.direction) << std::endl <<
              indent << "| transmittance = " << ray.transmittance << std::endl <<
              indent << "| emission = " << ToString(ray.emission) << std::endl <<
-             indent << "| weak = " << ToString(ray.weak, pad) <<
-             indent << "| strong = " << ToString(ray.strong, pad) <<
+             indent << "| weak = " << ToString(ray.weak, pad) << std::endl <<
+             indent << "| strong = " << ToString(ray.strong, pad) << std::endl <<
              indent << "| next = " << std::hex << std::showbase << ray.next << std::endl;
             break;
     }

@@ -36,7 +36,7 @@ inline std::string ToString(const WeakHit& weak, const std::string& indent = "")
     stream << "WeakHit {" << std::endl <<
      indent << "| worker = " << weak.worker << std::endl <<
      indent << "| t = " << weak.t << std::endl <<
-     indent << "}" << std::endl;
+     indent << "}";
     return stream.str();
 }
 

@@ -52,7 +52,7 @@ inline std::string ToString(const StrongHit& strong, const std::string& indent =
      indent << "| mesh = " << strong.mesh << std::endl <<
      indent << "| t = " << strong.t << std::endl <<
      indent << "| geom = " << ToString(strong.geom, pad) <<
-     indent << "}" << std::endl;
+     indent << "}";
     return stream.str();
 }
 
