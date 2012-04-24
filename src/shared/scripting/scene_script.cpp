@@ -92,7 +92,7 @@ FR_SCRIPT_FUNCTION(SceneScript, Camera) {
 FR_SCRIPT_FUNCTION(SceneScript, Texture) {
     BeginTableCall();
 
-    uint64_t id = _lib->GetNextResourceID();
+    uint64_t id = _lib->NextTextureID();
     Texture *tex = new Texture(id);
 
     // "texture.kind" is a required string.
@@ -142,7 +142,7 @@ FR_SCRIPT_FUNCTION(SceneScript, Texture) {
 FR_SCRIPT_FUNCTION(SceneScript, Shader) {
     BeginTableCall();
 
-    uint64_t id = _lib->GetNextResourceID();
+    uint64_t id = _lib->NextShaderID();
     Shader *shader = new Shader(id);
 
     // "shader.code" is a required string.
@@ -161,7 +161,7 @@ FR_SCRIPT_FUNCTION(SceneScript, Shader) {
 FR_SCRIPT_FUNCTION(SceneScript, Material) {
     BeginTableCall();
 
-    uint64_t id = _lib->GetNextResourceID();
+    uint64_t id = _lib->NextMaterialID();
     Material *mat = new Material(id);
 
     // "material.name" is a required string.
@@ -202,7 +202,7 @@ FR_SCRIPT_FUNCTION(SceneScript, Material) {
 FR_SCRIPT_FUNCTION(SceneScript, Mesh) {
     BeginTableCall();
 
-    uint64_t id = _lib->GetNextResourceID();
+    uint64_t id = _lib->NextMeshID();
     Mesh *mesh = new Mesh(id);
 
     _active_mesh = mesh;

@@ -44,6 +44,12 @@ int main(int argc, char *argv[]) {
     }
     TOUTLN("Scene loaded.");
 
+    TOUTLN(ToString(*lib.LookupShader(1)));
+    TOUTLN(ToString(*lib.LookupTexture(1)));
+    TOUTLN(ToString(*lib.LookupTexture(2)));
+    TOUTLN(ToString(*lib.LookupMaterial(1)));
+    TOUTLN(ToString(*lib.LookupMesh(1)));
+
     TOUTLN("FlexRender done.");
     return EXIT_SUCCESS;
 }
