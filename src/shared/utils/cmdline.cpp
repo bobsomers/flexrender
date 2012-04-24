@@ -6,7 +6,6 @@ using std::string;
 using std::find;
 
 namespace fr {
-namespace cmdline {
 
 string FlagValue(int argc, char* argv[], const string& flag_short,
  const string& flag_long) {
@@ -52,7 +51,7 @@ bool FlagExists(int argc, char* argv[], const string &flag_short,
     return false;
 }
 
-string Argument(int argc, char* argv[], int i) {
+string ArgumentValue(int argc, char* argv[], int i) {
     int count = 0;
     for (int j = 0; j < argc; j++) {
         const char* str = argv[j];
@@ -67,5 +66,4 @@ string Argument(int argc, char* argv[], int i) {
     return string("");
 }
 
-} // namespace cmdline
 } // namespace flexrender

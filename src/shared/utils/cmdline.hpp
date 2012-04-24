@@ -3,7 +3,6 @@
 #include <string>
 
 namespace fr {
-namespace cmdline {
 
 /**
  * Retrieves the value of a flag on the command line. If either the short
@@ -44,7 +43,6 @@ bool FlagExists(int argc, char *argv[], const std::string& flag_short,
  * @return  The value of the i'th command line argument, or an empty string if
  *          the i'th argument does not exist.
  */
-std::string Argument(int argc, char* argv[], int i);
+std::string ArgumentValue(int argc, char* argv[], int i);
 
-} // namespace cmdline
 } // namespace fr

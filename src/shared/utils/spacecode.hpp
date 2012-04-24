@@ -8,13 +8,12 @@
 // See: http://en.wikipedia.org/wiki/Z-order_(curve)
 
 namespace fr {
-namespace spacecode {
 
 /// Minimum value of the space encoding.
-extern const uint64_t MIN;
+extern const uint64_t SPACECODE_MIN;
 
 /// Maximum value of the space encoding.
-extern const uint64_t MAX;
+extern const uint64_t SPACECODE_MAX;
 
 /**
  * Encodes a point in 3D space to a designated space encoding (currently Morton
@@ -27,7 +26,6 @@ extern const uint64_t MAX;
  * @param   max     The maximum corner of an axis-aligned bounding box that
  *                  encloses the space.
  */
-uint64_t Encode(const glm::vec3& point, const glm::vec3& min, const glm::vec3& max);
+uint64_t SpaceEncode(const glm::vec3& point, const glm::vec3& min, const glm::vec3& max);
 
-} // namespace spacecode
 } // namespace fr

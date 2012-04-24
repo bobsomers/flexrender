@@ -60,6 +60,7 @@ solution "flexrender"
             "3p/build/lib"
         }
         links {
+            "rt",
             "uv"
         }
         defines {
@@ -86,6 +87,7 @@ solution "flexrender"
             "3p/build/lib"
         }
         links {
+            "rt",
             "uv"
         }
         defines {

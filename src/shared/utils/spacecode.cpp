@@ -3,12 +3,11 @@
 using glm::vec3;
 
 namespace fr {
-namespace spacecode {
 
-const uint64_t MIN = 0;
-const uint64_t MAX = 0x7fffffffffffffff; // msb = 0, everything else 1's
+const uint64_t SPACECODE_MIN = 0;
+const uint64_t SPACECODE_MAX = 0x7fffffffffffffff; // msb = 0, everything else 1's
 
-uint64_t Encode(const vec3& point, const vec3& min, const vec3& max) {
+uint64_t SpaceEncode(const vec3& point, const vec3& min, const vec3& max) {
     // 21 (x) + 21 (y) + 21 (z) = 63 (< 64) bits total.
     const uint32_t bits_per_component = 21;
     
@@ -44,5 +43,4 @@ uint64_t Encode(const vec3& point, const vec3& min, const vec3& max) {
     return morton;
 }
 
-} // namespace spacecode
 } // namespace fr

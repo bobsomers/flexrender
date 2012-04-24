@@ -18,8 +18,8 @@ int main(int argc, char *argv[]) {
         cerr << "Usage: " << argv[0] << " <config.lua> <scene.lua>" << endl;
         exit(EXIT_FAILURE);
     }
-    string config_file = cmdline::Argument(argc, argv, 1);
-    string scene_file = cmdline::Argument(argc, argv, 2);
+    string config_file = ArgumentValue(argc, argv, 1);
+    string scene_file = ArgumentValue(argc, argv, 2);
 
     TOUTLN("FlexRender starting.");
 
