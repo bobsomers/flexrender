@@ -12,8 +12,6 @@ class ConfigScript : public Script {
 public:
     explicit ConfigScript();
 
-    ~ConfigScript() {}
-
     /**
      * Parses the passed file as a config script and sets the passed config
      * object. If it succeeds, it returns true. If it fails, it returns

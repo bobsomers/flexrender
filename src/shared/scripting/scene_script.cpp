@@ -31,10 +31,6 @@ SceneScript::SceneScript() :
     FR_SCRIPT_REGISTER("triangle", SceneScript, Triangle);
 }
 
-SceneScript::~SceneScript() {
-    // Empty.
-}
-
 bool SceneScript::Parse(const string& filename, const Config* config, Library *lib) {
     _lib = lib;
     _config = config;

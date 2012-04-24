@@ -16,7 +16,7 @@ namespace cmdline {
  * @return  The argument passed with that flag. Empty string if there was
  *          no argument.
  */
-std::string FlagValue(int argc, const char *argv[],
+std::string FlagValue(int argc, char *argv[],
  const std::string& flag_short, const std::string& flag_long);
 
 /**
@@ -29,7 +29,7 @@ std::string FlagValue(int argc, const char *argv[],
  * @param   flag_long   The long form ("--flag") of the flag to look for.
  * @return  True if the flag is present, false otherwise.
  */
-bool FlagExists(int argc, const char *argv[], const std::string& flag_short,
+bool FlagExists(int argc, char *argv[], const std::string& flag_short,
  const std::string& flag_long);
 
 /**
@@ -44,7 +44,7 @@ bool FlagExists(int argc, const char *argv[], const std::string& flag_short,
  * @return  The value of the i'th command line argument, or an empty string if
  *          the i'th argument does not exist.
  */
-std::string Argument(int argc, const char* argv[], int i);
+std::string Argument(int argc, char* argv[], int i);
 
 } // namespace cmdline
 } // namespace fr

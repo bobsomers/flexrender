@@ -8,11 +8,11 @@ using std::find;
 namespace fr {
 namespace cmdline {
 
-string FlagValue(int argc, const char* argv[], const string& flag_short,
+string FlagValue(int argc, char* argv[], const string& flag_short,
  const string& flag_long) {
-    const char **begin = argv;
-    const char **end = argv + argc;
-    const char **iter = nullptr;
+    char **begin = argv;
+    char **end = argv + argc;
+    char **iter = nullptr;
 
     // Look for short flag value.
     iter = find(begin, end, flag_short);
@@ -30,11 +30,11 @@ string FlagValue(int argc, const char* argv[], const string& flag_short,
     return string("");
 }
 
-bool FlagExists(int argc, const char* argv[], const string &flag_short,
+bool FlagExists(int argc, char* argv[], const string &flag_short,
  const string& flag_long) {
-    const char **begin = argv;
-    const char **end = argv + argc;
-    const char **iter = nullptr;
+    char **begin = argv;
+    char **end = argv + argc;
+    char **iter = nullptr;
 
     // Look for short flag.
     iter = find(begin, end, flag_short);
@@ -52,7 +52,7 @@ bool FlagExists(int argc, const char* argv[], const string &flag_short,
     return false;
 }
 
-string Argument(int argc, const char* argv[], int i) {
+string Argument(int argc, char* argv[], int i) {
     int count = 0;
     for (int j = 0; j < argc; j++) {
         const char* str = argv[j];

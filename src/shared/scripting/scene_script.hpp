@@ -14,8 +14,6 @@ class SceneScript : public Script {
 public:
     explicit SceneScript();
 
-    ~SceneScript();
-
     /**
      * Parses the given scene script and all of its resources (including
      * shaders, textures, mesh data, etc.) out to a library. Returns

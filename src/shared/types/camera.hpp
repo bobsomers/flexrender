@@ -17,7 +17,7 @@ struct Camera {
     explicit Camera(const Config* config) :
      up(0.0f, 1.0f, 0.0f),
      rotation(0.0f),
-     ratio(static_cast<float>(_config->width) / static_cast<float>(_config->height)),
+     ratio(static_cast<float>(config->width) / static_cast<float>(config->height)),
      _config(config) {
         eye.x = std::numeric_limits<float>::quiet_NaN();
         eye.y = std::numeric_limits<float>::quiet_NaN();

@@ -19,7 +19,7 @@ material {
     emissive = true,
     shader = frsl("config.lua"),
     textures = {
-        diffuse = procedural("example.lua"),
+        diffuse = procedural("scenes/test.lua"),
         specular = fakeimg("image.fake")
     }
 }
