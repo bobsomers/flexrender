@@ -6,6 +6,7 @@
 
 namespace fr {
 
+class Library;
 struct Config;
 
 class ConfigScript : public Script {
@@ -17,7 +18,7 @@ public:
      * object. If it succeeds, it returns true. If it fails, it returns
      * false.
      */
-    bool Parse(const std::string& filename, Config *config);
+    bool Parse(const std::string& filename, Library *lib);
 
     // Script function handlers.
     FR_SCRIPT_DECLARE(Network);

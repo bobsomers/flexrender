@@ -15,7 +15,6 @@ namespace fr {
 SceneScript::SceneScript() :
  Script(),
  _lib(nullptr),
- _config(nullptr),
  _active_mesh(nullptr),
  _centroid_num(0.0f, 0.0f, 0.0f),
  _centroid_denom(0.0f) {
@@ -31,9 +30,8 @@ SceneScript::SceneScript() :
     FR_SCRIPT_REGISTER("triangle", SceneScript, Triangle);
 }
 
-bool SceneScript::Parse(const string& filename, const Config* config, Library *lib) {
+bool SceneScript::Parse(const string& filename, Library *lib) {
     _lib = lib;
-    _config = config;
 
     // Evaluate the file.
     if (luaL_dofile(_state, filename.c_str())) {
@@ -49,7 +47,7 @@ FR_SCRIPT_FUNCTION(SceneScript, Camera) {
 
     // Used for creating a sensible default aspect ratio based on the output
     // image dimensions.
-    Camera* cam = new Camera(_config);
+    Camera* cam = new Camera(_lib->LookupConfig());
 
     // "camera.eye" is a required float3.
     if (!PushField("eye", LUA_TTABLE)) {

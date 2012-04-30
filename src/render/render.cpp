@@ -23,13 +23,12 @@ int main(int argc, char *argv[]) {
 
     TOUTLN("FlexRender starting.");
 
-    Library lib;
+    Library* lib = new Library;
 
     // Parse the config file.
-    Config config;
     ConfigScript config_script;
     TOUTLN("Loading config from " << config_file << ".");
-    if (!config_script.Parse(config_file, &config)) {
+    if (!config_script.Parse(config_file, lib)) {
         TERRLN("Can't continue with bad config.");
         exit(EXIT_FAILURE);
     }
@@ -38,17 +37,19 @@ int main(int argc, char *argv[]) {
     // Parse and distribute the scene.
     SceneScript scene_script;
     TOUTLN("Loading scene from " << scene_file << ".");
-    if (!scene_script.Parse(scene_file, &config, &lib)) {
+    if (!scene_script.Parse(scene_file, lib)) {
         TERRLN("Can't continue with bad scene.");
         exit(EXIT_FAILURE);
     }
     TOUTLN("Scene loaded.");
 
-    TOUTLN(ToString(*lib.LookupShader(1)));
-    TOUTLN(ToString(*lib.LookupTexture(1)));
-    TOUTLN(ToString(*lib.LookupTexture(2)));
-    TOUTLN(ToString(*lib.LookupMaterial(1)));
-    TOUTLN(ToString(*lib.LookupMesh(1)));
+    TOUTLN(ToString(*lib->LookupShader(1)));
+    TOUTLN(ToString(*lib->LookupTexture(1)));
+    TOUTLN(ToString(*lib->LookupTexture(2)));
+    TOUTLN(ToString(*lib->LookupMaterial(1)));
+    TOUTLN(ToString(*lib->LookupMesh(1)));
+
+    delete lib;
 
     TOUTLN("FlexRender done.");
     return EXIT_SUCCESS;

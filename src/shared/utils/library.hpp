@@ -11,6 +11,7 @@
 
 namespace fr {
 
+struct Config;
 struct Camera;
 struct Shader;
 struct Texture;
@@ -22,9 +23,15 @@ public:
     explicit Library();
     ~Library();
 
-    inline void StoreCamera(Camera* camera) { _camera = camera; }
+    // Configs...
+    void StoreConfig(Config* config);
+    inline Config* LookupConfig() const { return _config; }
+
+    // Cameras...
+    void StoreCamera(Camera* camera);
     inline Camera* LookupCamera() const { return _camera; }
 
+    // Shaders...
     inline uint64_t NextShaderID() const { return _shaders.size(); }
     void StoreShader(uint64_t id, Shader* shader);
     inline Shader* LookupShader(uint64_t id) const {
@@ -33,6 +40,7 @@ public:
         return _shaders[id];    
     };
 
+    // Textures...
     inline uint64_t NextTextureID() const { return _textures.size(); }
     void StoreTexture(uint64_t id, Texture* texture);
     inline Texture* LookupTexture(uint64_t id) const {
@@ -41,6 +49,7 @@ public:
         return _textures[id];
     }
 
+    // Materials...
     inline uint64_t NextMaterialID() const { return _materials.size(); }
     void StoreMaterial(uint64_t id, Material* material, const std::string& name);
     inline Material* LookupMaterial(uint64_t id) const {
@@ -58,6 +67,7 @@ public:
         return id;
     }
 
+    // Meshes...
     inline uint64_t NextMeshID() const { return _meshes.size(); }
     void StoreMesh(uint64_t id, Mesh* mesh);
     inline Mesh* LookupMesh(uint64_t id) const {
@@ -67,6 +77,7 @@ public:
     }
 
 private:
+    Config *_config;
     Camera* _camera;
     std::vector<Shader*> _shaders;
     std::vector<Texture*> _textures;

@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "types/config.hpp"
+#include "utils/library.hpp"
 #include "utils/tout.hpp"
 
 using glm::vec2;
@@ -24,14 +25,17 @@ ConfigScript::ConfigScript() :
     FR_SCRIPT_REGISTER("render", ConfigScript, Render);
 }
 
-bool ConfigScript::Parse(const string& filename, Config *config) {
-    _config = config;
+bool ConfigScript::Parse(const string& filename, Library *lib) {
+    _config = new Config;
 
     // Evaluate the file.
     if (luaL_dofile(_state, filename.c_str())) {
         TERRLN(lua_tostring(_state, -1));
         return false;
     }
+
+    lib->StoreConfig(_config);
+    _config = nullptr;
 
     return true;
 }

@@ -7,7 +7,6 @@
 namespace fr {
 
 class Library;
-struct Config;
 struct Mesh;
 
 class SceneScript : public Script {
@@ -19,7 +18,7 @@ public:
      * shaders, textures, mesh data, etc.) out to a library. Returns
      * true if it succeeded, false if it failed.
      */
-    bool Parse(const std::string& filename, const Config* config, Library *lib);
+    bool Parse(const std::string& filename, Library *lib);
 
     // Script function handlers.
     FR_SCRIPT_DECLARE(Camera);
@@ -31,7 +30,6 @@ public:
 
 private:
     Library* _lib;
-    const Config* _config;
     Mesh *_active_mesh;
     glm::vec3 _centroid_num;
     float _centroid_denom;

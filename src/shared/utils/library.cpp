@@ -8,6 +8,7 @@ using std::string;
 namespace fr {
 
 Library::Library() :
+ _config(nullptr),
  _camera(nullptr),
  _shaders(),
  _textures(),
@@ -22,9 +23,18 @@ Library::Library() :
 }
 
 Library::~Library() {
-    if (_camera != nullptr) {
-        delete _camera;
-    }
+    if (_config != nullptr) delete _config;
+    if (_camera != nullptr) delete _camera;
+}
+
+void Library::StoreConfig(Config* config) {
+    if (_config != nullptr) delete _config;
+    _config = config;
+}
+
+void Library::StoreCamera(Camera* camera) {
+    if (_camera != nullptr) delete _camera;
+    _camera = camera;
 }
 
 void Library::StoreShader(uint64_t id, Shader* shader) {
