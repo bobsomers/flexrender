@@ -14,12 +14,14 @@ Library::Library() :
  _textures(),
  _materials(),
  _meshes(),
+ _servers(),
  _material_name_index() {
     // ID #0 is always reserved.
     _shaders.push_back(nullptr);
     _textures.push_back(nullptr);
     _materials.push_back(nullptr);
     _meshes.push_back(nullptr);
+    _servers.push_back(nullptr);
 }
 
 Library::~Library() {
@@ -84,6 +86,18 @@ void Library::StoreMesh(uint64_t id, Mesh* mesh) {
         _meshes.resize(id, nullptr);
     }
     _meshes.insert(_meshes.begin() + id, mesh);
+}
+
+void Library::StoreServer(uint64_t id, Server* server) {
+    if (id < _servers.size()) {
+        if (_servers[id] != nullptr) {
+            delete _servers[id];
+            _servers[id] = nullptr;
+        }
+    } else {
+        _servers.resize(id, nullptr);
+    }
+    _servers.insert(_servers.begin() + id, server);
 }
 
 }

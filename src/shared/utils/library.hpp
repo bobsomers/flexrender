@@ -17,6 +17,7 @@ struct Shader;
 struct Texture;
 struct Material;
 struct Mesh;
+struct Server;
 
 class Library : private Uncopyable {
 public:
@@ -76,6 +77,14 @@ public:
         return _meshes[id];
     }
 
+    // Servers...
+    void StoreServer(uint64_t id, Server* server);
+    inline Server* LookupServer(uint64_t id) const {
+        assert(id > 0);
+        assert(id < _servers.size());
+        return _servers[id];
+    }
+
 private:
     Config *_config;
     Camera* _camera;
@@ -83,6 +92,7 @@ private:
     std::vector<Texture*> _textures;
     std::vector<Material*> _materials;
     std::vector<Mesh*> _meshes;
+    std::vector<Server*> _servers;
     std::unordered_map<std::string, uint64_t> _material_name_index;
 };
 

@@ -7,6 +7,7 @@
 #include "types/mesh.hpp"
 #include "types/message.hpp"
 #include "types/ray.hpp"
+#include "types/server.hpp"
 #include "types/shader.hpp"
 #include "types/strong_hit.hpp"
 #include "types/texture.hpp"
