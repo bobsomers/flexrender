@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstdio>
 
 #include "utils/tostring.hpp"
 
@@ -107,9 +108,14 @@ inline std::string ToString(const Message& msg, const std::string& indent = "") 
             break;
     }
     stream << indent << "| size = " << msg.size << std::endl <<
-     indent << "| body = " << std::hex << std::showbase;
+     indent << "| body = ";
     for (uint32_t i = 0; i < msg.size; i++) {
-        stream << *(reinterpret_cast<uint8_t*>(msg.body) + i) << " ";
+        uint8_t byte = *(reinterpret_cast<uint8_t*>(
+         reinterpret_cast<uintptr_t>(msg.body) +
+         static_cast<uintptr_t>(i)));
+        char buf[8]; // I/O streams really suck sometimes...
+        snprintf(buf, 8, "0x%x ", byte);
+        stream << buf;
     }
     stream << std::endl << indent << "}";
     return stream.str(); 

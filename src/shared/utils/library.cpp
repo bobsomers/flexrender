@@ -4,6 +4,7 @@
 #include "utils.hpp"
 
 using std::string;
+using std::function;
 
 namespace fr {
 
@@ -98,6 +99,14 @@ void Library::StoreServer(uint64_t id, Server* server) {
         _servers.resize(id, nullptr);
     }
     _servers.insert(_servers.begin() + id, server);
+}
+
+void Library::ForEachServer(function<void (uint64_t, Server* server)> func) {
+    for (uint64_t id = 1; id < _servers.size(); id++) {
+        Server* server = _servers[id];
+        if (server == nullptr) continue;
+        func(id, server);
+    }
 }
 
 }

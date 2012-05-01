@@ -3,12 +3,17 @@
 #include <cassert>
 #include <cstdlib>
 
+#include <iostream>
+
 #include "uv.h"
 
 #include "client.hpp"
 #include "utils.hpp"
 
 using std::string;
+
+using std::cout;
+using std::endl;
 
 namespace fr {
 
@@ -72,8 +77,7 @@ void server::Init(const string& ip, uint16_t port) {
     CheckUVResult(result, "bind");
 
     // Attempt to listen on the bound port.
-    result = uv_listen(reinterpret_cast<uv_stream_t*>(&host), 128,
-     server::OnConnection);
+    result = uv_listen(reinterpret_cast<uv_stream_t*>(&host), 128, OnConnection);
     CheckUVResult(result, "listen");
 }
 
@@ -117,7 +121,7 @@ void server::OnConnection(uv_stream_t* stream, int status) {
 
     // Start reading from the client.
     result = uv_read_start(reinterpret_cast<uv_stream_t*>(&client->socket),
-     server::OnAlloc, server::OnRead);
+     OnAlloc, OnRead);
     CheckUVResult(result, "read_start");
 }
 
@@ -144,8 +148,7 @@ void server::OnRead(uv_stream_t* stream, ssize_t nread, uv_buf_t buf) {
         // No data was read.
         uv_err_t err = uv_last_error(uv_default_loop());
         if (err.code == UV_EOF) {
-            uv_close(reinterpret_cast<uv_handle_t*>(&client->socket),
-             server::OnClose);
+            uv_close(reinterpret_cast<uv_handle_t*>(&client->socket), OnClose);
         } else {
             TERRLN("read: " << uv_strerror(err));
         }
@@ -245,7 +248,7 @@ void server::ParseMessages(Client* client, const char* buf, ssize_t len) {
 }
 
 void server::DispatchMessage(const Message& message) {
-    ToString(message);
+    TOUTLN(ToString(message));
     // TODO: actually implement this
 }
 

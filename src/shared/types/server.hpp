@@ -14,6 +14,13 @@
 namespace fr {
 
 struct Server {
+    enum class State {
+        INIT_SENT,
+        READY_TO_SYNC,
+        SYNC_SENT,
+        SYNC_LIMBO
+    };
+
     explicit Server() :
      nwritten(0),
      flushed(false),
@@ -36,6 +43,9 @@ struct Server {
 
     /// The TCP socket this server is connected on.
     uv_tcp_t socket;
+
+    /// The state this server is currently in (one of the above).
+    State state;
 
     /// The amount of data we've written to the write buffer.
     ssize_t nwritten;
