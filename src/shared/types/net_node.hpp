@@ -16,10 +16,10 @@ class NetNode {
 public:
     enum class State {
         NONE,
-        INIT_SENT,
-        READY_TO_SYNC,
-        SYNC_SENT,
-        SYNC_LIMBO
+        INITIALIZING,
+        READY,
+        SYNCING,
+        WAITING
     };
 
     enum class ReadMode {

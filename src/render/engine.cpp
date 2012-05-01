@@ -21,6 +21,9 @@ static Library* lib = nullptr;
 /// The number of workers that we've connected to.
 static size_t num_workers_connected = 0;
 
+/// The number of workers that are ready to sync.
+static size_t num_workers_ready = 0;
+
 /// The timer for ensuring we flush the send buffer.
 static uv_timer_t flush_timer;
 
@@ -35,6 +38,8 @@ uv_buf_t OnAlloc(uv_handle_t* handle, size_t suggested_size);
 void OnRead(uv_stream_t* stream, ssize_t nread, uv_buf_t buf);
 void OnClose(uv_handle_t* handle);
 void OnFlushTimeout(uv_timer_t* timer, int status);
+
+void OnOK(NetNode* node);
 
 }
 
@@ -104,8 +109,16 @@ void client::Init(const Config& config) {
 }
 
 void client::DispatchMessage(NetNode* node) {
-    TOUTLN(ToString(node->message));
-    // TODO: implement me
+    switch (node->message.kind) {
+        case Message::Kind::OK:
+            OnOK(node);
+            break;
+
+        default:
+            TERRLN("Received unexpected message.");
+            TERRLN(ToString(node->message));
+            break;
+    }
 }
 
 void client::OnConnect(uv_connect_t* req, int status) {
@@ -143,6 +156,7 @@ void client::OnConnect(uv_connect_t* req, int status) {
         request.size = sizeof(uint64_t);
         request.body = &id;
         node->Send(request);
+        node->state = NetNode::State::INITIALIZING;
     });
 }
 
@@ -206,6 +220,23 @@ void client::OnFlushTimeout(uv_timer_t* timer, int status) {
         }
         node->flushed = false;
     });
+}
+
+void client::OnOK(NetNode* node) {
+    switch (node->state) {
+        case NetNode::State::INITIALIZING:
+            node->state = NetNode::State::READY;
+            TOUTLN("[" << node->ip << "] Worker is ready.");
+            num_workers_ready++;
+            if (num_workers_ready == lib->LookupConfig()->workers.size()) {
+                TOUTLN("SYNC TIEM!");
+                // TODO: begin syncing
+            }
+            break;
+
+        default:
+            TERRLN("Received OK in unexpected state.");
+    }
 }
 
 } // namespace fr

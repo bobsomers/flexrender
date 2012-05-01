@@ -202,7 +202,7 @@ void server::DispatchMessage(NetNode* node) {
             break;
 
         default:
-            TERRLN("Received unknown message.");
+            TERRLN("Received unexpected message.");
             TERRLN(ToString(node->message));
             break;
     }
