@@ -18,7 +18,7 @@ struct Shader;
 struct Texture;
 struct Material;
 struct Mesh;
-struct Server;
+class NetNode;
 
 class Library : private Uncopyable {
 public:
@@ -89,24 +89,24 @@ public:
         return _meshes[id];
     }
 
-    // Servers...
-    void StoreServer(uint64_t id, Server* server);
+    // NetNodes...
+    void StoreNetNode(uint64_t id, NetNode* node);
 
-    inline Server* LookupServer(uint64_t id) const {
+    inline NetNode* LookupNetNode(uint64_t id) const {
         assert(id > 0);
-        assert(id < _servers.size());
-        return _servers[id];
+        assert(id < _nodes.size());
+        return _nodes[id];
     }
 
-    void ForEachServer(std::function<void (uint64_t, Server* server)> func);
+    void ForEachNetNode(std::function<void (uint64_t id, NetNode* node)> func);
 
     template <typename RetType>
-    std::vector<RetType> ForEachServer(std::function<RetType (uint64_t, Server* server)> func) {
-        std::vector<RetType> results(_servers.size());
-        for (uint64_t id = 1; id < _servers.size(); id++) {
-            Server* server = _servers[id];
-            if (server == nullptr) continue;
-            RetType result = func(id, server);
+    std::vector<RetType> ForEachNetNode(std::function<RetType (uint64_t id, NetNode* node)> func) {
+        std::vector<RetType> results(_nodes.size());
+        for (uint64_t id = 1; id < _nodes.size(); id++) {
+            NetNode* node = _nodes[id];
+            if (node == nullptr) continue;
+            RetType result = func(id, node);
             results.insert(results.begin() + id, result);
         }
         return results;
@@ -119,7 +119,7 @@ private:
     std::vector<Texture*> _textures;
     std::vector<Material*> _materials;
     std::vector<Mesh*> _meshes;
-    std::vector<Server*> _servers;
+    std::vector<NetNode*> _nodes;
     std::unordered_map<std::string, uint64_t> _material_name_index;
 };
 

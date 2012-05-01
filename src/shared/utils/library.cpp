@@ -15,14 +15,14 @@ Library::Library() :
  _textures(),
  _materials(),
  _meshes(),
- _servers(),
+ _nodes(),
  _material_name_index() {
     // ID #0 is always reserved.
     _shaders.push_back(nullptr);
     _textures.push_back(nullptr);
     _materials.push_back(nullptr);
     _meshes.push_back(nullptr);
-    _servers.push_back(nullptr);
+    _nodes.push_back(nullptr);
 }
 
 Library::~Library() {
@@ -89,23 +89,23 @@ void Library::StoreMesh(uint64_t id, Mesh* mesh) {
     _meshes.insert(_meshes.begin() + id, mesh);
 }
 
-void Library::StoreServer(uint64_t id, Server* server) {
-    if (id < _servers.size()) {
-        if (_servers[id] != nullptr) {
-            delete _servers[id];
-            _servers[id] = nullptr;
+void Library::StoreNetNode(uint64_t id, NetNode* node) {
+    if (id < _nodes.size()) {
+        if (_nodes[id] != nullptr) {
+            delete _nodes[id];
+            _nodes[id] = nullptr;
         }
     } else {
-        _servers.resize(id, nullptr);
+        _nodes.resize(id, nullptr);
     }
-    _servers.insert(_servers.begin() + id, server);
+    _nodes.insert(_nodes.begin() + id, node);
 }
 
-void Library::ForEachServer(function<void (uint64_t, Server* server)> func) {
-    for (uint64_t id = 1; id < _servers.size(); id++) {
-        Server* server = _servers[id];
-        if (server == nullptr) continue;
-        func(id, server);
+void Library::ForEachNetNode(function<void (uint64_t, NetNode* node)> func) {
+    for (uint64_t id = 1; id < _nodes.size(); id++) {
+        NetNode* node = _nodes[id];
+        if (node == nullptr) continue;
+        func(id, node);
     }
 }
 
