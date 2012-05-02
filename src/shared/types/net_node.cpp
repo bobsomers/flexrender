@@ -454,4 +454,39 @@ void NetNode::SendShader(const Library* lib, uint64_t id) {
     _shaders[id] = true;
 }
 
+Buffer* NetNode::ReceiveBuffer() {
+    assert(message.size > 0);
+
+    // Deserialize the payload.
+    msgpack::unpacked mp_msg;
+    msgpack::unpack(&mp_msg, reinterpret_cast<const char*>(message.body), message.size);
+
+    // Unpack the buffer.
+    Buffer *buffer = new Buffer;
+    msgpack::object mp_obj = mp_msg.get();
+    mp_obj.convert(buffer);
+
+    return buffer;
+}
+
+void NetNode::SendBuffer(const Library* lib, uint64_t id) {
+    assert(lib != nullptr);
+    assert(id > 0);
+
+    Buffer* buffer = lib->LookupBuffer(id);
+    assert(buffer != nullptr);
+
+    Message request(Message::Kind::SYNC_BUFFER);
+
+    // Serialize the payload.
+    msgpack::sbuffer buf;
+    msgpack::pack(buf, *buffer);
+
+    // Pack the message body.
+    request.size = buf.size();
+    request.body = buf.data();
+
+    Send(request);
+}
+
 } // namespace fr

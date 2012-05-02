@@ -172,8 +172,8 @@ void client::OnConnect(uv_connect_t* req, int status) {
         Message request(Message::Kind::INIT);
         request.size = sizeof(uint64_t);
         request.body = &id;
-        node->Send(request);
         node->state = NetNode::State::INITIALIZING;
+        node->Send(request);
     });
 }
 
@@ -331,8 +331,15 @@ void client::StartSync() {
 }
 
 void client::StartRender() {
-    // TODO
-    TOUTLN("Starting render.");
+    // Send render start messages to each server.
+    lib->ForEachNetNode([](uint64_t id, NetNode* node) {
+        Message request(Message::Kind::RENDER_START);
+        node->state = NetNode::State::RENDERING;
+        node->Send(request);
+        TOUTLN("[" << node->ip << "] Starting render.");
+    });
+
+    TOUTLN("Rendering has started.");
 }
 
 void client::OnSyncStart(uv_work_t* req) {
