@@ -285,6 +285,28 @@ void client::StartSync() {
     // Build the spatial index.
     lib->BuildSpatialIndex();
 
+    Config* config = lib->LookupConfig();
+    assert(config != nullptr);
+
+    // Create the default image buffers.
+    uint64_t id = 0;
+    id = lib->NextBufferID();
+    Buffer* r = new Buffer(id, config->width, config->height);
+    lib->StoreBuffer(id, r, "R");
+    id = lib->NextBufferID();
+    Buffer* g = new Buffer(id, config->width, config->height);
+    lib->StoreBuffer(id, g, "G");
+    id = lib->NextBufferID();
+    Buffer* b = new Buffer(id, config->width, config->height);
+    lib->StoreBuffer(id, b, "B");
+
+    // Create any auxilliary image buffers.
+    for (const auto& buffer : config->buffers) {
+        id = lib->NextBufferID();
+        Buffer* buf = new Buffer(id, config->width, config->height);
+        lib->StoreBuffer(id, buf, buffer);
+    }
+
     // Initialize the semaphores for ping-ponging between threads.
     if (sem_init(&mesh_read, 0, 0) < 0) {
         perror("sem_init");

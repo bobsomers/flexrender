@@ -1,5 +1,6 @@
 #pragma once
 
+#include "types/buffer.hpp"
 #include "types/camera.hpp"
 #include "types/config.hpp"
 #include "types/local_geometry.hpp"

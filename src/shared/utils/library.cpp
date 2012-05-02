@@ -24,6 +24,7 @@ Library::Library() :
     _textures.push_back(nullptr);
     _materials.push_back(nullptr);
     _meshes.push_back(nullptr);
+    _buffers.push_back(nullptr);
     _nodes.push_back(nullptr);
 }
 
@@ -42,6 +43,9 @@ Library::~Library() {
     }
     for (size_t i = 0; i < _meshes.size(); i++) {
         if (_meshes[i] != nullptr) delete _meshes[i];
+    }
+    for (size_t i = 0; i < _buffers.size(); i++) {
+        if (_buffers[i] != nullptr) delete _buffers[i];
     }
     for (size_t i = 0; i < _nodes.size(); i++) {
         if (_nodes[i] != nullptr) delete _nodes[i];
@@ -93,6 +97,24 @@ void Library::StoreMesh(uint64_t id, Mesh* mesh) {
         _meshes.resize(id + 1, nullptr);
     }
     _meshes[id] = mesh;
+}
+
+void Library::StoreBuffer(uint64_t id, Buffer* buffer, const string& name) {
+    if (id < _buffers.size()) {
+        if (_buffers[id] != nullptr) delete _buffers[id];
+    } else {
+        _buffers.resize(id + 1, nullptr);
+    }
+    _buffers[id] = buffer;
+    _buffer_name_index[name] = id;
+}
+
+void Library::ForEachBuffer(function<void (uint64_t, Buffer* buffer)> func) {
+    for (uint64_t id = 1; id < _buffers.size(); id++) {
+        Buffer* buffer = _buffers[id];
+        if (buffer == nullptr) continue;
+        func(id, buffer);
+    }
 }
 
 void Library::StoreNetNode(uint64_t id, NetNode* node) {
