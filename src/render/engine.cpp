@@ -24,7 +24,10 @@ static Library* lib = nullptr;
 /// The number of workers that we've connected to.
 static size_t num_workers_connected = 0;
 
-/// The number of workers that are ready to sync.
+/// The number of workers that are syncing.
+static size_t num_workers_syncing = 0;
+
+/// The number of workers that are ready to render.
 static size_t num_workers_ready = 0;
 
 /// The timer for ensuring we flush the send buffer.
@@ -47,6 +50,7 @@ namespace client {
 void Init(const Config& config);
 void DispatchMessage(NetNode* node);
 void StartSync();
+void StartRender();
 uint64_t SyncMesh(Mesh* mesh);
 
 void OnConnect(uv_connect_t* req, int status);
@@ -242,20 +246,29 @@ void client::OnOK(NetNode* node) {
             break;
 
         case NetNode::State::CONFIGURING:
-            node->state = NetNode::State::SYNCING;
+            node->state = NetNode::State::SYNCING_ASSETS;
             TOUTLN("[" << node->ip << "] Ready to sync.");
-            num_workers_ready++;
-            if (num_workers_ready == lib->LookupConfig()->workers.size()) {
+            num_workers_syncing++;
+            if (num_workers_syncing == lib->LookupConfig()->workers.size()) {
                 StartSync();
             }
             break;
 
-        case NetNode::State::SYNCING:
+        case NetNode::State::SYNCING_ASSETS:
             // Delete the current mesh from the library.
             lib->StoreMesh(current_mesh_id, nullptr);
             if (sem_post(&mesh_synced) < 0) {
                 perror("sem_post");
                 exit(EXIT_FAILURE);
+            }
+            break;
+
+        case NetNode::State::SYNCING_CAMERA:
+            node->state = NetNode::State::READY;
+            TOUTLN("[" << node->ip << "] Ready to render.");
+            num_workers_ready++;
+            if (num_workers_ready == lib->LookupConfig()->workers.size()) {
+                StartRender();
             }
             break;
 
@@ -291,6 +304,11 @@ void client::StartSync() {
     CheckUVResult(result, "idle_init");
     result = uv_idle_start(idler, OnSyncIdle);
     CheckUVResult(result, "idle_start");
+}
+
+void client::StartRender() {
+    // TODO
+    TOUTLN("Starting render.");
 }
 
 void client::OnSyncStart(uv_work_t* req) {
@@ -365,14 +383,18 @@ void client::OnSyncIdle(uv_idle_t* handle, int status) {
         exit(EXIT_FAILURE);
     }
 
-    // Are we done?
+    // Are we done syncing assets?
     if (current_mesh_id == 0) {
         // Shut off the idle handler.
         result = uv_idle_stop(handle);
         CheckUVResult(result, "idle_stop");
 
-        TOUTLN("DONE SYNCING!");
-        // TODO: implement this
+        // Sync the camera with everyone.
+        lib->ForEachNetNode([](uint64_t id, NetNode* node) {
+            node->state = NetNode::State::SYNCING_CAMERA;
+            TOUTLN("[" << node->ip << "] Syncing camera.");
+            node->SendCamera(lib);
+        });
         return;
     }
 

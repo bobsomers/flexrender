@@ -21,8 +21,10 @@ public:
         NONE,
         INITIALIZING,
         CONFIGURING,
-        SYNCING,
-        WAITING
+        SYNCING_ASSETS,
+        SYNCING_CAMERA,
+        READY,
+        RENDERING
     };
 
     enum class ReadMode {
@@ -47,6 +49,12 @@ public:
 
     /// Sends the given config to this node.
     void SendConfig(const Library* lib);
+
+    /// Receives the message in the net node's buffer as a camera.
+    void ReceiveCamera(Library* lib);
+
+    /// Sends the given camera to this node.
+    void SendCamera(const Library* lib);
 
     /// Receives the message in the net node's buffer as a mesh.
     uint64_t ReceiveMesh(Library* lib);

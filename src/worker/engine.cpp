@@ -50,6 +50,7 @@ void OnSyncMesh(NetNode* node);
 void OnSyncMaterial(NetNode* node);
 void OnSyncTexture(NetNode* node);
 void OnSyncShader(NetNode* node);
+void OnSyncCamera(NetNode* node);
 
 } // namespace server
 
@@ -226,6 +227,10 @@ void server::DispatchMessage(NetNode* node) {
             OnSyncShader(node);
             break;
 
+        case Message::Kind::SYNC_CAMERA:
+            OnSyncCamera(node);
+            break;
+
         default:
             TERRLN("Received unexpected message.");
             TERRLN(ToString(node->message));
@@ -308,6 +313,20 @@ void server::OnSyncShader(NetNode* node) {
     uint64_t id = node->ReceiveShader(lib);
 
     TOUTLN("[" << node->ip << "] Received shader " << id << ".");
+}
+
+void server::OnSyncCamera(NetNode* node) {
+    assert(node != nullptr);
+    assert(lib != nullptr);
+
+    // Unpack the camera.
+    node->ReceiveCamera(lib);
+
+    // Reply with OK.
+    Message reply(Message::Kind::OK);
+    node->Send(reply);
+
+    TOUTLN("[" << node->ip << "] Received camera.");
 }
 
 void OnFlushTimeout(uv_timer_t* timer, int status) {

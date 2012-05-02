@@ -233,6 +233,44 @@ void NetNode::SendConfig(const Library* lib) {
     Send(request);
 }
 
+void NetNode::ReceiveCamera(Library* lib) {
+    assert(message.size > 0);
+
+    // Deserialize the payload.
+    msgpack::unpacked mp_msg;
+    msgpack::unpack(&mp_msg, reinterpret_cast<const char*>(message.body), message.size);
+
+    // Unpack the camera.
+    Camera *camera = new Camera;
+    msgpack::object mp_obj = mp_msg.get();
+    mp_obj.convert(camera);
+
+    // Hook up the config.
+    camera->SetConfig(lib->LookupConfig());
+
+    // Save it in the library.
+    lib->StoreCamera(camera);
+}
+
+void NetNode::SendCamera(const Library* lib) {
+    assert(lib != nullptr);
+
+    Camera* camera = lib->LookupCamera();
+    assert(camera != nullptr);
+
+    Message request(Message::Kind::SYNC_CAMERA);
+
+    // Serialize the payload.
+    msgpack::sbuffer buffer;
+    msgpack::pack(buffer, *camera);
+
+    // Pack the message body.
+    request.size = buffer.size();
+    request.body = buffer.data();
+
+    Send(request);
+}
+
 uint64_t NetNode::ReceiveMesh(Library *lib) {
     assert(message.size > 0);
 

@@ -18,10 +18,12 @@ struct Message {
         SYNC_TEXTURE  = 202,
         SYNC_MATERIAL = 203,
         SYNC_MESH     = 204,
-        SYNC_DONE     = 290,
-        SYNC_BUFFERS  = 295,
-        RAY           = 300,
-        STATS         = 400
+        SYNC_CAMERA   = 205,
+        SYNC_BUFFERS  = 290,
+        RENDER_START  = 300,
+        RENDER_STOP   = 301,
+        RAY           = 400,
+        STATS         = 500
     };
 
     explicit Message(Kind kind) :
@@ -87,12 +89,20 @@ inline std::string ToString(const Message& msg, const std::string& indent = "") 
             stream << indent << "| kind = SYNC_MESH" << std::endl;
             break;
 
-        case Message::Kind::SYNC_DONE:
-            stream << indent << "| kind = SYNC_DONE" << std::endl;
+        case Message::Kind::SYNC_CAMERA:
+            stream << indent << "| kind = SYNC_CAMERA" << std::endl;
             break;
 
         case Message::Kind::SYNC_BUFFERS:
             stream << indent << "| kind = SYNC_BUFFERS" << std::endl;
+            break;
+
+        case Message::Kind::RENDER_START:
+            stream << indent << "| kind = RENDER_START" << std::endl;
+            break;
+
+        case Message::Kind::RENDER_STOP:
+            stream << indent << "| kind = RENDER_STOP" << std::endl;
             break;
 
         case Message::Kind::RAY:
