@@ -30,6 +30,9 @@ static NetNode* renderer = nullptr;
 /// The timer for ensuring we flush the send buffer.
 static uv_timer_t flush_timer;
 
+/// The number of other workers we're connected to.
+static uint64_t num_workers_connected = 0;
+
 // Callbacks, handlers, and helpers for server functionality.
 namespace server {
 
@@ -57,13 +60,13 @@ void OnSyncCamera(NetNode* node);
 // Callbacks, handlers, and helpers for client functionality.
 namespace client {
 
-//void Init(const Config& config);
-//void DispatchMessage(NetNode* node);
+void Init();
+void DispatchMessage(NetNode* node);
 
-//void OnConnect(uv_connect_t* req, int status);
-//uv_buf_t OnAlloc(uv_handle_t* handle, size_t suggested_size);
-//void OnRead(uv_stream_t* stream, ssize_t nread, uv_buf_t buf);
-//void OnClose(uv_handle_t* handle);
+void OnConnect(uv_connect_t* req, int status);
+uv_buf_t OnAlloc(uv_handle_t* handle, size_t suggested_size);
+void OnRead(uv_stream_t* stream, ssize_t nread, uv_buf_t buf);
+void OnClose(uv_handle_t* handle);
 
 } // namespace client
 
@@ -252,6 +255,9 @@ void server::OnInit(NetNode* node) {
     // Hang on to the renderer.
     renderer = node;
 
+    // No workers connected yet.
+    num_workers_connected = 0;
+
     // Reply with OK.
     Message reply(Message::Kind::OK);
     node->Send(reply);
@@ -264,11 +270,10 @@ void server::OnSyncConfig(NetNode* node) {
     // Unpack the config.
     node->ReceiveConfig(lib);
 
-    // Reply with OK.
-    Message reply(Message::Kind::OK);
-    node->Send(reply);
-
     TOUTLN("[" << node->ip << "] Received configuration.");
+
+    // Connect to all the other workers.
+    client::Init();
 }
 
 void server::OnSyncMesh(NetNode* node) {
@@ -356,6 +361,128 @@ void OnFlushTimeout(uv_timer_t* timer, int status) {
     // back to one of the server's clients, we write back through our client
     // to that server. If you actually want to write from the server, you
     // need to flush that manually.
+}
+
+void client::Init() {
+    int result = 0;
+    struct sockaddr_in addr;
+
+    Config* config = lib->LookupConfig();
+
+    TOUTLN("Connecting to " << (config->workers.size() - 1) << " other workers...");
+
+    for (size_t i = 0; i < config->workers.size(); i++) {
+        // Don't connect to ourselves.
+        if (i == me - 1) continue;
+
+        const auto& worker = config->workers[i];
+
+        NetNode* node = new NetNode(DispatchMessage, worker);
+
+        // Initialize the TCP socket.
+        result = uv_tcp_init(uv_default_loop(), &node->socket);
+        CheckUVResult(result, "tcp_init");
+        
+        // Squirrel away the node in the data baton.
+        node->socket.data = node;
+
+        // Connect to the server.
+        addr = uv_ip4_addr(node->ip.c_str(), node->port);
+        uv_connect_t* req = reinterpret_cast<uv_connect_t*>(malloc(sizeof(uv_connect_t)));
+        result = uv_tcp_connect(req, &node->socket, addr, OnConnect);
+        CheckUVResult(result, "tcp_connect");
+
+        // Add the node to the library.
+        lib->StoreNetNode(i + 1, node); // +1 because 0 is reserved
+    }
+}
+
+void client::DispatchMessage(NetNode* node) {
+
+}
+
+void client::OnConnect(uv_connect_t* req, int status) {
+    assert(req != nullptr);
+    assert(req->handle != nullptr);
+    assert(req->handle->data != nullptr);
+
+    int result = 0;
+
+    // Pull the net node out of the data baton.
+    NetNode* node = reinterpret_cast<NetNode*>(req->handle->data);
+    free(req);
+
+    if (status != 0) {
+        TERRLN("Failed connecting to " << node->ip << ".");
+        exit(EXIT_FAILURE);
+    }
+
+    TOUTLN("[" << node->ip << "] Connected on port " << node->port << ".");
+
+    // Start reading replies from the server.
+    result = uv_read_start(reinterpret_cast<uv_stream_t*>(&node->socket),
+     OnAlloc, OnRead);
+    CheckUVResult(result, "read_start");
+
+    // Nothing else to do if we're still waiting for everyone to connect.
+    num_workers_connected++;
+    if (num_workers_connected < lib->LookupConfig()->workers.size() - 1) {
+        return;
+    }
+
+    // Reply with OK to the renderer.
+    Message reply(Message::Kind::OK);
+    assert(renderer != nullptr);
+    renderer->Send(reply);
+}
+
+uv_buf_t client::OnAlloc(uv_handle_t* handle, size_t suggested_size) {
+    assert(handle != nullptr);
+    assert(handle->data != nullptr);
+
+    // Just allocate a buffer of the suggested size.
+    uv_buf_t buf;
+    buf.base = reinterpret_cast<char*>(malloc(suggested_size));
+    buf.len = suggested_size;
+
+    return buf;
+}
+
+void client::OnRead(uv_stream_t* stream, ssize_t nread, uv_buf_t buf) {
+    assert(stream != nullptr);
+    assert(stream->data != nullptr);
+
+    // Pull the net node out of the data baton.
+    NetNode* node = reinterpret_cast<NetNode*>(stream->data);
+
+    if (nread < 0) {
+        // No data was read.
+        uv_err_t err = uv_last_error(uv_default_loop());
+        if (err.code == UV_EOF) {
+            uv_close(reinterpret_cast<uv_handle_t*>(&node->socket), OnClose);
+        } else {
+            TERRLN("read: " << uv_strerror(err));
+        }
+    } else if (nread > 0) {
+        // Data is available, parse any new messages out.
+        node->Receive(buf.base, nread);
+    }
+
+    if (buf.base) {
+        free(buf.base);
+    }
+}
+
+void client::OnClose(uv_handle_t* handle) {
+    assert(handle != nullptr);
+    assert(handle->data != nullptr);
+
+    // Pull the net node out of the data baton.
+    NetNode* node = reinterpret_cast<NetNode*>(handle->data);
+
+    TOUTLN("[" << node->ip << "] Disconnected.");
+
+    // Net node will be deleted with library.
 }
 
 } // namespace fr

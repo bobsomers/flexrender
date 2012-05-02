@@ -47,7 +47,7 @@ static string scene;
 // Callbacks, handlers, and helpers for client functionality.
 namespace client {
 
-void Init(const Config& config);
+void Init();
 void DispatchMessage(NetNode* node);
 void StartSync();
 void StartRender();
@@ -80,21 +80,23 @@ void EngineInit(const string& config_file, const string& scene_file) {
 
     scene = scene_file;
 
-    client::Init(*lib->LookupConfig());
+    client::Init();
 }
 
 void EngineRun() {
     uv_run(uv_default_loop());
 }
 
-void client::Init(const Config& config) {
+void client::Init() {
     int result = 0;
     struct sockaddr_in addr;
 
-    TOUTLN("Connecting to " << config.workers.size() << " workers...");
+    Config* config = lib->LookupConfig();
 
-    for (size_t i = 0; i < config.workers.size(); i++) {
-        const auto& worker = config.workers[i];
+    TOUTLN("Connecting to " << config->workers.size() << " workers...");
+
+    for (size_t i = 0; i < config->workers.size(); i++) {
+        const auto& worker = config->workers[i];
 
         NetNode* node = new NetNode(DispatchMessage, worker);
 
