@@ -16,7 +16,9 @@ Library::Library() :
  _materials(),
  _meshes(),
  _nodes(),
- _material_name_index() {
+ _material_name_index(),
+ _spatial_index(),
+ _chunk_size(0) {
     // ID #0 is always reserved.
     _shaders.push_back(nullptr);
     _textures.push_back(nullptr);
@@ -107,6 +109,16 @@ void Library::ForEachNetNode(function<void (uint64_t, NetNode* node)> func) {
         if (node == nullptr) continue;
         func(id, node);
     }
+}
+
+void Library::BuildSpatialIndex() {
+    _spatial_index.clear();
+
+    for (uint64_t id = 1; id < _nodes.size(); id++) {
+        _spatial_index.push_back(id);
+    }
+
+    _chunk_size = ((SPACECODE_MAX + 1) / (_nodes.size() - 1)) + 1;
 }
 
 }

@@ -11,7 +11,9 @@ struct Mesh;
 
 class SceneScript : public Script {
 public:
-    explicit SceneScript();
+    typedef uint64_t (*SyncCallback)(Mesh* mesh);
+
+    explicit SceneScript(SyncCallback syncer);
 
     /**
      * Parses the given scene script and all of its resources (including
@@ -33,6 +35,7 @@ private:
     Mesh *_active_mesh;
     glm::vec3 _centroid_num;
     float _centroid_denom;
+    SyncCallback _syncer;
 };
 
 } // namespace fr

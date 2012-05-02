@@ -12,12 +12,13 @@ using glm::normalize;
 
 namespace fr {
 
-SceneScript::SceneScript() :
+SceneScript::SceneScript(SyncCallback syncer) :
  Script(),
  _lib(nullptr),
  _active_mesh(nullptr),
  _centroid_num(0.0f, 0.0f, 0.0f),
- _centroid_denom(0.0f) {
+ _centroid_denom(0.0f),
+ _syncer(syncer) {
     // Scene scripts should have access to the entire standard library.
     FR_SCRIPT_INIT(SceneScript, ScriptLibs::STANDARD_LIBS);
 
@@ -200,8 +201,7 @@ FR_SCRIPT_FUNCTION(SceneScript, Material) {
 FR_SCRIPT_FUNCTION(SceneScript, Mesh) {
     BeginTableCall();
 
-    uint64_t id = _lib->NextMeshID();
-    Mesh *mesh = new Mesh(id);
+    Mesh *mesh = new Mesh;
 
     _active_mesh = mesh;
     _centroid_num = vec3(0.0f, 0.0f, 0.0f);
@@ -284,7 +284,8 @@ FR_SCRIPT_FUNCTION(SceneScript, Mesh) {
                           _centroid_num.y / _centroid_denom,
                           _centroid_num.z / _centroid_denom);
 
-    _lib->StoreMesh(id, mesh);
+    // Sync the mesh.
+    uint64_t id = _syncer(mesh);
 
     EndTableCall();
     return ReturnResourceID(id);

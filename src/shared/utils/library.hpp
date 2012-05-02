@@ -9,6 +9,7 @@
 #include <functional>
 
 #include "utils/uncopyable.hpp"
+#include "utils/tout.hpp"
 
 namespace fr {
 
@@ -89,7 +90,7 @@ public:
         return _meshes[id];
     }
 
-    // NetNodes...
+    // Net nodes...
     void StoreNetNode(uint64_t id, NetNode* node);
 
     inline NetNode* LookupNetNode(uint64_t id) const {
@@ -112,6 +113,19 @@ public:
         return results;
     }
 
+    // Spatial index access for net nodes...
+    void BuildSpatialIndex();
+
+    inline uint64_t LookupNetNodeBySpaceCode(uint64_t spacecode) const {
+#ifndef NDEBUG
+        if (_chunk_size == 0) {
+            TERRLN("Attempted to lookup net node by space code without first building the spatial index!");
+            exit(EXIT_FAILURE);
+        }
+#endif
+        return _spatial_index.at(spacecode / _chunk_size);
+    }
+
 private:
     Config *_config;
     Camera* _camera;
@@ -121,6 +135,8 @@ private:
     std::vector<Mesh*> _meshes;
     std::vector<NetNode*> _nodes;
     std::unordered_map<std::string, uint64_t> _material_name_index;
+    std::vector<uint64_t> _spatial_index;
+    uint64_t _chunk_size;
 };
 
 } // namespace fr

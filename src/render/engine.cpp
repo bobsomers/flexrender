@@ -1,6 +1,9 @@
 #include "engine.hpp"
 
 #include <cassert>
+#include <semaphore.h>
+#include <stdio.h>
+#include <errno.h>
 
 #include "uv.h"
 
@@ -27,17 +30,33 @@ static size_t num_workers_ready = 0;
 /// The timer for ensuring we flush the send buffer.
 static uv_timer_t flush_timer;
 
+/// Synchronization primitives for synchronizing the synchronization.
+/// "We need to go deeper..."
+static sem_t mesh_read;
+static sem_t mesh_synced;
+
+/// The ID of the mesh we're currently syncing over the network.
+static uint64_t current_mesh_id = 0;
+
+/// The scene file we're rendering.
+static string scene;
+
 // Callbacks, handlers, and helpers for client functionality.
 namespace client {
 
 void Init(const Config& config);
 void DispatchMessage(NetNode* node);
+void StartSync();
+uint64_t SyncMesh(Mesh* mesh);
 
 void OnConnect(uv_connect_t* req, int status);
 uv_buf_t OnAlloc(uv_handle_t* handle, size_t suggested_size);
 void OnRead(uv_stream_t* stream, ssize_t nread, uv_buf_t buf);
 void OnClose(uv_handle_t* handle);
 void OnFlushTimeout(uv_timer_t* timer, int status);
+void OnSyncStart(uv_work_t* req);
+void AfterSync(uv_work_t* req);
+void OnSyncIdle(uv_idle_t* handle, int status);
 
 void OnOK(NetNode* node);
 
@@ -55,17 +74,9 @@ void EngineInit(const string& config_file, const string& scene_file) {
     }
     TOUTLN("Config loaded.");
 
-    client::Init(*lib->LookupConfig());
+    scene = scene_file;
 
-    // Parse and distribute the scene.
-    // TODO: do this in a a uv_work thread after connected to all workers
-    //SceneScript scene_script;
-    //TOUTLN("Loading scene from " << scene_file << ".");
-    //if (!scene_script.Parse(scene_file, lib)) {
-    //    TERRLN("Can't continue with bad scene.");
-    //    exit(EXIT_FAILURE);
-    //}
-    //TOUTLN("Scene loaded.");
+    client::Init(*lib->LookupConfig());
 }
 
 void EngineRun() {
@@ -225,17 +236,154 @@ void client::OnFlushTimeout(uv_timer_t* timer, int status) {
 void client::OnOK(NetNode* node) {
     switch (node->state) {
         case NetNode::State::INITIALIZING:
+            node->state = NetNode::State::CONFIGURING;
+            TOUTLN("[" << node->ip << "] Configuring worker.");
+            node->SendConfig(lib->LookupConfig());
+            break;
+
+        case NetNode::State::CONFIGURING:
             node->state = NetNode::State::READY;
-            TOUTLN("[" << node->ip << "] Worker is ready.");
+            TOUTLN("[" << node->ip << "] Ready to sync.");
             num_workers_ready++;
             if (num_workers_ready == lib->LookupConfig()->workers.size()) {
-                TOUTLN("SYNC TIEM!");
-                // TODO: begin syncing
+                StartSync();
             }
             break;
 
         default:
             TERRLN("Received OK in unexpected state.");
+    }
+}
+
+void client::StartSync() {
+    int result = 0;
+
+    // Build the spatial index.
+    lib->BuildSpatialIndex();
+
+    // Initialize the semaphores for ping-ponging between threads.
+    if (sem_init(&mesh_read, 0, 0) < 0) {
+        perror("sem_init");
+        exit(EXIT_FAILURE);
+    }
+    if (sem_init(&mesh_synced, 0, 1) < 0) {
+        perror("sem_init");
+        exit(EXIT_FAILURE);
+    }
+
+    // Queue up the scene parsing to happen on the thread pool.
+    uv_work_t* req = reinterpret_cast<uv_work_t*>(malloc(sizeof(uv_work_t)));
+    result = uv_queue_work(uv_default_loop(), req, OnSyncStart, AfterSync);
+    CheckUVResult(result, "queue_work");
+
+    // Start up the idle callback for handling networking.
+    uv_idle_t* idler = reinterpret_cast<uv_idle_t*>(malloc(sizeof(uv_idle_t)));
+    result = uv_idle_init(uv_default_loop(), idler);
+    CheckUVResult(result, "idle_init");
+    result = uv_idle_start(idler, OnSyncIdle);
+    CheckUVResult(result, "idle_start");
+}
+
+void client::OnSyncStart(uv_work_t* req) {
+    // !!! WARNING !!!
+    // Everything this function does and calls must be thread-safe. This
+    // function will NOT run in the main thread, it runs on the thread pool.
+
+    assert(req != nullptr);
+
+    // Parse and distribute the scene.
+    SceneScript scene_script(SyncMesh);
+    TOUTLN("Loading scene from " << scene << ".");
+    if (!scene_script.Parse(scene, lib)) {
+        TERRLN("Can't continue with bad scene.");
+        exit(EXIT_FAILURE);
+    }
+
+    // Signal that we're finished.
+    SyncMesh(nullptr);
+    TOUTLN("Scene distributed.");
+}
+
+void client::AfterSync(uv_work_t* req) {
+    assert(req != nullptr);
+    free(req);
+}
+
+uint64_t client::SyncMesh(Mesh* mesh) {
+    // !!! WARNING !!!
+    // Everything this function does and calls must be thread-safe. This
+    // function will NOT run in the main thread, it runs on the thread pool.
+
+    // Wait for the main thread to be finished with the network.
+    if (sem_wait(&mesh_synced) < 0) {
+        perror("sem_wait");
+        exit(EXIT_FAILURE);
+    }
+
+    uint64_t id = 0;
+    if (mesh != nullptr) {
+        // Store the mesh in the library and get back its ID.
+        id = lib->NextMeshID();
+        mesh->id = id;
+        lib->StoreMesh(id, mesh);
+    }
+
+    // Tell the main thread which mesh we'd like to sync over the network.
+    current_mesh_id = id;
+
+    // Wake up the main thread to do the networking.
+    if (sem_post(&mesh_read) < 0) {
+        perror("sem_post");
+        exit(EXIT_FAILURE);
+    }
+
+    return id;
+}
+
+void client::OnSyncIdle(uv_idle_t* handle, int status) {
+    assert(handle != nullptr);
+    assert(status == 0);
+
+    int result = 0;
+
+    // Are we done reading in a new mesh?
+    if (sem_trywait(&mesh_read) < 0) {
+        if (errno == EAGAIN) {
+            // Nope.
+            return;
+        }
+        perror("sem_trywait");
+        exit(EXIT_FAILURE);
+    }
+
+    // Are we done?
+    if (current_mesh_id == 0) {
+        // Shut off the idle handler.
+        result = uv_idle_stop(handle);
+        CheckUVResult(result, "idle_stop");
+
+        TOUTLN("DONE SYNCING!");
+        // TODO: implement this
+        return;
+    }
+
+    Mesh* mesh = lib->LookupMesh(current_mesh_id);
+    Config* config = lib->LookupConfig();
+    assert(mesh != nullptr);
+    assert(config != nullptr);
+
+    uint64_t spacecode = SpaceEncode(mesh->centroid, config->min, config->max);
+    uint64_t id = lib->LookupNetNodeBySpaceCode(spacecode);
+    NetNode* node = lib->LookupNetNode(id);
+
+    TOUTLN("[" << node->ip << "] Sending mesh " << current_mesh_id << " to worker " << id << ".");
+
+    node->SendMesh(mesh);
+
+    // TODO: move this to the OnOK callback (also, delete the mesh from the library)
+    if (sem_post(&mesh_synced) < 0) {
+        perror("sem_post");
+        exit(EXIT_FAILURE);
     }
 }
 

@@ -33,3 +33,33 @@ mesh {
     },
     data = unitbox()
 }
+
+mesh {
+    material = "brushed metal",
+    transforms = {
+        rotate(math.pi, {1, 2, 3}),
+        scale({4, 5, 6}),
+        translate({7, 8, 9})
+    },
+    data = unitbox()
+}
+
+mesh {
+    material = "brushed metal",
+    transforms = {
+        rotate(math.pi, {1, 2, 3}),
+        scale({4, 5, 6}),
+        translate({7, 8, 9})
+    },
+    data = unitbox()
+}
+
+mesh {
+    material = "brushed metal",
+    transforms = {
+        rotate(math.pi, {1, 2, 3}),
+        scale({4, 5, 6}),
+        translate({7, 8, 9})
+    },
+    data = unitbox()
+}

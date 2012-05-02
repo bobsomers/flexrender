@@ -61,7 +61,8 @@ solution "flexrender"
         }
         links {
             "rt",
-            "uv"
+            "uv",
+            "msgpack"
         }
         defines {
             "FR_RENDER"
@@ -88,7 +89,8 @@ solution "flexrender"
         }
         links {
             "rt",
-            "uv"
+            "uv",
+            "msgpack"
         }
         defines {
             "FR_WORKER"

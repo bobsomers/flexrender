@@ -5,6 +5,7 @@
 #include <cstring>
 #include <sstream>
 
+#include "types.hpp"
 #include "utils/network.hpp"
 
 using std::stringstream;
@@ -19,7 +20,10 @@ NetNode::NetNode(DispatchCallback dispatcher, const string& address) :
  nread(0),
  nwritten(0),
  flushed(false),
- _dispatcher(dispatcher) {
+ _dispatcher(dispatcher),
+ _materials(),
+ _textures(),
+ _shaders() {
     size_t pos = address.find(':');
     if (pos == string::npos) {
         ip = address;
@@ -190,6 +194,51 @@ void NetNode::AfterFlush(uv_write_t* req, int status) {
 
     free(req->data);
     free(req);
+}
+
+Config* NetNode::ReceiveConfig() {
+    assert(message.size > 0);
+
+    // Deserialize the payload.
+    msgpack::unpacked mp_msg;
+    msgpack::unpack(&mp_msg, reinterpret_cast<const char*>(message.body), message.size);
+
+    // Unpack the config.
+    Config *config = new Config;
+    msgpack::object mp_obj = mp_msg.get();
+    mp_obj.convert(config);
+
+    return config;
+}
+
+void NetNode::SendConfig(const Config* config) {
+    Message request(Message::Kind::SYNC_CONFIG);
+
+    // Serialize the payload.
+    msgpack::sbuffer buffer;
+    msgpack::pack(buffer, *config);
+
+    // Pack the message body.
+    request.size = buffer.size();
+    request.body = buffer.data();
+
+    Send(request);
+}
+
+void NetNode::SendMesh(const Mesh* mesh) {
+
+}
+
+void NetNode::SendMaterial(const Material* material) {
+
+}
+
+void NetNode::SendTexture(const Texture* texture) {
+
+}
+
+void NetNode::SendShader(const Shader* shader) {
+
 }
 
 } // namespace fr

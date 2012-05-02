@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <unordered_map>
 
 #include "uv.h"
 
@@ -12,11 +13,19 @@
 
 namespace fr {
 
+struct Config;
+struct Mesh;
+struct Material;
+struct Texture;
+struct Shader;
+class Library;
+
 class NetNode {
 public:
     enum class State {
         NONE,
         INITIALIZING,
+        CONFIGURING,
         READY,
         SYNCING,
         WAITING
@@ -38,6 +47,25 @@ public:
 
     /// Appends the given message to the send buffer.
     void Send(const Message& msg);
+
+    /// Receives the message in the net node's buffer as a config and returns
+    /// a freshly allocated one.
+    Config* ReceiveConfig();
+
+    /// Sends the given config to this node.
+    void SendConfig(const Config* config);
+
+    /// Sends the given mesh (and its dependent assets) to this node.
+    void SendMesh(const Mesh* mesh);
+
+    /// Sends the given material (and its dependent assets) to this node.
+    void SendMaterial(const Material* material);
+
+    /// Sends the given texture to this node.
+    void SendTexture(const Texture* texture);
+
+    /// Sends the given shader to this node.
+    void SendShader(const Shader* shader);
 
     /// Flushes the send buffer, forcing all buffered messages to be written.
     void Flush();
@@ -74,6 +102,9 @@ public:
 
 private:
     DispatchCallback _dispatcher;
+    std::unordered_map<uint64_t, bool> _materials;
+    std::unordered_map<uint64_t, bool> _textures;
+    std::unordered_map<uint64_t, bool> _shaders;
 
     /// Post-write callback from libuv.
     static void AfterFlush(uv_write_t* req, int status);

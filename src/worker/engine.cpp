@@ -45,6 +45,7 @@ void OnClose(uv_handle_t* handle);
 //void AfterWork(uv_work_t* req);
 
 void OnInit(NetNode* node);
+void OnSyncConfig(NetNode* node);
 
 } // namespace server
 
@@ -201,6 +202,10 @@ void server::DispatchMessage(NetNode* node) {
             OnInit(node);
             break;
 
+        case Message::Kind::SYNC_CONFIG:
+            OnSyncConfig(node);
+            break;
+
         default:
             TERRLN("Received unexpected message.");
             TERRLN(ToString(node->message));
@@ -213,7 +218,7 @@ void server::OnInit(NetNode* node) {
 
     // Who am I?
     me = *(reinterpret_cast<uint64_t*>(node->message.body));
-    TOUTLN("I am worker " << me << ".");
+    TOUTLN("[" << node->ip << "] Joining the render as worker " << me << ".");
 
     // Create a fresh library.
     if (lib != nullptr) delete lib;
@@ -225,6 +230,23 @@ void server::OnInit(NetNode* node) {
     // Reply with OK.
     Message reply(Message::Kind::OK);
     node->Send(reply);
+}
+
+void server::OnSyncConfig(NetNode* node) {
+    assert(node != nullptr);
+    assert(lib != nullptr);
+
+    // Unpack the config.
+    Config* config = node->ReceiveConfig();
+
+    // Store it in the library.
+    lib->StoreConfig(config);
+
+    // Reply with OK.
+    Message reply(Message::Kind::OK);
+    node->Send(reply);
+
+    TOUTLN("[" << node->ip << "] Received configuration.");
 }
 
 void OnFlushTimeout(uv_timer_t* timer, int status) {
