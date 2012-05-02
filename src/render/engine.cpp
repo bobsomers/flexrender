@@ -238,15 +238,24 @@ void client::OnOK(NetNode* node) {
         case NetNode::State::INITIALIZING:
             node->state = NetNode::State::CONFIGURING;
             TOUTLN("[" << node->ip << "] Configuring worker.");
-            node->SendConfig(lib->LookupConfig());
+            node->SendConfig(lib);
             break;
 
         case NetNode::State::CONFIGURING:
-            node->state = NetNode::State::READY;
+            node->state = NetNode::State::SYNCING;
             TOUTLN("[" << node->ip << "] Ready to sync.");
             num_workers_ready++;
             if (num_workers_ready == lib->LookupConfig()->workers.size()) {
                 StartSync();
+            }
+            break;
+
+        case NetNode::State::SYNCING:
+            // Delete the current mesh from the library.
+            lib->StoreMesh(current_mesh_id, nullptr);
+            if (sem_post(&mesh_synced) < 0) {
+                perror("sem_post");
+                exit(EXIT_FAILURE);
             }
             break;
 
@@ -368,8 +377,8 @@ void client::OnSyncIdle(uv_idle_t* handle, int status) {
     }
 
     Mesh* mesh = lib->LookupMesh(current_mesh_id);
-    Config* config = lib->LookupConfig();
     assert(mesh != nullptr);
+    Config* config = lib->LookupConfig();
     assert(config != nullptr);
 
     uint64_t spacecode = SpaceEncode(mesh->centroid, config->min, config->max);
@@ -378,13 +387,7 @@ void client::OnSyncIdle(uv_idle_t* handle, int status) {
 
     TOUTLN("[" << node->ip << "] Sending mesh " << current_mesh_id << " to worker " << id << ".");
 
-    node->SendMesh(mesh);
-
-    // TODO: move this to the OnOK callback (also, delete the mesh from the library)
-    if (sem_post(&mesh_synced) < 0) {
-        perror("sem_post");
-        exit(EXIT_FAILURE);
-    }
+    node->SendMesh(lib, current_mesh_id);
 }
 
 } // namespace fr

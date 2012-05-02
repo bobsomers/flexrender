@@ -13,11 +13,6 @@
 
 namespace fr {
 
-struct Config;
-struct Mesh;
-struct Material;
-struct Texture;
-struct Shader;
 class Library;
 
 class NetNode {
@@ -26,7 +21,6 @@ public:
         NONE,
         INITIALIZING,
         CONFIGURING,
-        READY,
         SYNCING,
         WAITING
     };
@@ -48,24 +42,35 @@ public:
     /// Appends the given message to the send buffer.
     void Send(const Message& msg);
 
-    /// Receives the message in the net node's buffer as a config and returns
-    /// a freshly allocated one.
-    Config* ReceiveConfig();
+    /// Receives the message in the net node's buffer as a config.
+    void ReceiveConfig(Library* lib);
 
     /// Sends the given config to this node.
-    void SendConfig(const Config* config);
+    void SendConfig(const Library* lib);
+
+    /// Receives the message in the net node's buffer as a mesh.
+    uint64_t ReceiveMesh(Library* lib);
 
     /// Sends the given mesh (and its dependent assets) to this node.
-    void SendMesh(const Mesh* mesh);
+    void SendMesh(const Library* lib, uint64_t id);
+
+    /// Receives the message in the net node's buffer as a material.
+    uint64_t ReceiveMaterial(Library* lib);
 
     /// Sends the given material (and its dependent assets) to this node.
-    void SendMaterial(const Material* material);
+    void SendMaterial(const Library* lib, uint64_t id);
+
+    /// Receives the message in the net node's buffer as a texture.
+    uint64_t ReceiveTexture(Library* lib);
 
     /// Sends the given texture to this node.
-    void SendTexture(const Texture* texture);
+    void SendTexture(const Library* lib, uint64_t id);
+
+    /// Receives the message in the net node's buffer as a shader.
+    uint64_t ReceiveShader(Library* lib);
 
     /// Sends the given shader to this node.
-    void SendShader(const Shader* shader);
+    void SendShader(const Library* lib, uint64_t id);
 
     /// Flushes the send buffer, forcing all buffered messages to be written.
     void Flush();

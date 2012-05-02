@@ -6,10 +6,12 @@
 #include <sstream>
 
 #include "types.hpp"
+#include "utils/library.hpp"
 #include "utils/network.hpp"
 
 using std::stringstream;
 using std::string;
+using std::unordered_map;
 
 namespace fr {
 
@@ -196,7 +198,7 @@ void NetNode::AfterFlush(uv_write_t* req, int status) {
     free(req);
 }
 
-Config* NetNode::ReceiveConfig() {
+void NetNode::ReceiveConfig(Library* lib) {
     assert(message.size > 0);
 
     // Deserialize the payload.
@@ -208,10 +210,16 @@ Config* NetNode::ReceiveConfig() {
     msgpack::object mp_obj = mp_msg.get();
     mp_obj.convert(config);
 
-    return config;
+    // Save it in the library.
+    lib->StoreConfig(config);
 }
 
-void NetNode::SendConfig(const Config* config) {
+void NetNode::SendConfig(const Library* lib) {
+    assert(lib != nullptr);
+
+    Config* config = lib->LookupConfig();
+    assert(config != nullptr);
+
     Message request(Message::Kind::SYNC_CONFIG);
 
     // Serialize the payload.
@@ -225,20 +233,187 @@ void NetNode::SendConfig(const Config* config) {
     Send(request);
 }
 
-void NetNode::SendMesh(const Mesh* mesh) {
+uint64_t NetNode::ReceiveMesh(Library *lib) {
+    assert(message.size > 0);
+
+    // Deserialize the payload.
+    msgpack::unpacked mp_msg;
+    msgpack::unpack(&mp_msg, reinterpret_cast<const char*>(message.body), message.size);
+
+    // Unpack the mesh.
+    Mesh *mesh = new Mesh;
+    msgpack::object mp_obj = mp_msg.get();
+    mp_obj.convert(mesh);
+
+    // Save it in the library.
+    lib->StoreMesh(mesh->id, mesh);
+
+    return mesh->id;
+}
+
+void NetNode::SendMesh(const Library* lib, uint64_t id) {
+    assert(lib != nullptr);
+    assert(id > 0);
+
+    Mesh* mesh = lib->LookupMesh(id);
+    assert(mesh != nullptr);
+
+    // Send the material first.
+    SendMaterial(lib, mesh->material);
+
+    Message request(Message::Kind::SYNC_MESH);
+
+    // Serialize the payload.
+    msgpack::sbuffer buffer;
+    msgpack::pack(buffer, *mesh);
+
+    // Pack the message body.
+    request.size = buffer.size();
+    request.body = buffer.data();
+
+    Send(request);
+}
+
+uint64_t NetNode::ReceiveMaterial(Library* lib) {
+    assert(message.size > 0);
+
+    // Deserialize the payload.
+    msgpack::unpacked mp_msg;
+    msgpack::unpack(&mp_msg, reinterpret_cast<const char*>(message.body), message.size);
+
+    // Unpack the material.
+    Material *material = new Material;
+    msgpack::object mp_obj = mp_msg.get();
+    mp_obj.convert(material);
+
+    // Save it in the library.
+    // (Material names are inaccessible (and irrelevant) by this point.
+    lib->StoreMaterial(material->id, material, "");
+
+    return material->id;
+}
+
+void NetNode::SendMaterial(const Library* lib, uint64_t id) {
+    assert(lib != nullptr);
+    assert(id > 0);
+
+    // Don't send the material if this node already has it.
+    if (_materials.find(id) != _materials.end()) return;
+
+    Material* material = lib->LookupMaterial(id);
+    assert(material != nullptr);
+
+    // Send the shader first.
+    SendShader(lib, material->shader);
+
+    // Send each of the textures first.
+    for (const auto& kv_pair : material->textures) {
+        SendTexture(lib, kv_pair.second);
+    }
+
+    Message request(Message::Kind::SYNC_MATERIAL);
+
+    // Serialize the payload.
+    msgpack::sbuffer buffer;
+    msgpack::pack(buffer, *material);
+
+    // Pack the message body.
+    request.size = buffer.size();
+    request.body = buffer.data();
+
+    Send(request);
+
+    // Mark that this node has this material.
+    _materials[id] = true;
+}
+
+uint64_t NetNode::ReceiveTexture(Library *lib) {
+    assert(message.size > 0);
+
+    // Deserialize the payload.
+    msgpack::unpacked mp_msg;
+    msgpack::unpack(&mp_msg, reinterpret_cast<const char*>(message.body), message.size);
+
+    // Unpack the texture.
+    Texture *texture = new Texture;
+    msgpack::object mp_obj = mp_msg.get();
+    mp_obj.convert(texture);
+
+    // Save it in the library.
+    lib->StoreTexture(texture->id, texture);
+
+    return texture->id;
+}
+
+void NetNode::SendTexture(const Library* lib, uint64_t id) {
+    assert(lib != nullptr);
+    assert(id > 0);
+
+    // Don't send the texture if this node already has it.
+    if (_textures.find(id) != _textures.end()) return;
+
+    Texture* texture = lib->LookupTexture(id);
+    assert(texture != nullptr);
+
+    Message request(Message::Kind::SYNC_TEXTURE);
+
+    // Serialize the payload.
+    msgpack::sbuffer buffer;
+    msgpack::pack(buffer, *texture);
+
+    // Pack the message body.
+    request.size = buffer.size();
+    request.body = buffer.data();
+
+    Send(request);
+
+    // Mark that this node has this texture.
+    _textures[id] = true;
 
 }
 
-void NetNode::SendMaterial(const Material* material) {
+uint64_t NetNode::ReceiveShader(Library *lib) {
+    assert(message.size > 0);
 
+    // Deserialize the payload.
+    msgpack::unpacked mp_msg;
+    msgpack::unpack(&mp_msg, reinterpret_cast<const char*>(message.body), message.size);
+
+    // Unpack the shader.
+    Shader *shader = new Shader;
+    msgpack::object mp_obj = mp_msg.get();
+    mp_obj.convert(shader);
+
+    // Save it in the library.
+    lib->StoreShader(shader->id, shader);
+
+    return shader->id;
 }
 
-void NetNode::SendTexture(const Texture* texture) {
+void NetNode::SendShader(const Library* lib, uint64_t id) {
+    assert(lib != nullptr);
+    assert(id > 0);
 
-}
+    // Don't send the shader if this node already has it.
+    if (_shaders.find(id) != _shaders.end()) return;
 
-void NetNode::SendShader(const Shader* shader) {
+    Shader* shader = lib->LookupShader(id);
+    assert(shader != nullptr);
 
+    Message request(Message::Kind::SYNC_SHADER);
+
+    // Serialize the payload.
+    msgpack::sbuffer buffer;
+    msgpack::pack(buffer, *shader);
+
+    // Pack the message body.
+    request.size = buffer.size();
+    request.body = buffer.data();
+
+    Send(request);
+
+    // Mark that this node has this shader.
+    _shaders[id] = true;
 }
 
 } // namespace fr

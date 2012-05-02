@@ -46,6 +46,10 @@ void OnClose(uv_handle_t* handle);
 
 void OnInit(NetNode* node);
 void OnSyncConfig(NetNode* node);
+void OnSyncMesh(NetNode* node);
+void OnSyncMaterial(NetNode* node);
+void OnSyncTexture(NetNode* node);
+void OnSyncShader(NetNode* node);
 
 } // namespace server
 
@@ -206,6 +210,22 @@ void server::DispatchMessage(NetNode* node) {
             OnSyncConfig(node);
             break;
 
+        case Message::Kind::SYNC_MESH:
+            OnSyncMesh(node);
+            break;
+
+        case Message::Kind::SYNC_MATERIAL:
+            OnSyncMaterial(node);
+            break;
+
+        case Message::Kind::SYNC_TEXTURE:
+            OnSyncTexture(node);
+            break;
+
+        case Message::Kind::SYNC_SHADER:
+            OnSyncShader(node);
+            break;
+
         default:
             TERRLN("Received unexpected message.");
             TERRLN(ToString(node->message));
@@ -237,16 +257,57 @@ void server::OnSyncConfig(NetNode* node) {
     assert(lib != nullptr);
 
     // Unpack the config.
-    Config* config = node->ReceiveConfig();
-
-    // Store it in the library.
-    lib->StoreConfig(config);
+    node->ReceiveConfig(lib);
 
     // Reply with OK.
     Message reply(Message::Kind::OK);
     node->Send(reply);
 
     TOUTLN("[" << node->ip << "] Received configuration.");
+}
+
+void server::OnSyncMesh(NetNode* node) {
+    assert(node != nullptr);
+    assert(lib != nullptr);
+
+    // Unpack the mesh.
+    uint64_t id = node->ReceiveMesh(lib);
+
+    // Reply with OK.
+    Message reply(Message::Kind::OK);
+    node->Send(reply);
+
+    TOUTLN("[" << node->ip << "] Received mesh " << id << ".");
+}
+
+void server::OnSyncMaterial(NetNode* node) {
+    assert(node != nullptr);
+    assert(lib != nullptr);
+
+    // Unpack the material.
+    uint64_t id = node->ReceiveMaterial(lib);
+
+    TOUTLN("[" << node->ip << "] Received material " << id << ".");
+}
+
+void server::OnSyncTexture(NetNode* node) {
+    assert(node != nullptr);
+    assert(lib != nullptr);
+
+    // Unpack the texture.
+    uint64_t id = node->ReceiveTexture(lib);
+
+    TOUTLN("[" << node->ip << "] Received texture " << id << ".");
+}
+
+void server::OnSyncShader(NetNode* node) {
+    assert(node != nullptr);
+    assert(lib != nullptr);
+
+    // Unpack the shader.
+    uint64_t id = node->ReceiveShader(lib);
+
+    TOUTLN("[" << node->ip << "] Received shader " << id << ".");
 }
 
 void OnFlushTimeout(uv_timer_t* timer, int status) {
