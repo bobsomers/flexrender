@@ -1,8 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <string>
-#include <limits>
 
 #include "msgpack.hpp"
 
@@ -11,19 +9,12 @@
 namespace fr {
 
 struct Shader {
-    explicit Shader(uint64_t id) :
-     id(id),
-     code("") {}
+    explicit Shader(uint64_t id);
 
-    explicit Shader(uint64_t id, const std::string& code) :
-     id(id),
-     code(code) {}
+    explicit Shader(uint64_t id, const std::string& code);
 
     // FOR MSGPACK ONLY!
-    explicit Shader() :
-     code("") {
-        id = std::numeric_limits<uint64_t>::max(); 
-    }
+    explicit Shader();
 
     /// Resource ID of the shader.
     uint64_t id;
@@ -36,16 +27,6 @@ struct Shader {
     TOSTRINGABLE(Shader);
 };
 
-inline std::string ToString(const Shader& shader, const std::string& indent = "") {
-    std::stringstream stream;
-    stream << "Shader {" << std::endl <<
-     indent << "| id = " << shader.id << std::endl <<
-     indent << "| code = ..." << std::endl <<
-"======================================================================" << std::endl <<
-shader.code << std::endl <<
-"======================================================================" << std::endl <<
-     indent << "}";
-    return stream.str();
-}
+std::string ToString(const Shader& shader, const std::string& indent = "");
 
 } // namespace fr

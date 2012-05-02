@@ -1,28 +1,15 @@
 #pragma once
 
-#include "glm/glm.hpp"
+#include <string>
 
-#include "utils/tostring.hpp"
+#include "glm/glm.hpp"
 
 namespace fr {
 
-inline std::string ToString(glm::vec2 vec, const std::string& indent = "") {
-    std::stringstream stream;
-    stream << indent << "<" << vec.x << ", " << vec.y << ">";
-    return stream.str();
-}
+std::string ToString(glm::vec2 vec, const std::string& indent = "");
 
-inline std::string ToString(glm::vec3 vec, const std::string& indent = "") {
-    std::stringstream stream;
-    stream << indent << "<" << vec.x << ", " << vec.y << ", " << vec.z << ">";
-    return stream.str();
-}
+std::string ToString(glm::vec3 vec, const std::string& indent = "");
 
-inline std::string ToString(glm::vec4 vec, const std::string& indent = "") {
-    std::stringstream stream;
-    stream << indent <<
-     "<" << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w << ">";
-    return stream.str();
-}
+std::string ToString(glm::vec4 vec, const std::string& indent = "");
 
 } // namespace fr

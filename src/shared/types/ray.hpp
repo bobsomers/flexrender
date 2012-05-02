@@ -1,14 +1,12 @@
 #pragma once
 
 #include <cstdint>
-#include <limits>
 
 #include "glm/glm.hpp"
 
 #include "types/weak_hit.hpp"
 #include "types/strong_hit.hpp"
 #include "utils/tostring.hpp"
-#include "utils/printers.hpp"
 
 namespace fr {
 
@@ -19,79 +17,11 @@ struct Ray {
         LIGHT     = 2
     };
 
-    explicit Ray(Kind kind, int16_t x, int16_t y) :
-     kind(kind),
-     x(x),
-     y(y),
-     weak(),
-     strong(),
-     next(nullptr) {
-        bounces = std::numeric_limits<int16_t>::min();
+    explicit Ray(Kind kind, int16_t x, int16_t y);
 
-        origin.x = std::numeric_limits<float>::quiet_NaN();
-        origin.y = std::numeric_limits<float>::quiet_NaN();
-        origin.z = std::numeric_limits<float>::quiet_NaN();
+    explicit Ray(Kind kind);
 
-        direction.x = std::numeric_limits<float>::quiet_NaN();
-        direction.y = std::numeric_limits<float>::quiet_NaN();
-        direction.z = std::numeric_limits<float>::quiet_NaN();
-
-        transmittance = std::numeric_limits<float>::quiet_NaN();
-
-        emission.x = std::numeric_limits<float>::quiet_NaN();
-        emission.y = std::numeric_limits<float>::quiet_NaN();
-        emission.z = std::numeric_limits<float>::quiet_NaN();
-    }
-
-    explicit Ray(Kind kind) :
-     kind(kind),
-     weak(),
-     strong(),
-     next(nullptr) {
-        x = std::numeric_limits<int16_t>::min();
-        y = std::numeric_limits<int16_t>::min();
-
-        bounces = std::numeric_limits<int16_t>::min();
-
-        origin.x = std::numeric_limits<float>::quiet_NaN();
-        origin.y = std::numeric_limits<float>::quiet_NaN();
-        origin.z = std::numeric_limits<float>::quiet_NaN();
-
-        direction.x = std::numeric_limits<float>::quiet_NaN();
-        direction.y = std::numeric_limits<float>::quiet_NaN();
-        direction.z = std::numeric_limits<float>::quiet_NaN();
-
-        transmittance = std::numeric_limits<float>::quiet_NaN();
-
-        emission.x = std::numeric_limits<float>::quiet_NaN();
-        emission.y = std::numeric_limits<float>::quiet_NaN();
-        emission.z = std::numeric_limits<float>::quiet_NaN();
-    }
-
-    explicit Ray() :
-     kind(Kind::NONE),
-     weak(),
-     strong(),
-     next(nullptr) {
-        x = std::numeric_limits<int16_t>::min();
-        y = std::numeric_limits<int16_t>::min();
-
-        bounces = std::numeric_limits<int16_t>::min();
-
-        origin.x = std::numeric_limits<float>::quiet_NaN();
-        origin.y = std::numeric_limits<float>::quiet_NaN();
-        origin.z = std::numeric_limits<float>::quiet_NaN();
-
-        direction.x = std::numeric_limits<float>::quiet_NaN();
-        direction.y = std::numeric_limits<float>::quiet_NaN();
-        direction.z = std::numeric_limits<float>::quiet_NaN();
-
-        transmittance = std::numeric_limits<float>::quiet_NaN();
-
-        emission.x = std::numeric_limits<float>::quiet_NaN();
-        emission.y = std::numeric_limits<float>::quiet_NaN();
-        emission.z = std::numeric_limits<float>::quiet_NaN();
-    }
+    explicit Ray();
 
     /// The kind of ray (from the above possible).
     int16_t kind; 
@@ -133,43 +63,6 @@ struct Ray {
     TOSTRINGABLE(Ray);
 };
 
-inline std::string ToString(const Ray& ray, const std::string& indent = "") {
-    std::stringstream stream;
-    std::string pad = indent + "| ";
-    stream << "Ray {" << std::endl;
-    switch (ray.kind) {
-        case Ray::Kind::NONE:
-            stream << indent << "| kind = NONE" << std::endl;
-            break;
-
-        case Ray::Kind::INTERSECT:
-            stream << indent << "| kind = INTERSECT" << std::endl <<
-             indent << "| x = " << ray.x << std::endl <<
-             indent << "| y = " << ray.y << std::endl <<
-             indent << "| bounces = " << ray.bounces << std::endl <<
-             indent << "| origin = " << ToString(ray.origin) << std::endl <<
-             indent << "| direction = " << ToString(ray.direction) << std::endl <<
-             indent << "| transmittance = " << ray.transmittance << std::endl <<
-             indent << "| weak = " << ToString(ray.weak, pad) << std::endl <<
-             indent << "| strong = " << ToString(ray.strong, pad) << std::endl <<
-             indent << "| next = " << std::hex << std::showbase << ray.next << std::endl;
-            break;
-
-        case Ray::Kind::LIGHT:
-            stream << indent << "| kind = LIGHT" << std::endl <<
-             indent << "| x = " << ray.x << std::endl <<
-             indent << "| y = " << ray.y << std::endl <<
-             indent << "| origin = " << ToString(ray.origin) << std::endl <<
-             indent << "| direction = " << ToString(ray.direction) << std::endl <<
-             indent << "| transmittance = " << ray.transmittance << std::endl <<
-             indent << "| emission = " << ToString(ray.emission) << std::endl <<
-             indent << "| weak = " << ToString(ray.weak, pad) << std::endl <<
-             indent << "| strong = " << ToString(ray.strong, pad) << std::endl <<
-             indent << "| next = " << std::hex << std::showbase << ray.next << std::endl;
-            break;
-    }
-    stream << indent << "}";
-    return stream.str();
-}
+std::string ToString(const Ray& ray, const std::string& indent = "");
 
 } // namespace fr

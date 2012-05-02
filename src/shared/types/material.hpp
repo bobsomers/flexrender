@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include <map>
-#include <limits>
 
 #include "msgpack.hpp"
 
@@ -11,32 +10,14 @@
 namespace fr {
 
 struct Material {
-    explicit Material(uint64_t id) :
-     id(id),
-     textures(),
-     emissive(false) {
-        shader = std::numeric_limits<uint64_t>::max();
-    }
+    explicit Material(uint64_t id);
 
-    explicit Material(uint64_t id, uint64_t shader) :
-     id(id),
-     shader(shader),
-     textures(),
-     emissive(false) {}
+    explicit Material(uint64_t id, uint64_t shader);
 
-    explicit Material(uint64_t id, uint64_t shader, bool emissive) :
-     id(id),
-     shader(shader),
-     textures(),
-     emissive(emissive) {}
+    explicit Material(uint64_t id, uint64_t shader, bool emissive);
 
     // FOR MSGPACK ONLY!
-    explicit Material() :
-     textures(),
-     emissive(false) {
-        id = std::numeric_limits<uint64_t>::max();
-        shader = std::numeric_limits<uint64_t>::max();
-    }
+    explicit Material();
 
     /// Resource ID of the material.
     uint64_t id;
@@ -56,19 +37,6 @@ struct Material {
     TOSTRINGABLE(Material);
 };
 
-inline std::string ToString(const Material& mat, const std::string& indent = "") {
-    std::stringstream stream;
-    stream << "Material {" << std::endl <<
-     indent << "| id = " << mat.id << std::endl <<
-     indent << "| shader = " << mat.shader << std::endl <<
-     indent << "| textures = {" << std::endl;
-    for (const auto& binding : mat.textures) {
-        stream << indent << "| | " << binding.first << " -> " << binding.second << std::endl;
-    }
-    stream << indent << "| }" << std::endl <<
-     indent << "| emissive = " << (mat.emissive ? "true" : "false") << std::endl <<
-     indent << "}";
-    return stream.str();
-}
+std::string ToString(const Material& mat, const std::string& indent = "");
 
 } // namespace fr

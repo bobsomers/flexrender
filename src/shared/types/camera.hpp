@@ -1,47 +1,20 @@
 #pragma once
 
-#include <limits>
-
 #include "glm/glm.hpp"
 #include "msgpack.hpp"
 
-#include "types/config.hpp"
 #include "utils/tostring.hpp"
-#include "utils/printers.hpp"
 
 namespace fr {
 
+struct Config;
 struct Ray;
 
 struct Camera {
-    explicit Camera(const Config* config) :
-     up(0.0f, 1.0f, 0.0f),
-     rotation(0.0f),
-     ratio(static_cast<float>(config->width) / static_cast<float>(config->height)),
-     _config(config) {
-        eye.x = std::numeric_limits<float>::quiet_NaN();
-        eye.y = std::numeric_limits<float>::quiet_NaN();
-        eye.z = std::numeric_limits<float>::quiet_NaN();
-
-        look.x = std::numeric_limits<float>::quiet_NaN();
-        look.y = std::numeric_limits<float>::quiet_NaN();
-        look.z = std::numeric_limits<float>::quiet_NaN();
-    }
+    explicit Camera(const Config* config);
 
     // FOR MSGPACK ONLY!
-    explicit Camera() :
-     up(0.0f, 1.0f, 0.0f),
-     rotation(0.0f),
-     ratio(4.0f / 3.0f),
-     _config(nullptr) {
-        eye.x = std::numeric_limits<float>::quiet_NaN();
-        eye.y = std::numeric_limits<float>::quiet_NaN();
-        eye.z = std::numeric_limits<float>::quiet_NaN();
-
-        look.x = std::numeric_limits<float>::quiet_NaN();
-        look.y = std::numeric_limits<float>::quiet_NaN();
-        look.z = std::numeric_limits<float>::quiet_NaN();
-    }
+    explicit Camera();
 
     /// The eye position.
     glm::vec3 eye;
@@ -71,22 +44,20 @@ struct Camera {
      * Once all rays have been generated, returns false and the contents of ray
      * are undefined.
      */
-    bool GeneratePrimary(Ray &ray);
+    bool GeneratePrimary(Ray* ray);
 
 private:
     const Config* _config;
+    int16_t _x;
+    int16_t _y;
+    uint16_t _i;
+    uint16_t _j;
+    float _l;
+    float _b;
+    glm::vec3 _u, _v, _w;
+    bool _initialized;
 };
 
-inline std::string ToString(const Camera& camera, const std::string& indent = "") {
-    std::stringstream stream;
-    stream << "Camera {" << std::endl <<
-     indent << "| eye = " << ToString(camera.eye) << std::endl <<
-     indent << "| look = " << ToString(camera.look) << std::endl <<
-     indent << "| up = " << ToString(camera.up) << std::endl <<
-     indent << "| rotation = " << camera.rotation << std::endl <<
-     indent << "| ratio = " << camera.ratio << std::endl <<
-     indent << "}";
-    return stream.str();
-}
+std::string ToString(const Camera& camera, const std::string& indent = "");
 
 } // namespace fr
