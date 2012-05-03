@@ -331,11 +331,24 @@ void client::StartSync() {
 }
 
 void client::StartRender() {
+    Config* config = lib->LookupConfig();
+    size_t num_workers = num_workers_ready;
+
     // Send render start messages to each server.
-    lib->ForEachNetNode([](uint64_t id, NetNode* node) {
+    lib->ForEachNetNode([config, num_workers](uint64_t id, NetNode* node) {
+        uint16_t chunk_size = config->width / num_workers;
+        int16_t offset = (id - 1) * chunk_size;
+        if (id == num_workers) {
+            chunk_size = config->width - (id - 1) * chunk_size;
+        }
+        uint32_t payload = (offset << 16) | chunk_size;
+
         Message request(Message::Kind::RENDER_START);
-        node->state = NetNode::State::RENDERING;
+        request.size = sizeof(uint32_t);
+        request.body = &payload;
         node->Send(request);
+
+        node->state = NetNode::State::RENDERING;
         TOUTLN("[" << node->ip << "] Starting render.");
     });
 

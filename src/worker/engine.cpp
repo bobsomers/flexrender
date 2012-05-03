@@ -54,6 +54,7 @@ void OnSyncMaterial(NetNode* node);
 void OnSyncTexture(NetNode* node);
 void OnSyncShader(NetNode* node);
 void OnSyncCamera(NetNode* node);
+void OnRenderStart(NetNode* node);
 
 } // namespace server
 
@@ -234,6 +235,10 @@ void server::DispatchMessage(NetNode* node) {
             OnSyncCamera(node);
             break;
 
+        case Message::Kind::RENDER_START:
+            OnRenderStart(node);
+            break;
+
         default:
             TERRLN("Received unexpected message.");
             TERRLN(ToString(node->message));
@@ -354,6 +359,21 @@ void server::OnSyncCamera(NetNode* node) {
     node->Send(reply);
 
     TOUTLN("[" << node->ip << "] Received camera.");
+}
+
+void server::OnRenderStart(NetNode* node) {
+    assert(node != nullptr);
+    assert(lib != nullptr);
+    assert(node->message.size == sizeof(uint32_t));
+
+    // Unpack the offset and chunk size.
+    uint32_t payload = *(reinterpret_cast<uint32_t*>(node->message.body));
+    int16_t offset = (payload & 0xffff0000) >> 16;
+    uint16_t chunk_size = payload & 0xffff;
+
+    // TODO: do something with them
+    TOUTLN("offset = " << offset);
+    TOUTLN("chunk_size = " << chunk_size);
 }
 
 void OnFlushTimeout(uv_timer_t* timer, int status) {
