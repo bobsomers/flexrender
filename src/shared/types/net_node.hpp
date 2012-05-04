@@ -14,7 +14,7 @@
 namespace fr {
 
 class Library;
-class Buffer;
+class Image;
 
 class NetNode {
 public:
@@ -87,6 +87,13 @@ public:
     /// Sends the given camera to this node.
     void SendCamera(const Library* lib);
 
+    /// Receives the message in the net node's buffer as a freshly allocated
+    /// image.
+    Image* ReceiveImage();
+
+    /// Sends the given image to this node.
+    void SendImage(const Library* lib);
+
     /// Receives the message in the net node's buffer as a mesh.
     uint64_t ReceiveMesh(Library* lib);
 
@@ -110,13 +117,6 @@ public:
 
     /// Sends the given shader to this node.
     void SendShader(const Library* lib, uint64_t id);
-
-    /// Receives the message in the net node's buffer as a freshly allocated
-    /// image buffer.
-    Buffer* ReceiveBuffer();
-
-    /// Sends the given buffer to this node.
-    void SendBuffer(const Library* lib, uint64_t id);
 
     /// Flushes the send buffer, forcing all buffered messages to be written.
     void Flush();

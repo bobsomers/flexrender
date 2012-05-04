@@ -3,6 +3,7 @@
 #include "types/buffer.hpp"
 #include "types/camera.hpp"
 #include "types/config.hpp"
+#include "types/image.hpp"
 #include "types/local_geometry.hpp"
 #include "types/material.hpp"
 #include "types/mesh.hpp"

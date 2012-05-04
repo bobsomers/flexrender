@@ -280,24 +280,12 @@ void server::OnSyncConfig(NetNode* node) {
     Config* config = lib->LookupConfig();
     assert(config != nullptr);
 
-    // Create the default image buffers.
-    uint64_t id = 0;
-    id = lib->NextBufferID();
-    Buffer* r = new Buffer(id, config->width, config->height);
-    lib->StoreBuffer(id, r, "R");
-    id = lib->NextBufferID();
-    Buffer* g = new Buffer(id, config->width, config->height);
-    lib->StoreBuffer(id, g, "G");
-    id = lib->NextBufferID();
-    Buffer* b = new Buffer(id, config->width, config->height);
-    lib->StoreBuffer(id, b, "B");
-
-    // Create any auxilliary image buffers.
+    // Create the image with all the requested buffers.
+    Image* image = new Image(config->width, config->height);
     for (const auto& buffer : config->buffers) {
-        id = lib->NextBufferID();
-        Buffer* buf = new Buffer(id, config->width, config->height);
-        lib->StoreBuffer(id, buf, buffer);
+        image->AddBuffer(buffer);
     }
+    lib->StoreImage(image);
 
     // Connect to all the other workers.
     client::Init();

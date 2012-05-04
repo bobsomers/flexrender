@@ -18,7 +18,7 @@ struct Message {
         SYNC_MATERIAL = 203,
         SYNC_MESH     = 204,
         SYNC_CAMERA   = 205,
-        SYNC_BUFFER   = 290,
+        SYNC_IMAGE    = 290,
         RENDER_START  = 300,
         RENDER_STOP   = 301,
         RAY           = 400,

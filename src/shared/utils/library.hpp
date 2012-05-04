@@ -15,11 +15,11 @@ namespace fr {
 
 struct Config;
 struct Camera;
+class Image;
 struct Shader;
 struct Texture;
 struct Material;
 struct Mesh;
-class Buffer;
 class NetNode;
 
 class Library : private Uncopyable {
@@ -36,6 +36,11 @@ public:
     void StoreCamera(Camera* camera);
 
     inline Camera* LookupCamera() const { return _camera; }
+
+    // Images...
+    void StoreImage(Image* image);
+
+    inline Image* LookupImage() const { return _image; }
 
     // Shaders...
     inline uint64_t NextShaderID() const { return _shaders.size(); }
@@ -91,41 +96,6 @@ public:
         return _meshes[id];
     }
 
-    // Buffers...
-    inline uint64_t NextBufferID() const { return _buffers.size(); }
-
-    void StoreBuffer(uint64_t id, Buffer* buffer, const std::string& name);
-
-    inline Buffer* LookupBuffer(uint64_t id) const {
-        assert(id > 0);
-        assert(id < _buffers.size());
-        return _buffers[id];
-    }
-
-    inline uint64_t LookupBuffer(const std::string& name) const {
-        uint64_t id = 0;
-        try {
-            id = _buffer_name_index.at(name);
-        } catch (std::out_of_range& e) {
-            id = 0;
-        }
-        return id;
-    }
-
-    void ForEachBuffer(std::function<void (uint64_t id, Buffer* buffer)> func);
-
-    template <typename RetType>
-    std::vector<RetType> ForEachBuffer(std::function<RetType (uint64_t id, Buffer* buffer)> func) {
-        std::vector<RetType> results(_buffers.size());
-        for (uint64_t id = 1; id < _buffers.size(); id++) {
-            Buffer* buffer = _buffers[id];
-            if (buffer == nullptr) continue;
-            RetType result = func(id, buffer);
-            results.insert(results.begin() + id, result);
-        }
-        return results;
-    }
-
     // Net nodes...
     void StoreNetNode(uint64_t id, NetNode* node);
 
@@ -165,14 +135,13 @@ public:
 private:
     Config *_config;
     Camera* _camera;
+    Image* _image;
     std::vector<Shader*> _shaders;
     std::vector<Texture*> _textures;
     std::vector<Material*> _materials;
     std::vector<Mesh*> _meshes;
-    std::vector<Buffer*> _buffers;
     std::vector<NetNode*> _nodes;
     std::unordered_map<std::string, uint64_t> _material_name_index;
-    std::unordered_map<std::string, uint64_t> _buffer_name_index;
     std::vector<uint64_t> _spatial_index;
     uint64_t _chunk_size;
 };

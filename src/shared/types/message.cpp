@@ -64,8 +64,8 @@ string ToString(const Message& msg, const string& indent) {
             stream << indent << "| kind = SYNC_CAMERA" << endl;
             break;
 
-        case Message::Kind::SYNC_BUFFER:
-            stream << indent << "| kind = SYNC_BUFFER" << endl;
+        case Message::Kind::SYNC_IMAGE:
+            stream << indent << "| kind = SYNC_IMAGE" << endl;
             break;
 
         case Message::Kind::RENDER_START:
