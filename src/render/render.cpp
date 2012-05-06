@@ -1,11 +1,14 @@
 #include <cstdlib>
 #include <string>
+#include <sstream>
 #include <iostream>
+#include <cstdint>
 
 #include "engine.hpp"
 #include "utils.hpp"
 
 using std::string;
+using std::stringstream;
 using std::cerr;
 using std::endl;
 
@@ -20,9 +23,18 @@ int main(int argc, char *argv[]) {
     string config_file = ArgumentValue(argc, argv, 1);
     string scene_file = ArgumentValue(argc, argv, 2);
 
+    uint32_t intervals = 8;
+    {
+        string intervals_str = FlagValue(argc, argv, "-i", "--intervals");
+        if (intervals_str != "") {
+            stringstream stream(intervals_str);
+            stream >> intervals;
+        }
+    }
+
     TOUTLN("FlexRender starting.");
 
-    EngineInit(config_file, scene_file);
+    EngineInit(config_file, scene_file, intervals);
     EngineRun();
 
     TOUTLN("FlexRender done.");

@@ -35,8 +35,15 @@ static size_t num_workers_ready = 0;
 /// The number of workers that have sent and merged their images.
 static size_t num_workers_complete = 0;
 
+/// The maximum number of uninteresting stats intervals before we declare the
+/// rendering complete.
+static uint32_t max_intervals = 0;
+
 /// The timer for ensuring we flush the send buffer.
 static uv_timer_t flush_timer;
+
+/// Timer for watching whether or not the render is still interesting.
+static uv_timer_t interesting_timer;
 
 /// Synchronization primitives for synchronizing the synchronization.
 /// "We need to go deeper..."
@@ -64,17 +71,22 @@ uv_buf_t OnAlloc(uv_handle_t* handle, size_t suggested_size);
 void OnRead(uv_stream_t* stream, ssize_t nread, uv_buf_t buf);
 void OnClose(uv_handle_t* handle);
 void OnFlushTimeout(uv_timer_t* timer, int status);
+void OnInterestingTimeout(uv_timer_t* timer, int status);
 void OnSyncStart(uv_work_t* req);
 void AfterSync(uv_work_t* req);
 void OnSyncIdle(uv_idle_t* handle, int status);
 
 void OnOK(NetNode* node);
 void OnSyncImage(NetNode* node);
+void OnRenderStats(NetNode* node);
 
 }
 
-void EngineInit(const string& config_file, const string& scene_file) {
+void EngineInit(const string& config_file, const string& scene_file,
+ uint32_t intervals) {
     lib = new Library;
+
+    max_intervals = intervals;
 
     // Parse the config file.
     ConfigScript config_script;
@@ -130,12 +142,20 @@ void client::Init() {
     result = uv_timer_start(&flush_timer, OnFlushTimeout, FR_FLUSH_TIMEOUT_MS,
      FR_FLUSH_TIMEOUT_MS);
     CheckUVResult(result, "timer_start");
+    
+    // Initialize the interesting timer.
+    result = uv_timer_init(uv_default_loop(), &interesting_timer);
+    CheckUVResult(result, "interesting_timer");
 }
 
 void client::DispatchMessage(NetNode* node) {
     switch (node->message.kind) {
         case Message::Kind::OK:
             OnOK(node);
+            break;
+
+        case Message::Kind::RENDER_STATS:
+            OnRenderStats(node);
             break;
 
         case Message::Kind::SYNC_IMAGE:
@@ -250,6 +270,32 @@ void client::OnFlushTimeout(uv_timer_t* timer, int status) {
     });
 }
 
+void client::OnInterestingTimeout(uv_timer_t* timer, int status) {
+    assert(timer == &interesting_timer);
+    assert(status == 0);
+
+    // If all net nodes are no longer interesting, stop the render.
+    bool done = true;
+    lib->ForEachNetNode([&done](uint64_t id, NetNode* node) {
+        done = done && !node->IsInteresting(max_intervals);
+    });
+
+    // Are we done rendering?
+    if (done) {
+        TOUTLN("Workers are no longer interesting.");
+        StopRender();
+        return;
+    }
+
+
+    // Display some information about the total number of rays being processed.
+    uint64_t total_rays = 0;
+    lib->ForEachNetNode([&total_rays](uint64_t id, NetNode* node) {
+        total_rays += node->RaysProcessed(max_intervals / 2);
+    });
+    TOUTLN(total_rays << " rays processed.");
+}
+
 void client::OnOK(NetNode* node) {
     Config* config = lib->LookupConfig();
     assert(config != nullptr);
@@ -291,6 +337,11 @@ void client::OnOK(NetNode* node) {
         default:
             TERRLN("Received OK in unexpected state.");
     }
+}
+
+void client::OnRenderStats(NetNode* node) {
+    assert(node != nullptr);
+    node->ReceiveRenderStats();
 }
 
 void client::OnSyncImage(NetNode* node) {
@@ -383,6 +434,8 @@ void client::StartSync() {
 }
 
 void client::StartRender() {
+    int result = 0;
+
     Config* config = lib->LookupConfig();
 
     // Send render start messages to each server.
@@ -403,10 +456,22 @@ void client::StartRender() {
         TOUTLN("[" << node->ip << "] Starting render.");
     });
 
+    // Start the interesting timer.
+    result = uv_timer_start(&interesting_timer, OnInterestingTimeout,
+     FR_STATS_TIMEOUT_MS * max_intervals / 2, FR_STATS_TIMEOUT_MS * max_intervals / 2);
+    CheckUVResult(result, "timer_start");
+
     TOUTLN("Rendering has started.");
 }
 
 void client::StopRender() {
+    int result = 0;
+
+    // Stop the interesting timer.
+    result = uv_timer_stop(&interesting_timer);
+    CheckUVResult(result, "timer_stop");
+    uv_close(reinterpret_cast<uv_handle_t*>(&interesting_timer), nullptr);
+
     // Send render stop messages to each server.
     lib->ForEachNetNode([](uint64_t id, NetNode* node) {
         Message request(Message::Kind::RENDER_STOP);

@@ -34,13 +34,20 @@ static NetNode* renderer = nullptr;
 /// The timer for ensuring we flush the send buffer.
 static uv_timer_t flush_timer;
 
+/// The timer for sending stats during rendering.
+static uv_timer_t stats_timer;
+
 /// The number of other workers we're connected to.
 static uint64_t num_workers_connected = 0;
 
 /// The maximum number of jobs "in flight" at any given time.
 static uint32_t max_jobs = 0;
 
+/// The number of jobs currently available for running on libuv's thread pool.
 static uint32_t active_jobs = 0;
+
+/// Render stats for this worker.
+static RenderStats stats;
 
 // Callbacks, handlers, and helpers for server functionality.
 namespace server {
@@ -54,7 +61,7 @@ uv_buf_t OnAlloc(uv_handle_t* handle, size_t suggested_size);
 void OnRead(uv_stream_t* stream, ssize_t nread, uv_buf_t buf);
 void OnWork(uv_work_t* req);
 void AfterWork(uv_work_t* req);
-//void OnStatsTimeout(uv_timer_t* timer, int status);
+void OnStatsTimeout(uv_timer_t* timer, int status);
 void OnClose(uv_handle_t* handle);
 
 void OnRay(NetNode* node);
@@ -98,6 +105,10 @@ void EngineInit(const string& ip, uint16_t port, uint32_t jobs) {
     result = uv_timer_start(&flush_timer, OnFlushTimeout, FR_FLUSH_TIMEOUT_MS,
      FR_FLUSH_TIMEOUT_MS);
     CheckUVResult(result, "timer_start");
+
+    // Initialize the stats timeout timer.
+    result = uv_timer_init(uv_default_loop(), &stats_timer);
+    CheckUVResult(result, "timer_init");
 }
 
 void EngineRun() {
@@ -304,7 +315,7 @@ void server::OnWork(uv_work_t* req) {
 
     // TODO: do work with the ray
     
-    TOUTLN("Ray <" << ray->x << ", " << ray->y << ">!");
+    //TOUTLN("Ray <" << ray->x << ", " << ray->y << ">!");
 
     // TODO: allocate a WorkResult, fill it potentially with a chain of buffer
     // writes and a chain of rays.
@@ -324,6 +335,8 @@ void server::AfterWork(uv_work_t* req) {
 
     free(req);
 
+    stats.rays_processed++;
+
     // This job is done. Schedule more work.
     active_jobs--;
     ScheduleJob();
@@ -335,6 +348,8 @@ void server::OnRay(NetNode* node) {
     
     // Unpack the ray and push it into the queue.
     rayq->Push(node->ReceiveRay());
+
+    stats.rays_rx++;
 
     // Try to schedule a job.
     ScheduleJob();
@@ -455,6 +470,8 @@ void server::OnRenderStart(NetNode* node) {
     assert(lib != nullptr);
     assert(node->message.size == sizeof(uint32_t));
 
+    int result = 0;
+
     // Unpack the offset and chunk size.
     uint32_t payload = *(reinterpret_cast<uint32_t*>(node->message.body));
     int16_t offset = (payload & 0xffff0000) >> 16;
@@ -465,6 +482,11 @@ void server::OnRenderStart(NetNode* node) {
     assert(camera != nullptr);
     camera->SetRange(offset, chunk_size);
 
+    // Start the stats timer.
+    result = uv_timer_start(&stats_timer, OnStatsTimeout, FR_STATS_TIMEOUT_MS,
+     FR_STATS_TIMEOUT_MS);
+    CheckUVResult(result, "timer_start");
+
     // Queue up some jobs.
     for (uint32_t i = 0; i < max_jobs; i++) {
         ScheduleJob();
@@ -474,6 +496,12 @@ void server::OnRenderStart(NetNode* node) {
 void server::OnRenderStop(NetNode* node) {
     assert(node != nullptr);
     assert(lib != nullptr);
+
+    int result = 0;
+
+    // Stop the stats timer.
+    result = uv_timer_stop(&stats_timer);
+    CheckUVResult(result, "timer_stop");
 
     node->SendImage(lib);
 
@@ -507,6 +535,15 @@ void OnFlushTimeout(uv_timer_t* timer, int status) {
     // back to one of the server's clients, we write back through our client
     // to that server. If you actually want to write from the server, you
     // need to flush that manually.
+}
+
+void server::OnStatsTimeout(uv_timer_t* timer, int status) {
+    assert(timer == &stats_timer);
+    assert(status == 0);
+    assert(renderer != nullptr);
+
+    renderer->SendRenderStats(&stats);
+    stats.Reset();
 }
 
 void client::Init() {
@@ -612,6 +649,7 @@ void client::OnRead(uv_stream_t* stream, ssize_t nread, uv_buf_t buf) {
     } else if (nread > 0) {
         // Data is available, parse any new messages out.
         node->Receive(buf.base, nread);
+        stats.bytes_rx += nread;
     }
 
     if (buf.base) {

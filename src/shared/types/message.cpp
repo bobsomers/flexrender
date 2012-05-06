@@ -76,12 +76,12 @@ string ToString(const Message& msg, const string& indent) {
             stream << indent << "| kind = RENDER_STOP" << endl;
             break;
 
-        case Message::Kind::RAY:
-            stream << indent << "| kind = RAY" << endl;
+        case Message::Kind::RENDER_STATS:
+            stream << indent << "| kind = RENDER_STATS" << endl;
             break;
 
-        case Message::Kind::STATS:
-            stream << indent << "| kind = STATS" << endl;
+        case Message::Kind::RAY:
+            stream << indent << "| kind = RAY" << endl;
             break;
 
         default:

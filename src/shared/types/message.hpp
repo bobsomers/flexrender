@@ -21,8 +21,8 @@ struct Message {
         SYNC_IMAGE    = 290,
         RENDER_START  = 300,
         RENDER_STOP   = 301,
-        RAY           = 400,
-        STATS         = 500
+        RENDER_STATS  = 302,
+        RAY           = 400
     };
 
     explicit Message(Kind kind);

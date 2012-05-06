@@ -25,7 +25,9 @@ NetNode::NetNode(DispatchCallback dispatcher, const string& address) :
  _dispatcher(dispatcher),
  _materials(),
  _textures(),
- _shaders() {
+ _shaders(),
+ _stats_log(),
+ _num_uninteresting(0) {
     size_t pos = address.find(':');
     if (pos == string::npos) {
         ip = address;
@@ -46,7 +48,12 @@ NetNode::NetNode(DispatchCallback dispatcher) :
  nread(0),
  nwritten(0),
  flushed(false),
- _dispatcher(dispatcher) {}
+ _dispatcher(dispatcher),
+ _materials(),
+ _textures(),
+ _shaders(),
+ _stats_log(),
+ _num_uninteresting(0) {}
 
 void NetNode::Receive(const char* buf, ssize_t len) {
     if (buf == nullptr || len <= 0) return;
@@ -509,6 +516,63 @@ void NetNode::SendRay(Ray* ray) {
     msg.body = ray;
 
     Send(msg);
+}
+
+void NetNode::ReceiveRenderStats() {
+    assert(message.size > 0);
+
+    // Deserialize the payload.
+    msgpack::unpacked mp_msg;
+    msgpack::unpack(&mp_msg, reinterpret_cast<const char*>(message.body), message.size);
+
+    // Unpack the render stats.
+    RenderStats *stats = new RenderStats;
+    msgpack::object mp_obj = mp_msg.get();
+    mp_obj.convert(stats);
+
+    // Store them in the stats log.
+    _stats_log.push_back(stats);
+
+    // Are they interesting?
+    if (stats->rays_processed > 0) {
+        _num_uninteresting = 0;
+    } else {
+        _num_uninteresting++;
+    }
+}
+
+void NetNode::SendRenderStats(RenderStats* stats) {
+    assert(stats != nullptr);
+
+    Message request(Message::Kind::RENDER_STATS);
+
+    // Serialize the payload.
+    msgpack::sbuffer buffer;
+    msgpack::pack(buffer, *stats);
+
+    // Pack the message body.
+    request.size = buffer.size();
+    request.body = buffer.data();
+
+    Send(request);
+}
+
+bool NetNode::IsInteresting(uint32_t intervals) {
+    return _num_uninteresting < intervals;
+}
+
+uint64_t NetNode::RaysProcessed(uint32_t intervals) {
+    uint64_t rays = 0;
+
+    uint32_t count = 0;
+    auto iter = _stats_log.rbegin();
+    while (iter != _stats_log.rend() && count < intervals) {
+        rays += (*iter)->rays_processed;
+        iter++;
+        count++;
+    }
+
+    return rays;
 }
 
 } // namespace fr

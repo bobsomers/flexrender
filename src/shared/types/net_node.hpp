@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#include <deque>
 
 #include "uv.h"
 
@@ -16,6 +17,7 @@ namespace fr {
 class Library;
 class Image;
 struct Ray;
+struct RenderStats;
 
 class NetNode {
 public:
@@ -126,14 +128,30 @@ public:
     /// Sends the given ray to this node.
     void SendRay(Ray* ray);
 
+    /// Receives the message in the net node's buffer as a freshly allocated 
+    /// render stats.
+    void ReceiveRenderStats();
+
+    /// Sends the given render stats to this node.
+    void SendRenderStats(RenderStats* stats);
+
     /// Flushes the send buffer, forcing all buffered messages to be written.
     void Flush();
+
+    /// Has this net node been interesting in the last intervals intervals?
+    bool IsInteresting(uint32_t intervals);
+
+    /// Returns the number of rays processed at this node (from the stats logs)
+    /// in the last intervals intervals.
+    uint64_t RaysProcessed(uint32_t intervals);
 
 private:
     DispatchCallback _dispatcher;
     std::unordered_map<uint64_t, bool> _materials;
     std::unordered_map<uint64_t, bool> _textures;
     std::unordered_map<uint64_t, bool> _shaders;
+    std::deque<RenderStats*> _stats_log;
+    uint32_t _num_uninteresting;
 
     /// Post-write callback from libuv.
     static void AfterFlush(uv_write_t* req, int status);
