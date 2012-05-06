@@ -404,9 +404,6 @@ void client::StartRender() {
     });
 
     TOUTLN("Rendering has started.");
-
-    // TODO: remove this, just testing
-    StopRender();
 }
 
 void client::StopRender() {

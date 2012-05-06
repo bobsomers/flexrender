@@ -26,9 +26,18 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    uint32_t jobs = 10;
+    {
+        string jobs_str = FlagValue(argc, argv, "-j", "--jobs");
+        if (jobs_str != "") {
+            stringstream stream(jobs_str);
+            stream >> jobs;
+        }
+    }
+
     TOUTLN("FlexWorker starting.");
 
-    EngineInit("0.0.0.0", port);
+    EngineInit("0.0.0.0", port, jobs);
     TOUTLN("Listening on port " << port << ".");
 
     EngineRun();

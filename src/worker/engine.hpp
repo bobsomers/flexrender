@@ -5,7 +5,7 @@
 
 namespace fr {
 
-void EngineInit(const std::string& ip, uint16_t port);
+void EngineInit(const std::string& ip, uint16_t port, uint32_t jobs);
 
 void EngineRun();
 

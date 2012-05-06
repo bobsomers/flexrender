@@ -37,19 +37,25 @@ static uv_timer_t flush_timer;
 /// The number of other workers we're connected to.
 static uint64_t num_workers_connected = 0;
 
+/// The maximum number of jobs "in flight" at any given time.
+static uint32_t max_jobs = 0;
+
+static uint32_t active_jobs = 0;
+
 // Callbacks, handlers, and helpers for server functionality.
 namespace server {
 
 void Init(const string& ip, uint16_t port);
 void DispatchMessage(NetNode* node);
+void ScheduleJob();
 
 void OnConnection(uv_stream_t* stream, int status);
 uv_buf_t OnAlloc(uv_handle_t* handle, size_t suggested_size);
 void OnRead(uv_stream_t* stream, ssize_t nread, uv_buf_t buf);
-//void OnWork(uv_work_t* req);
+void OnWork(uv_work_t* req);
+void AfterWork(uv_work_t* req);
 //void OnStatsTimeout(uv_timer_t* timer, int status);
 void OnClose(uv_handle_t* handle);
-//void AfterWork(uv_work_t* req);
 
 void OnRay(NetNode* node);
 void OnInit(NetNode* node);
@@ -79,8 +85,10 @@ void OnClose(uv_handle_t* handle);
 
 void OnFlushTimeout(uv_timer_t* timer, int status);
 
-void EngineInit(const string& ip, uint16_t port) {
+void EngineInit(const string& ip, uint16_t port, uint32_t jobs) {
     int result = 0;
+
+    max_jobs = jobs;
 
     server::Init(ip, port);
 
@@ -265,12 +273,71 @@ void server::DispatchMessage(NetNode* node) {
     }
 }
 
+void server::ScheduleJob() {
+    assert(rayq != nullptr);
+
+    int result = 0;
+
+    // Don't schedule anything if we're maxed out.
+    if (active_jobs >= max_jobs) {
+        return;
+    }
+
+    // Attempt to queue some work.
+    Ray* ray = rayq->Pop();
+    if (ray != nullptr) {
+        uv_work_t* req = reinterpret_cast<uv_work_t*>(malloc(sizeof(uv_work_t)));
+        req->data = ray;
+        result = uv_queue_work(uv_default_loop(), req, OnWork, AfterWork);
+        CheckUVResult(result, "queue_work");
+        active_jobs++;
+    }
+}
+
+void server::OnWork(uv_work_t* req) {
+    // !!! WARNING !!!
+    // Everything this function does and calls must be thread-safe. This
+    // function will NOT run in the main thread, it runs on the thread pool.
+
+    // Pull the ray out of the data baton.
+    Ray *ray = reinterpret_cast<Ray*>(req->data);
+
+    // TODO: do work with the ray
+    
+    TOUTLN("Ray <" << ray->x << ", " << ray->y << ">!");
+
+    // TODO: allocate a WorkResult, fill it potentially with a chain of buffer
+    // writes and a chain of rays.
+
+    // Kill off the ray.
+    delete ray;
+}
+
+void server::AfterWork(uv_work_t* req) {
+    assert(req != nullptr);
+
+    // TODO: Pull the work result out of the data baton.
+
+    // TODO: process buffer writes
+    
+    // TODO: process rays
+
+    free(req);
+
+    // This job is done. Schedule more work.
+    active_jobs--;
+    ScheduleJob();
+}
+
 void server::OnRay(NetNode* node) {
     assert(node != nullptr);
     assert(rayq != nullptr);
     
     // Unpack the ray and push it into the queue.
     rayq->Push(node->ReceiveRay());
+
+    // Try to schedule a job.
+    ScheduleJob();
 }
 
 void server::OnInit(NetNode* node) {
@@ -289,6 +356,9 @@ void server::OnInit(NetNode* node) {
 
     // No workers connected yet.
     num_workers_connected = 0;
+
+    // No active jobs yet.
+    active_jobs = 0;
 
     // Reply with OK.
     Message reply(Message::Kind::OK);
@@ -394,6 +464,11 @@ void server::OnRenderStart(NetNode* node) {
     Camera* camera = lib->LookupCamera();
     assert(camera != nullptr);
     camera->SetRange(offset, chunk_size);
+
+    // Queue up some jobs.
+    for (uint32_t i = 0; i < max_jobs; i++) {
+        ScheduleJob();
+    }
 }
 
 void server::OnRenderStop(NetNode* node) {
