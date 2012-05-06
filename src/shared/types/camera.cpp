@@ -41,7 +41,7 @@ Camera::Camera(const Config* config) :
     look.z = numeric_limits<float>::quiet_NaN();
 
     _l = numeric_limits<float>::quiet_NaN();
-    _b = numeric_limits<float>::quiet_NaN();
+    _t = numeric_limits<float>::quiet_NaN();
 
     _u.x = numeric_limits<float>::quiet_NaN();
     _u.y = numeric_limits<float>::quiet_NaN();
@@ -77,7 +77,7 @@ Camera::Camera() :
     look.z = numeric_limits<float>::quiet_NaN();
 
     _l = numeric_limits<float>::quiet_NaN();
-    _b = numeric_limits<float>::quiet_NaN();
+    _t = numeric_limits<float>::quiet_NaN();
 
     _u.x = numeric_limits<float>::quiet_NaN();
     _u.y = numeric_limits<float>::quiet_NaN();
@@ -98,9 +98,9 @@ bool Camera::GeneratePrimary(FatRay* ray) {
     assert(_config != nullptr);
 
     if (!_initialized) {
-        // Compute the bottom left screen space extents.
+        // Compute the top left screen space extents.
         _l = ratio / -2.0f;
-        _b = -0.5f;
+        _t = 0.5f;
 
         // Compute the camera gaze vector.
         _w = normalize(look - eye);
@@ -143,7 +143,7 @@ bool Camera::GeneratePrimary(FatRay* ray) {
     if (_config->antialiasing <= 1) {
         // No antialiasing.
         us = _l + (ratio * (_x + 0.5f) / _config->width);
-        vs = _b + (1.0f * (_y + 0.5f) / _config->height);
+        vs = _t - (1.0f * (_y + 0.5f) / _config->height);
         ws = 1.0f;
         transmittance = 1.0f;
     } else {
@@ -152,7 +152,7 @@ bool Camera::GeneratePrimary(FatRay* ray) {
         float rand_offset = static_cast<float>(rand()) / RAND_MAX;
         us = _l + (ratio * (_x + (_i * cell_size) + (rand_offset * cell_size)) / _config->width);
         rand_offset = static_cast<float>(rand()) / RAND_MAX;
-        vs = _b + (1.0f * (_y + (_j * cell_size) + (rand_offset * cell_size)) / _config->height);
+        vs = _t - (1.0f * (_y + (_j * cell_size) + (rand_offset * cell_size)) / _config->height);
         ws = 1.0f;
         transmittance = 1.0f / (_config->antialiasing * _config->antialiasing);
     }

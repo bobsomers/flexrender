@@ -14,7 +14,7 @@ output {
 }
 
 render {
-    antialiasing = 1,
+    antialiasing = 3,
     min = {-100, -100, -100},
     max = {100, 100, 100},
 }

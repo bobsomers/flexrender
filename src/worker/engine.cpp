@@ -327,8 +327,8 @@ naive_intersection:
     if (ray->weak.worker > config->workers.size()) {
         if (ray->strong.worker == me) {
             // TODO: shade!
-            results->ops.emplace_back(BufferOp::Kind::WRITE, "intersection",
-             ray->x, ray->y, 1.0f);
+            results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "intersection",
+             ray->x, ray->y, 1.0f * ray->transmittance);
             delete ray; // TODO: keep this?
         } else if (ray->strong.worker != 0) {
             // Forward to the strong hit.

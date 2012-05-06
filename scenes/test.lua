@@ -7,7 +7,7 @@ local primitives = require "frlib.primitives"
 local vec3 = base.vec3
 
 camera {
-    eye = vec3(0, 0, 5),
+    eye = vec3(4, 2, 6),
     look = vec3(0, 0, 0)
 }
 
@@ -27,14 +27,40 @@ mesh {
         {1, 0, 0, 0},
         {0, 1, 0, 0},
         {0, 0, 1, 0},
-        {0, 0, 0, 1}
+        {2, 0, 2, 1}
     },
-    --[[
-    transforms = {
-        rotate(math.pi, {1, 2, 3}),
-        scale({4, 5, 6}),
-        translate({7, 8, 9})
+    data = primitives.cube(1)
+}
+
+mesh {
+    material = "brushed metal",
+    transform = {
+        {1, 0, 0, 0},
+        {0, 1, 0, 0},
+        {0, 0, 1, 0},
+        {-2, 0, 2, 1}
     },
-    ]]
+    data = primitives.cube(1)
+}
+
+mesh {
+    material = "brushed metal",
+    transform = {
+        {1, 0, 0, 0},
+        {0, 1, 0, 0},
+        {0, 0, 1, 0},
+        {2, 0, -2, 1}
+    },
+    data = primitives.cube(1)
+}
+
+mesh {
+    material = "brushed metal",
+    transform = {
+        {1, 0, 0, 0},
+        {0, 1, 0, 0},
+        {0, 0, 1, 0},
+        {-2, 0, -2, 1}
+    },
     data = primitives.cube(1)
 }

@@ -59,7 +59,7 @@ private:
     uint16_t _j;
     int16_t _end;
     float _l;
-    float _b;
+    float _t;
     glm::vec3 _u, _v, _w;
     bool _initialized;
 };
