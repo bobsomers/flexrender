@@ -1,36 +1,33 @@
--- library loaders for shaders, textures, and mesh data
-local frsl = require "frlib.loaders.frsl"
-local procedural = require "frlib.loaders.procedural"
-local fakeimg = require "frlib.loaders.fakeimg"
-local unitbox = require "frlib.loaders.unitbox"
+-- import functionality
+local base = require "frlib.base"
+local loaders = require "frlib.loaders"
+local primitives = require "frlib.primitives"
 
--- library functions for transforms
---local rotate = require "frlib.transforms.rotate"
---local scale = require "frlib.transforms.scale"
---local translate = require "frlib.transforms.translate"
+-- local aliases
+local vec3 = base.vec3
 
 camera {
-    eye = {0, 0, 5},
-    look = {0, 0, 0}
+    eye = vec3(0, 0, 5),
+    look = vec3(0, 0, 0)
 }
 
 material {
     name = "brushed metal",
     emissive = true,
-    shader = frsl("config.lua"),
+    shader = loaders.frsl("config.lua"),
     textures = {
-        diffuse = procedural("scenes/test.lua"),
-        specular = fakeimg("image.fake")
+        diffuse = loaders.procedural("scenes/test.lua"),
+        specular = loaders.fakeimg("image.fake")
     }
 }
 
 mesh {
     material = "brushed metal",
     transform = {
-        {1.1, 2.2, 3.3, 4.4},
-        {5.5, 6.6, 7.7, 8.8},
-        {9.9, 10.10, 11.11, 12.12},
-        {13.13, 14.14, 15.15, 16.16}
+        {1, 0, 0, 0},
+        {0, 1, 0, 0},
+        {0, 0, 1, 0},
+        {10, 20, 30, 1}
     },
     --[[
     transforms = {
@@ -39,5 +36,5 @@ mesh {
         translate({7, 8, 9})
     },
     ]]
-    data = unitbox()
+    data = primitives.cube(1)
 }
