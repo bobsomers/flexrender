@@ -298,6 +298,36 @@ protected:
     }
 
     /**
+     * Fetches a 4-dimensional vector as a table of 4 floats. It typechecks the
+     * elements of the vector. Assumes the table is on the top of the stack.
+     */
+    inline glm::vec4 FetchFloat4() {
+        glm::vec4 vec;
+        vec.x = std::numeric_limits<float>::quiet_NaN();
+        vec.y = std::numeric_limits<float>::quiet_NaN();
+        vec.z = std::numeric_limits<float>::quiet_NaN();
+        vec.w = std::numeric_limits<float>::quiet_NaN();
+
+        uint32_t count = 0;
+        ForEachIndex([this, &vec, &count](size_t index) {
+            if (count > 3) {
+                ScriptError("expected 4 numbers in table");
+            }
+
+            PushIndex(index, LUA_TNUMBER);
+            vec[index - 1] = FetchFloat();
+            PopIndex();
+            count++;
+        });
+
+        if (count != 4) {
+            ScriptError("expected 4 numbers in table");
+        }
+
+        return vec;
+    }
+
+    /**
      * Helper function for squirreling away a pointer to the object instance
      * inside the Lua interpreter registry. This works in conjuction with the
      * above macros to provide a much simpler interface for FlexScript

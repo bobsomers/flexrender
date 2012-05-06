@@ -7,7 +7,6 @@
 #include "msgpack.hpp"
 
 #include "types/triangle.hpp"
-#include "types/transform.hpp"
 #include "utils/tostring.hpp"
 
 namespace fr {
@@ -26,16 +25,34 @@ struct Mesh {
     /// Resource ID of the material to use for rendering.
     uint64_t material;
 
-    /// Centroid of the mesh.
-    glm::vec3 centroid;
+    /// Columns of the 4x4 transform matrix. Only used for syncing.
+    glm::vec4 xform_cols[4];
 
     /// The raw triangle data.
     std::vector<Triangle> tris;
 
-    /// List of transforms (in the order they should be applied).
-    std::vector<Transform> xforms;
+    /// Centroid of the mesh in WORLD space. Only used for scene distribution.
+    /// Not synced.
+    glm::vec3 centroid;
 
-    MSGPACK_DEFINE(id, material, centroid, tris, xforms);
+    /// The world space transformation matrix. Not synced, but recomputed on
+    /// worker.
+    glm::mat4 xform;
+
+    /// The inverse of the transformation matrix. Not synced, but recomputed on
+    /// worker.
+    glm::mat4 xform_inv;
+
+    /// The inverse transpose of the transformation matrix. Not synced, but
+    /// recomputed on worker.
+    glm::mat4 xform_inv_tr;
+
+    /// Uses the data in xform_cols to build the transformation matrix and
+    /// compute the inverse and inverse transpose.
+    void ComputeMatrices();
+
+    MSGPACK_DEFINE(id, material, xform_cols[0], xform_cols[1], xform_cols[2],
+     xform_cols[3], tris);
 
     TOSTRINGABLE(Mesh);
 };

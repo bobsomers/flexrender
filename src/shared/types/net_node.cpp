@@ -317,6 +317,9 @@ uint64_t NetNode::ReceiveMesh(Library *lib) {
     msgpack::object mp_obj = mp_msg.get();
     mp_obj.convert(mesh);
 
+    // Recompute transformation matrices.
+    mesh->ComputeMatrices();
+
     // Save it in the library.
     lib->StoreMesh(mesh->id, mesh);
 

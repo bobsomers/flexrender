@@ -8,6 +8,7 @@
 using std::string;
 using glm::vec2;
 using glm::vec3;
+using glm::vec4;
 using glm::normalize;
 
 namespace fr {
@@ -214,61 +215,24 @@ FR_SCRIPT_FUNCTION(SceneScript, Mesh) {
     mesh->material = _lib->LookupMaterial(FetchString());
     PopField();
 
-    // "mesh.transforms" is an optional table.
-    if (PushField("transforms", LUA_TTABLE)) {
-        ForEachIndex([this, mesh](size_t index) {
+    // "mesh.transforms" is an 4x4 array of floats.
+    if (PushField("transform", LUA_TTABLE)) {
+        vec4 rows[4];
+        uint32_t count = 0;
+        ForEachIndex([this, &rows, &count, mesh](size_t index) {
+            if (count > 3) {
+                ScriptError("expected 4 columns in a matrix");
+            }
+
             PushIndex(index, LUA_TTABLE);
-
-            Transform xform;
-
-            // "transform.kind" is a required string.
-            if (!PushField("kind", LUA_TSTRING)) {
-                ScriptError("transform.kind is required");
-            }
-            string kind = FetchString();
-            PopField();
-
-            if (kind == "rotate") {
-                xform.kind = Transform::Kind::ROTATE;
-
-                // "transform.scalar" is a required float.
-                if (!PushField("scalar", LUA_TNUMBER)) {
-                    ScriptError("transform.scalar is required for rotations");
-                }
-                xform.scalar = FetchFloat();
-                PopField();
-
-                // "transform.vector" is a required float3.
-                if (!PushField("vector", LUA_TTABLE)) {
-                    ScriptError("transform.vector is required for rotations");
-                }
-                xform.vec = normalize(FetchFloat3());
-                PopField();
-            } else if (kind == "scale") {
-                xform.kind = Transform::Kind::SCALE;
-
-                // "transform.vector" is a required float3.
-                if (!PushField("vector", LUA_TTABLE)) {
-                    ScriptError("transform.vector is required for scales");
-                }
-                xform.vec = FetchFloat3();
-                PopField();
-            } else if (kind == "translate") {
-                xform.kind = Transform::Kind::TRANSLATE;
-
-                // "transform.vector" is a required float3.
-                if (!PushField("vector", LUA_TTABLE)) {
-                    ScriptError("transform.vector is required for translations");
-                }
-                xform.vec = FetchFloat3();
-                PopField();
-            } else {
-                ScriptError("transform.kind must be 'rotation', 'scale', or 'translation'");
-            }
-
-            mesh->xforms.push_back(xform);
+            rows[index - 1] = FetchFloat4();
             PopIndex();
+            count++;
         });
+        mesh->xform_cols[0] = rows[0];
+        mesh->xform_cols[1] = rows[1];
+        mesh->xform_cols[2] = rows[2];
+        mesh->xform_cols[3] = rows[3];
     }
     PopField();
 
@@ -279,10 +243,17 @@ FR_SCRIPT_FUNCTION(SceneScript, Mesh) {
     CallFunc(0, 0);
     // no need to pop, 0 return values
     
-    // Compute the centroid of the mesh.
-    mesh->centroid = vec3(_centroid_num.x / _centroid_denom,
-                          _centroid_num.y / _centroid_denom,
-                          _centroid_num.z / _centroid_denom);
+    // Compute transformation matrices.
+    mesh->ComputeMatrices();
+
+    // Transform the centroid into world space.
+    vec4 centroid(_centroid_num.x / _centroid_denom,
+                  _centroid_num.y / _centroid_denom,
+                  _centroid_num.z / _centroid_denom,
+                  1.0f);
+    mesh->centroid = vec3(mesh->xform * centroid);
+
+    TOUTLN(ToString(*mesh));
 
     // Sync the mesh.
     uint64_t id = _syncer(mesh);

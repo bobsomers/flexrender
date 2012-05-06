@@ -12,4 +12,6 @@ std::string ToString(glm::vec3 vec, const std::string& indent = "");
 
 std::string ToString(glm::vec4 vec, const std::string& indent = "");
 
+std::string ToString(glm::mat4 mat, const std::string& indent = "");
+
 } // namespace fr
