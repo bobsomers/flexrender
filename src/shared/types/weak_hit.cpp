@@ -13,7 +13,7 @@ namespace fr {
 
 WeakHit::WeakHit(uint64_t worker) :
  worker(worker) {
-    t = numeric_limits<float>::quiet_NaN();
+    t = numeric_limits<float>::infinity();
 }
 
 WeakHit::WeakHit(uint64_t worker, float t) :
@@ -22,7 +22,7 @@ WeakHit::WeakHit(uint64_t worker, float t) :
 
 WeakHit::WeakHit() {
     worker = numeric_limits<uint64_t>::max();
-    t = numeric_limits<float>::quiet_NaN();
+    t = numeric_limits<float>::infinity();
 }
 
 string ToString(const WeakHit& weak, const string& indent) {

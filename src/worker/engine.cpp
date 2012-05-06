@@ -8,6 +8,7 @@
 #include "types.hpp"
 #include "utils.hpp"
 #include "ray_queue.hpp"
+#include "work_results.hpp"
 
 /// How long to wait for more data before flushing the send buffer.
 #define FR_FLUSH_TIMEOUT_MS 10
@@ -314,6 +315,7 @@ void server::OnWork(uv_work_t* req) {
     FatRay *ray = reinterpret_cast<FatRay*>(req->data);
 
     Config* config = lib->LookupConfig();
+    WorkResults* results = new WorkResults;
 
     if (ray->weak.worker == me) {
 naive_intersection:
@@ -325,33 +327,44 @@ naive_intersection:
     if (ray->weak.worker > config->workers.size()) {
         if (ray->strong.worker == me) {
             // TODO: shade!
+            TOUTLN("INTERSECTION! <" << ray->x << ", " << ray->y << ">");
+            delete ray; // TODO: keep this?
         } else if (ray->strong.worker != 0) {
-            // TODO: forward to ray->strong.worker
+            // Forward to the strong hit.
+            NetNode* node = lib->LookupNetNode(ray->strong.worker);
+            results->forwards.emplace_back(ray, node);
         } else {
-            // TODO: no hit!
+            // No hit! Kill off the ray.
+            delete ray;
         }
     } else if (ray->weak.worker == me) {
         goto naive_intersection;
     } else {
-        // TODO: forward to ray->weak.worker
+        // Forward to the weak hit.
+        NetNode* node = lib->LookupNetNode(ray->weak.worker);
+        results->forwards.emplace_back(ray, node);
     }
-    
-    // TODO: allocate a WorkResult, fill it potentially with a chain of buffer
-    // writes and a chain of rays.
 
-    // Kill off the ray.
-    delete ray;
+    // Pass the work results back through the data baton.
+    req->data = results;
 }
 
 void server::AfterWork(uv_work_t* req) {
     assert(req != nullptr);
+    assert(req->data != nullptr);
 
-    // TODO: Pull the work result out of the data baton.
+    // Pull the work result out of the data baton.
+    WorkResults* results = reinterpret_cast<WorkResults*>(req->data);
 
-    // TODO: process buffer writes
+    // TODO: do buffer writes
     
-    // TODO: process rays
+    // Forward rays and kill them off.
+    for (auto& forward : results->forwards) {
+        forward.node->SendRay(forward.ray);
+        delete forward.ray;
+    }
 
+    delete results;
     free(req);
 
     stats.rays_processed++;

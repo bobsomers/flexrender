@@ -15,7 +15,7 @@ StrongHit::StrongHit(uint64_t worker, uint64_t mesh) :
  worker(worker),
  mesh(mesh),
  geom(geom) {
-    t = numeric_limits<float>::quiet_NaN();
+    t = numeric_limits<float>::infinity();
 }
 
 StrongHit::StrongHit(uint64_t worker, uint64_t mesh, float t) :
@@ -28,7 +28,7 @@ StrongHit::StrongHit() :
  geom() {
     worker = numeric_limits<uint64_t>::max();
     mesh = numeric_limits<uint64_t>::max();
-    t = numeric_limits<float>::quiet_NaN();
+    t = numeric_limits<float>::infinity();
 }
 
 string ToString(const StrongHit& strong, const string& indent) {

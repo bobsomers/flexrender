@@ -6,7 +6,7 @@ network {
 }
 
 output {
-    size = {1280, 720},
+    size = {640, 480},
     name = "test",
     buffers = {
         "intersection"
