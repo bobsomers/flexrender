@@ -10,10 +10,6 @@ struct RayForward {
      ray(ray),
      node(node) {}
 
-    explicit RayForward() :
-     ray(nullptr),
-     node(nullptr) {}
-
     /// What are we sending?
     FatRay* ray;
 

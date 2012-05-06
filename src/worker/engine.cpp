@@ -327,7 +327,8 @@ naive_intersection:
     if (ray->weak.worker > config->workers.size()) {
         if (ray->strong.worker == me) {
             // TODO: shade!
-            TOUTLN("INTERSECTION! <" << ray->x << ", " << ray->y << ">");
+            results->ops.emplace_back(BufferOp::Kind::WRITE, "intersection",
+             ray->x, ray->y, 1.0f);
             delete ray; // TODO: keep this?
         } else if (ray->strong.worker != 0) {
             // Forward to the strong hit.
@@ -356,7 +357,20 @@ void server::AfterWork(uv_work_t* req) {
     // Pull the work result out of the data baton.
     WorkResults* results = reinterpret_cast<WorkResults*>(req->data);
 
-    // TODO: do buffer writes
+    // Do buffer operations.
+    Image* image = lib->LookupImage();
+    assert(image != nullptr);
+    for (auto& op : results->ops) {
+        switch (op.kind) {
+            case BufferOp::Kind::WRITE:
+                image->Write(op.buffer, op.x, op.y, op.value);
+                break;
+
+            case BufferOp::Kind::ACCUMULATE:
+                image->Accumulate(op.buffer, op.x, op.y, op.value);
+                break;
+        }
+    }
     
     // Forward rays and kill them off.
     for (auto& forward : results->forwards) {
