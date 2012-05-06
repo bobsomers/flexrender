@@ -4,24 +4,27 @@
 
 #include "glm/glm.hpp"
 
+#include "types/skinny_ray.hpp"
 #include "types/weak_hit.hpp"
 #include "types/strong_hit.hpp"
 #include "utils/tostring.hpp"
 
 namespace fr {
 
-struct Ray {
+struct Mesh;
+
+struct FatRay {
     enum Kind {
         NONE      = 0,
         INTERSECT = 1,
         LIGHT     = 2
     };
 
-    explicit Ray(Kind kind, int16_t x, int16_t y);
+    explicit FatRay(Kind kind, int16_t x, int16_t y);
 
-    explicit Ray(Kind kind);
+    explicit FatRay(Kind kind);
 
-    explicit Ray();
+    explicit FatRay();
 
     /// The kind of ray (from the above possible).
     uint16_t kind;
@@ -35,11 +38,8 @@ struct Ray {
     /// The number of times this ray has bounced (zero is primary).
     int16_t bounces;
 
-    /// The origin position of the ray.
-    glm::vec3 origin;
-
-    /// The normalized direction of the ray. Unit length is not enforced.
-    glm::vec3 direction;
+    /// The embedded skinny ray (origin and direction).
+    SkinnyRay skinny;
 
     /// The transmittance of light along this ray. Range is not enforced.
     float transmittance;
@@ -55,14 +55,18 @@ struct Ray {
 
     /// Next pointer for chaining rays together. Obviously not valid once the
     /// ray has been sent over the network.
-    Ray* next;
+    FatRay* next;
+
+    /// Returns a skinny ray that represents this fat ray transformed into
+    /// object space of the given mesh.
+    SkinnyRay TransformTo(const Mesh* mesh);
 
     /// Evaluate a point along the ray at a specific t value.
-    inline glm::vec3 operator()(float t) const { return direction * t + origin; }
+    inline glm::vec3 operator()(float t) const { return skinny(t); }
 
-    TOSTRINGABLE(Ray);
+    TOSTRINGABLE(FatRay);
 };
 
-std::string ToString(const Ray& ray, const std::string& indent = "");
+std::string ToString(const FatRay& ray, const std::string& indent = "");
 
 } // namespace fr

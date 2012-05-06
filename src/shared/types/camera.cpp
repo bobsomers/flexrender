@@ -9,7 +9,7 @@
 #include <limits>
 
 #include "types/config.hpp"
-#include "types/ray.hpp"
+#include "types/fat_ray.hpp"
 #include "utils/printers.hpp"
 
 using std::numeric_limits;
@@ -94,7 +94,7 @@ Camera::Camera() :
     _end = numeric_limits<int16_t>::min();
 }
 
-bool Camera::GeneratePrimary(Ray* ray) {
+bool Camera::GeneratePrimary(FatRay* ray) {
     assert(_config != nullptr);
 
     if (!_initialized) {
@@ -164,12 +164,12 @@ bool Camera::GeneratePrimary(Ray* ray) {
                      (_w * vec3(ws, ws, ws));
 
     // Fill in the ray.
-    ray->kind = Ray::Kind::INTERSECT;
+    ray->kind = FatRay::Kind::INTERSECT;
     ray->x = _x;
     ray->y = _y;
     ray->bounces = 0;
-    ray->origin = eye;
-    ray->direction = normalize(screen_pt - eye);
+    ray->skinny.origin = eye;
+    ray->skinny.direction = normalize(screen_pt - eye);
     ray->transmittance = transmittance;
     ray->weak.worker = 0;
     ray->strong.worker = 0;

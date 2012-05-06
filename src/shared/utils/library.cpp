@@ -1,10 +1,21 @@
 #include "utils/library.hpp"
 
+#include <limits>
+
+#include "glm/glm.hpp"
+
 #include "types.hpp"
 #include "utils.hpp"
+#ifdef FR_WORKER
+#   include "intersection.hpp"
+#endif
 
 using std::string;
 using std::function;
+using std::numeric_limits;
+using glm::vec3;
+using glm::vec4;
+using glm::normalize;
 
 namespace fr {
 
@@ -128,5 +139,39 @@ void Library::BuildSpatialIndex() {
 
     _chunk_size = ((SPACECODE_MAX + 1) / (_nodes.size() - 1)) + 1;
 }
+
+#ifdef FR_WORKER
+void Library::NaiveIntersect(FatRay* ray, uint64_t me) {
+    StrongHit nearest(0, 0, numeric_limits<float>::infinity());
+
+    for (uint64_t id = 1; id < _meshes.size(); id++) {
+        Mesh* mesh = _meshes[id];
+        if (mesh == nullptr) continue;
+
+        // Get a skinny ray in the mesh's object space.
+        SkinnyRay xformed_ray = ray->TransformTo(mesh);
+
+        for (const auto& tri : mesh->tris) {
+            float t = numeric_limits<float>::quiet_NaN();
+            LocalGeometry local;
+            if (IntersectRayTri(xformed_ray, tri, &t, &local) && t < nearest.t) {
+                nearest.worker = me;
+                nearest.mesh = id;
+                nearest.t = t;
+                nearest.geom = local;
+            }
+        }
+    }
+
+    if (nearest.worker > 0 && nearest.t < ray->strong.t) {
+        ray->strong = nearest;
+
+        // Correct the interpolated normal.
+        vec4 n(ray->strong.geom.n, 0.0f);
+        ray->strong.geom.n = normalize(
+         vec3(_meshes[ray->strong.mesh]->xform_inv_tr * n));
+    }
+}
+#endif
 
 }

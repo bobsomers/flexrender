@@ -8,7 +8,7 @@
 namespace fr {
 
 struct Config;
-struct Ray;
+struct FatRay;
 
 struct Camera {
     explicit Camera(const Config* config);
@@ -45,7 +45,7 @@ struct Camera {
      * Once all rays have been generated, returns false and the contents of ray
      * are undefined.
      */
-    bool GeneratePrimary(Ray* ray);
+    bool GeneratePrimary(FatRay* ray);
 
     MSGPACK_DEFINE(eye, look, up, rotation, ratio);
 

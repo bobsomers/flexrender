@@ -17,7 +17,7 @@ RayQueue::RayQueue(Camera* camera) :
  _light_size(0) {}
 
 RayQueue::~RayQueue() {
-    Ray* ray = nullptr;
+    FatRay* ray = nullptr;
 
     while (_light_front != nullptr) {
         ray = _light_front;
@@ -32,11 +32,11 @@ RayQueue::~RayQueue() {
     }
 }
 
-void RayQueue::Push(Ray* ray) {
+void RayQueue::Push(FatRay* ray) {
     assert(ray != nullptr);
 
     switch (ray->kind) {
-        case Ray::Kind::INTERSECT:
+        case FatRay::Kind::INTERSECT:
             if (_intersect_back != nullptr) {
                 _intersect_back->next = ray;
             } else {
@@ -47,7 +47,7 @@ void RayQueue::Push(Ray* ray) {
             _intersect_size++;
             break;
 
-        case Ray::Kind::LIGHT:
+        case FatRay::Kind::LIGHT:
             if (_light_back != nullptr) {
                 _light_back->next = ray;
             } else {
@@ -64,8 +64,8 @@ void RayQueue::Push(Ray* ray) {
     }
 }
 
-Ray* RayQueue::Pop() {
-    Ray* ray = nullptr;
+FatRay* RayQueue::Pop() {
+    FatRay* ray = nullptr;
 
     // Pull from the light queue first.
     ray = _light_front;
@@ -92,7 +92,7 @@ Ray* RayQueue::Pop() {
     }
 
     // Generate a primary ray if the intersection queue is empty.
-    ray = new Ray;
+    ray = new FatRay;
     if (_camera->GeneratePrimary(ray)) {
         return ray;
     }

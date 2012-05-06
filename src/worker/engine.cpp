@@ -295,7 +295,7 @@ void server::ScheduleJob() {
     }
 
     // Attempt to queue some work.
-    Ray* ray = rayq->Pop();
+    FatRay* ray = rayq->Pop();
     if (ray != nullptr) {
         uv_work_t* req = reinterpret_cast<uv_work_t*>(malloc(sizeof(uv_work_t)));
         req->data = ray;
@@ -311,12 +311,31 @@ void server::OnWork(uv_work_t* req) {
     // function will NOT run in the main thread, it runs on the thread pool.
 
     // Pull the ray out of the data baton.
-    Ray *ray = reinterpret_cast<Ray*>(req->data);
+    FatRay *ray = reinterpret_cast<FatRay*>(req->data);
 
-    // TODO: do work with the ray
+    Config* config = lib->LookupConfig();
+
+    if (ray->weak.worker == me) {
+naive_intersection:
+        lib->NaiveIntersect(ray, me);
+    }
+
+    ray->weak.worker++;
+
+    if (ray->weak.worker > config->workers.size()) {
+        if (ray->strong.worker == me) {
+            // TODO: shade!
+        } else if (ray->strong.worker != 0) {
+            // TODO: forward to ray->strong.worker
+        } else {
+            // TODO: no hit!
+        }
+    } else if (ray->weak.worker == me) {
+        goto naive_intersection;
+    } else {
+        // TODO: forward to ray->weak.worker
+    }
     
-    //TOUTLN("Ray <" << ray->x << ", " << ray->y << ">!");
-
     // TODO: allocate a WorkResult, fill it potentially with a chain of buffer
     // writes and a chain of rays.
 

@@ -287,7 +287,6 @@ void client::OnInterestingTimeout(uv_timer_t* timer, int status) {
         return;
     }
 
-
     // Display some information about the total number of rays being processed.
     uint64_t total_rays = 0;
     lib->ForEachNetNode([&total_rays](uint64_t id, NetNode* node) {
