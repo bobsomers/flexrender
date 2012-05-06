@@ -13,7 +13,7 @@
 #include "utils.hpp"
 
 /// How long to wait for more data before flushing the send buffer.
-#define FR_FLUSH_TIMEOUT_MS 100
+#define FR_FLUSH_TIMEOUT_MS 10
 
 using std::string;
 using std::stringstream;
