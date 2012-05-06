@@ -1,6 +1,7 @@
 #include "engine.hpp"
 
 #include <cassert>
+#include <sstream>
 #include <semaphore.h>
 #include <stdio.h>
 #include <errno.h>
@@ -15,6 +16,7 @@
 #define FR_FLUSH_TIMEOUT_MS 100
 
 using std::string;
+using std::stringstream;
 
 namespace fr {
 
@@ -29,6 +31,9 @@ static size_t num_workers_syncing = 0;
 
 /// The number of workers that are ready to render.
 static size_t num_workers_ready = 0;
+
+/// The number of workers that have sent and merged their images.
+static size_t num_workers_complete = 0;
 
 /// The timer for ensuring we flush the send buffer.
 static uv_timer_t flush_timer;
@@ -50,8 +55,9 @@ namespace client {
 void Init();
 void DispatchMessage(NetNode* node);
 void StartSync();
-void StartRender();
 uint64_t SyncMesh(Mesh* mesh);
+void StartRender();
+void StopRender();
 
 void OnConnect(uv_connect_t* req, int status);
 uv_buf_t OnAlloc(uv_handle_t* handle, size_t suggested_size);
@@ -63,6 +69,7 @@ void AfterSync(uv_work_t* req);
 void OnSyncIdle(uv_idle_t* handle, int status);
 
 void OnOK(NetNode* node);
+void OnSyncImage(NetNode* node);
 
 }
 
@@ -129,6 +136,10 @@ void client::DispatchMessage(NetNode* node) {
     switch (node->message.kind) {
         case Message::Kind::OK:
             OnOK(node);
+            break;
+
+        case Message::Kind::SYNC_IMAGE:
+            OnSyncImage(node);
             break;
 
         default:
@@ -240,6 +251,9 @@ void client::OnFlushTimeout(uv_timer_t* timer, int status) {
 }
 
 void client::OnOK(NetNode* node) {
+    Config* config = lib->LookupConfig();
+    assert(config != nullptr);
+
     switch (node->state) {
         case NetNode::State::INITIALIZING:
             node->state = NetNode::State::CONFIGURING;
@@ -251,7 +265,7 @@ void client::OnOK(NetNode* node) {
             node->state = NetNode::State::SYNCING_ASSETS;
             TOUTLN("[" << node->ip << "] Ready to sync.");
             num_workers_syncing++;
-            if (num_workers_syncing == lib->LookupConfig()->workers.size()) {
+            if (num_workers_syncing == config->workers.size()) {
                 StartSync();
             }
             break;
@@ -269,7 +283,7 @@ void client::OnOK(NetNode* node) {
             node->state = NetNode::State::READY;
             TOUTLN("[" << node->ip << "] Ready to render.");
             num_workers_ready++;
-            if (num_workers_ready == lib->LookupConfig()->workers.size()) {
+            if (num_workers_ready == config->workers.size()) {
                 StartRender();
             }
             break;
@@ -277,6 +291,56 @@ void client::OnOK(NetNode* node) {
         default:
             TERRLN("Received OK in unexpected state.");
     }
+}
+
+void client::OnSyncImage(NetNode* node) {
+    assert(node != nullptr);
+    assert(lib != nullptr);
+
+    int result = 0;
+
+    Config* config = lib->LookupConfig();
+    assert(config != nullptr);
+
+    Image* final = lib->LookupImage();
+    assert(final != nullptr);
+
+    Image* component = node->ReceiveImage();
+    assert(component != nullptr);
+
+    // Write the component image out as name-worker.exr.
+    stringstream component_file;
+    component_file << config->name << "-" << node->ip << "_" << node->port <<
+     ".exr";
+    TOUTLN("Writing " << component_file.str() << "...");
+    component->ToEXRFile(component_file.str());
+
+    // Merge the component image with the final image.
+    final->Merge(component);
+    TOUTLN("[" << node->ip << "] Merged image.");
+
+    // Done with the component image.
+    delete component;
+
+    // Done for now if this wasn't the last worker.
+    num_workers_complete++;
+    if (num_workers_complete < config->workers.size()) {
+        return;
+    }
+
+    // Write out the final image.
+    final->ToEXRFile(config->name + ".exr");
+    TOUTLN("Wrote " << config->name << ".exr.");
+
+    // Disconnect from each worker.
+    lib->ForEachNetNode([config](uint64_t id, NetNode* node) {
+        uv_close(reinterpret_cast<uv_handle_t*>(&node->socket), OnClose);
+    });
+
+    // Shutdown the flush timer.
+    result = uv_timer_stop(&flush_timer);
+    CheckUVResult(result, "timer_stop");
+    uv_close(reinterpret_cast<uv_handle_t*>(&flush_timer), nullptr);
 }
 
 void client::StartSync() {
@@ -320,13 +384,12 @@ void client::StartSync() {
 
 void client::StartRender() {
     Config* config = lib->LookupConfig();
-    size_t num_workers = num_workers_ready;
 
     // Send render start messages to each server.
-    lib->ForEachNetNode([config, num_workers](uint64_t id, NetNode* node) {
-        uint16_t chunk_size = config->width / num_workers;
+    lib->ForEachNetNode([config](uint64_t id, NetNode* node) {
+        uint16_t chunk_size = config->width / config->workers.size();
         int16_t offset = (id - 1) * chunk_size;
-        if (id == num_workers) {
+        if (id == config->workers.size()) {
             chunk_size = config->width - (id - 1) * chunk_size;
         }
         uint32_t payload = (offset << 16) | chunk_size;
@@ -341,6 +404,21 @@ void client::StartRender() {
     });
 
     TOUTLN("Rendering has started.");
+
+    // TODO: remove this, just testing
+    StopRender();
+}
+
+void client::StopRender() {
+    // Send render stop messages to each server.
+    lib->ForEachNetNode([](uint64_t id, NetNode* node) {
+        Message request(Message::Kind::RENDER_STOP);
+        node->Send(request);
+        node->state = NetNode::State::SYNCING_IMAGES;
+        TOUTLN("[" << node->ip << "] Stopping render.");
+    });
+
+    TOUTLN("Rendering has stopped, syncing images.");
 }
 
 void client::OnSyncStart(uv_work_t* req) {
@@ -420,6 +498,7 @@ void client::OnSyncIdle(uv_idle_t* handle, int status) {
         // Shut off the idle handler.
         result = uv_idle_stop(handle);
         CheckUVResult(result, "idle_stop");
+        uv_close(reinterpret_cast<uv_handle_t*>(handle), nullptr);
 
         // Sync the camera with everyone.
         lib->ForEachNetNode([](uint64_t id, NetNode* node) {

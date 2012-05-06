@@ -55,6 +55,7 @@ void OnSyncTexture(NetNode* node);
 void OnSyncShader(NetNode* node);
 void OnSyncCamera(NetNode* node);
 void OnRenderStart(NetNode* node);
+void OnRenderStop(NetNode* node);
 
 } // namespace server
 
@@ -202,6 +203,11 @@ void server::OnClose(uv_handle_t* handle) {
     if (node == renderer) {
         delete node;
         renderer = nullptr;
+
+        // Disconnect all clients.
+        lib->ForEachNetNode([](uint64_t id, NetNode* node) {
+            uv_close(reinterpret_cast<uv_handle_t*>(&node->socket), client::OnClose);
+        });
     }
 }
 
@@ -237,6 +243,10 @@ void server::DispatchMessage(NetNode* node) {
 
         case Message::Kind::RENDER_START:
             OnRenderStart(node);
+            break;
+
+        case Message::Kind::RENDER_STOP:
+            OnRenderStop(node);
             break;
 
         default:
@@ -363,6 +373,15 @@ void server::OnRenderStart(NetNode* node) {
     Camera* camera = lib->LookupCamera();
     assert(camera != nullptr);
     camera->SetRange(offset, chunk_size);
+}
+
+void server::OnRenderStop(NetNode* node) {
+    assert(node != nullptr);
+    assert(lib != nullptr);
+
+    node->SendImage(lib);
+
+    TOUTLN("[" << node->ip << "] Sending image to renderer.");
 }
 
 void OnFlushTimeout(uv_timer_t* timer, int status) {

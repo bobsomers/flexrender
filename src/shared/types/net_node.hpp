@@ -25,7 +25,8 @@ public:
         SYNCING_ASSETS,
         SYNCING_CAMERA,
         READY,
-        RENDERING
+        RENDERING,
+        SYNCING_IMAGES,
     };
 
     enum class ReadMode {
