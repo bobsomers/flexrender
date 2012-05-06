@@ -24,7 +24,7 @@ struct Ray {
     explicit Ray();
 
     /// The kind of ray (from the above possible).
-    int16_t kind; 
+    uint16_t kind;
 
     /// The x component of the source pixel.
     int16_t x;

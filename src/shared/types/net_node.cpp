@@ -491,4 +491,24 @@ void NetNode::SendShader(const Library* lib, uint64_t id) {
     _shaders[id] = true;
 }
 
+Ray* NetNode::ReceiveRay() {
+    assert(message.size == sizeof(Ray));
+
+    // Forgo safe deserialization for speed.
+    Ray* ray = new Ray;
+    memcpy(ray, message.body, sizeof(Ray));
+
+    return ray;
+}
+
+void NetNode::SendRay(Ray* ray) {
+    Message msg(Message::Kind::RAY);
+
+    // Forgo safe serialization for speed.
+    msg.size = sizeof(Ray);
+    msg.body = ray;
+
+    Send(msg);
+}
+
 } // namespace fr

@@ -7,6 +7,7 @@
 
 #include "types.hpp"
 #include "utils.hpp"
+#include "ray_queue.hpp"
 
 /// How long to wait for more data before flushing the send buffer.
 #define FR_FLUSH_TIMEOUT_MS 10
@@ -17,6 +18,9 @@ namespace fr {
 
 /// The library for the current render.
 static Library* lib = nullptr;
+
+/// The ray queue for the current render.
+static RayQueue* rayq = nullptr;
 
 /// The libuv socket for the server we're running.
 static uv_tcp_t host;
@@ -47,6 +51,7 @@ void OnRead(uv_stream_t* stream, ssize_t nread, uv_buf_t buf);
 void OnClose(uv_handle_t* handle);
 //void AfterWork(uv_work_t* req);
 
+void OnRay(NetNode* node);
 void OnInit(NetNode* node);
 void OnSyncConfig(NetNode* node);
 void OnSyncMesh(NetNode* node);
@@ -213,6 +218,10 @@ void server::OnClose(uv_handle_t* handle) {
 
 void server::DispatchMessage(NetNode* node) {
     switch (node->message.kind) {
+        case Message::Kind::RAY:
+            OnRay(node);
+            break;
+
         case Message::Kind::INIT:
             OnInit(node);
             break;
@@ -254,6 +263,14 @@ void server::DispatchMessage(NetNode* node) {
             TERRLN(ToString(node->message));
             break;
     }
+}
+
+void server::OnRay(NetNode* node) {
+    assert(node != nullptr);
+    assert(rayq != nullptr);
+    
+    // Unpack the ray and push it into the queue.
+    rayq->Push(node->ReceiveRay());
 }
 
 void server::OnInit(NetNode* node) {
@@ -351,6 +368,10 @@ void server::OnSyncCamera(NetNode* node) {
 
     // Unpack the camera.
     node->ReceiveCamera(lib);
+
+    // Create a fresh ray queue.
+    if (rayq != nullptr) delete rayq;
+    rayq = new RayQueue(lib->LookupCamera());
 
     // Reply with OK.
     Message reply(Message::Kind::OK);

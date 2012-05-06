@@ -15,6 +15,7 @@ namespace fr {
 
 class Library;
 class Image;
+struct Ray;
 
 class NetNode {
 public:
@@ -118,6 +119,12 @@ public:
 
     /// Sends the given shader to this node.
     void SendShader(const Library* lib, uint64_t id);
+
+    /// Receives the message in the net node's buffer as a freshly allocated ray.
+    Ray* ReceiveRay();
+
+    /// Sends the given ray to this node.
+    void SendRay(Ray* ray);
 
     /// Flushes the send buffer, forcing all buffered messages to be written.
     void Flush();
