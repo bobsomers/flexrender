@@ -4,3 +4,6 @@
 
 # Profiling results.
 /profile.txt
+
+# Rendered images.
+/*.exr
