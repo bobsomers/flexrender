@@ -2,8 +2,6 @@
 
 #include <cstdlib>
 #include <string>
-#include <sstream>
-#include <limits>
 
 #include "glm/glm.hpp"
 #include "luajit-2.0/lua.hpp"
@@ -77,9 +75,7 @@ protected:
     /**
      * Kills script execution with the given error message.
      */
-    inline void ScriptError(const std::string& message) {
-        luaL_error(_state, message.c_str());
-    }
+    void ScriptError(const std::string& message);
 
     /**
      * This will call a Lua function with num_args arguments pushed onto the
@@ -87,121 +83,69 @@ protected:
      * original function and its arguments will be popped automatically by
      * Lua.
      */
-    inline void CallFunc(int num_args, int num_returns) {
-        if (lua_pcall(_state, num_args, num_returns, 0)) {
-            ScriptError(lua_tostring(_state, -1));
-        }
-    }
+    void CallFunc(int num_args, int num_returns);
 
     /**
      * Verifies that the first argument to this function call was a table, and
      * pushes a copy of that table onto the top of the stack (so all indexing
      * can be done with negative indices).
      */
-    inline void BeginTableCall() {
-        luaL_checktype(_state, 1, LUA_TTABLE);
-        lua_pushvalue(_state, 1);
-    }
+    void BeginTableCall();
 
     /**
      * Pops the copy of the table we pushed off the stack.
      */
-    inline void EndTableCall() {
-        lua_pop(_state, 1);
-    }
+    void EndTableCall();
 
     /**
      * Pushes a string representation of the given resource ID onto the stack
      * and returns the number of arguments pushed (1).
      */
-    inline int ReturnResourceID(uint64_t id) {
-        std::stringstream stream;
-        stream << id;
-        lua_pushstring(_state, stream.str().c_str());
-        return 1;
-    }
+    int ReturnResourceID(uint64_t id);
 
     /**
      * Takes a string representation of a resource ID and decodes it back to
      * a 64-bit unsigned integer.
      */
-    inline uint64_t DecodeResourceID(std::string value) {
-        std::istringstream stream(value);
-        uint64_t id;
-        stream >> id;
-        return id;
-    }
+    uint64_t DecodeResourceID(std::string value);
 
     /**
      * Verifies that the top of the stack has the passed type. You may pass an
      * optional cosmetic name of the thing you're type checking to make the
      * error message better.
      */
-    inline void TypeCheck(int type, const std::string& name = "") {
-        if (lua_type(_state, -1) != type) {
-            std::stringstream message;
-            message << "expected ";
-            if (name != "") {
-                message << name << " to be a ";
-            }
-            message << lua_typename(_state, type);
-            message << ", got a ";
-            message << lua_typename(_state, lua_type(_state, -1));
-            message << " instead";
-            ScriptError(message.str());
-        }
-    }
+    void TypeCheck(int type, const std::string& name = "");
 
     /**
      * Assuming the table is on the top of the stack, push the field named
      * name onto the stack if it passes a type check of the given luatype.
      * Returns true if the field was found, false if it wasnt.
      */
-    inline bool PushField(const char* name, int field_type) {
-        lua_getfield(_state, -1, name);
-        if (lua_isnil(_state, -1)) {
-            return false;
-        }
-        TypeCheck(field_type, name);
-        return true;
-    }
+    bool PushField(const char* name, int field_type);
 
     /**
      * Removed the pushed field from the stack.
      */
-    inline void PopField() {
-        lua_pop(_state, 1);
-    }
+    void PopField();
 
     /**
      * Runs the given function over all numerically indexed elements in the
      * table on the top of the stack. Passes into that function the index of
      * the current element.
      */
-    inline void ForEachIndex(std::function<void (size_t)> func) {
-        for (size_t i = 1; i <= lua_objlen(_state, -1); i++) {
-            func(i);
-        }
-    }
+    void ForEachIndex(std::function<void (size_t)> func);
 
     /**
      * Pushes the numerical index of a table (which should be on the top of
      * the stack) onto the stack. Does a type check to make sure that the
      * pushed value is of passed type index_type.
      */
-    inline void PushIndex(size_t index, int index_type) {
-        lua_rawgeti(_state, -1, index);
-        std::stringstream name;
-        name << "[" << index << "]";
-        TypeCheck(index_type, name.str());
-    }
+    void PushIndex(size_t index, int index_type);
 
     /**
      * Pops a pushed index value off the stack.
      */
-    inline void PopIndex() {
-        lua_pop(_state, 1);
-    }
+    void PopIndex();
 
     /**
      * Iterates over the key/value pairs in a table that is on the top of the
@@ -209,123 +153,40 @@ protected:
      * anything to get the value. The value will be sitting on the top of the
      * stack when the lambda is called.
      */
-    inline void ForEachKeyVal(std::function<void (const std::string &key)> func) {
-        lua_pushnil(_state); // for first iteration
-        while (lua_next(_state, -2) != 0) {
-            std::string key = std::string(lua_tostring(_state, -2));
-            func(key);
-            lua_pop(_state, 1);
-        }
-    
-    }
+    void ForEachKeyVal(std::function<void (const std::string &key)> func);
 
     /**
      * Returns the top of the stack as a string. It is not type checked.
      */
-    inline std::string FetchString() {
-        return std::string(lua_tostring(_state, -1));
-    }
+    std::string FetchString();
 
     /**
      * Returns the top of the stack as a boolean. It is not type checked.
      */
-    inline bool FetchBool() {
-        return lua_toboolean(_state, -1) ? true : false;
-    }
+    bool FetchBool();
 
     /**
      * Returns the top of the stack as a float. It is not type checked.
      */
-    inline float FetchFloat() {
-        return static_cast<float>(lua_tonumber(_state, -1));
-    }
+    float FetchFloat();
 
     /**
      * Fetches a 2-dimensional vector as a table of 2 floats. It typechecks the
      * elements of the vector. Assumes the table is on the top of the stack.
      */
-    inline glm::vec2 FetchFloat2() {
-        glm::vec2 vec;
-        vec.x = std::numeric_limits<float>::quiet_NaN();
-        vec.y = std::numeric_limits<float>::quiet_NaN();
-
-        uint32_t count = 0;
-        ForEachIndex([this, &vec, &count](size_t index) {
-            if (count > 1) {
-                ScriptError("expected 2 numbers in table");
-            }
-
-            PushIndex(index, LUA_TNUMBER);
-            vec[index - 1] = FetchFloat();
-            PopIndex();
-            count++;
-        });
-
-        if (count != 2) {
-            ScriptError("expected 2 numbers in table");
-        }
-
-        return vec;
-    }
+    glm::vec2 FetchFloat2();
 
     /**
      * Fetches a 3-dimensional vector as a table of 3 floats. It typechecks the
      * elements of the vector. Assumes the table is on the top of the stack.
      */
-    inline glm::vec3 FetchFloat3() {
-        glm::vec3 vec;
-        vec.x = std::numeric_limits<float>::quiet_NaN();
-        vec.y = std::numeric_limits<float>::quiet_NaN();
-        vec.z = std::numeric_limits<float>::quiet_NaN();
-
-        uint32_t count = 0;
-        ForEachIndex([this, &vec, &count](size_t index) {
-            if (count > 2) {
-                ScriptError("expected 3 numbers in table");
-            }
-
-            PushIndex(index, LUA_TNUMBER);
-            vec[index - 1] = FetchFloat();
-            PopIndex();
-            count++;
-        });
-
-        if (count != 3) {
-            ScriptError("expected 3 numbers in table");
-        }
-
-        return vec;
-    }
+    glm::vec3 FetchFloat3();
 
     /**
      * Fetches a 4-dimensional vector as a table of 4 floats. It typechecks the
      * elements of the vector. Assumes the table is on the top of the stack.
      */
-    inline glm::vec4 FetchFloat4() {
-        glm::vec4 vec;
-        vec.x = std::numeric_limits<float>::quiet_NaN();
-        vec.y = std::numeric_limits<float>::quiet_NaN();
-        vec.z = std::numeric_limits<float>::quiet_NaN();
-        vec.w = std::numeric_limits<float>::quiet_NaN();
-
-        uint32_t count = 0;
-        ForEachIndex([this, &vec, &count](size_t index) {
-            if (count > 3) {
-                ScriptError("expected 4 numbers in table");
-            }
-
-            PushIndex(index, LUA_TNUMBER);
-            vec[index - 1] = FetchFloat();
-            PopIndex();
-            count++;
-        });
-
-        if (count != 4) {
-            ScriptError("expected 4 numbers in table");
-        }
-
-        return vec;
-    }
+    glm::vec4 FetchFloat4();
 
     /**
      * Helper function for squirreling away a pointer to the object instance

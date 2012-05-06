@@ -302,8 +302,6 @@ void server::OnSyncMesh(NetNode* node) {
     Message reply(Message::Kind::OK);
     node->Send(reply);
 
-    TOUTLN(ToString(*lib->LookupMesh(id)));
-
     TOUTLN("[" << node->ip << "] Received mesh " << id << ".");
 }
 

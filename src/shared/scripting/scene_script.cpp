@@ -253,8 +253,6 @@ FR_SCRIPT_FUNCTION(SceneScript, Mesh) {
                   1.0f);
     mesh->centroid = vec3(mesh->xform * centroid);
 
-    TOUTLN(ToString(*mesh));
-
     // Sync the mesh.
     uint64_t id = _syncer(mesh);
 
