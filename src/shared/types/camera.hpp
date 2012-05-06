@@ -32,11 +32,12 @@ struct Camera {
     /// The aspect ratio of the camera.
     float ratio;
 
-    MSGPACK_DEFINE(eye, look, up, rotation, ratio);
-
-    TOSTRINGABLE(Camera);
-
     inline void SetConfig(const Config* config) { _config = config; }
+
+    inline void SetRange(int16_t offset, uint16_t chunk_size) {
+        _x = offset;
+        _end = offset + chunk_size;
+    }
 
     /**
      * Generates a single primary ray based on the passed config and the
@@ -46,12 +47,17 @@ struct Camera {
      */
     bool GeneratePrimary(Ray* ray);
 
+    MSGPACK_DEFINE(eye, look, up, rotation, ratio);
+
+    TOSTRINGABLE(Camera);
+
 private:
     const Config* _config;
     int16_t _x;
     int16_t _y;
     uint16_t _i;
     uint16_t _j;
+    int16_t _end;
     float _l;
     float _b;
     glm::vec3 _u, _v, _w;

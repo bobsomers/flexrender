@@ -54,6 +54,8 @@ Camera::Camera(const Config* config) :
     _w.x = numeric_limits<float>::quiet_NaN();
     _w.y = numeric_limits<float>::quiet_NaN();
     _w.z = numeric_limits<float>::quiet_NaN();
+
+    _end = numeric_limits<int16_t>::min();
 }
 
 Camera::Camera() :
@@ -88,6 +90,8 @@ Camera::Camera() :
     _w.x = numeric_limits<float>::quiet_NaN();
     _w.y = numeric_limits<float>::quiet_NaN();
     _w.z = numeric_limits<float>::quiet_NaN();
+
+    _end = numeric_limits<int16_t>::min();
 }
 
 bool Camera::GeneratePrimary(Ray* ray) {
@@ -125,7 +129,7 @@ bool Camera::GeneratePrimary(Ray* ray) {
     }
 
     // Termination condition.
-    if (_x >= _config->width) {
+    if (_x >= _end) {
         ray = nullptr;
         return false;
     }

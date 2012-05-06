@@ -359,9 +359,10 @@ void server::OnRenderStart(NetNode* node) {
     int16_t offset = (payload & 0xffff0000) >> 16;
     uint16_t chunk_size = payload & 0xffff;
 
-    // TODO: do something with them
-    TOUTLN("offset = " << offset);
-    TOUTLN("chunk_size = " << chunk_size);
+    // Set the camera range.
+    Camera* camera = lib->LookupCamera();
+    assert(camera != nullptr);
+    camera->SetRange(offset, chunk_size);
 }
 
 void OnFlushTimeout(uv_timer_t* timer, int status) {
