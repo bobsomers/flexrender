@@ -99,6 +99,18 @@ string ToString(const FatRay& ray, const string& indent) {
              indent << "| next = " << hex << showbase << ray.next << endl;
             break;
 
+        case FatRay::Kind::ILLUMINATE:
+            stream << indent << "| kind = ILLUMINATE" << endl <<
+             indent << "| x = " << ray.x << endl <<
+             indent << "| y = " << ray.y << endl <<
+             indent << "| bounces = " << ray.bounces << endl <<
+             indent << "| skinny = " << ToString(ray.skinny, pad) << endl <<
+             indent << "| transmittance = " << ray.transmittance << endl <<
+             indent << "| weak = " << ToString(ray.weak, pad) << endl <<
+             indent << "| strong = " << ToString(ray.strong, pad) << endl <<
+             indent << "| next = " << hex << showbase << ray.next << endl;
+            break;
+
         case FatRay::Kind::LIGHT:
             stream << indent << "| kind = LIGHT" << endl <<
              indent << "| x = " << ray.x << endl <<

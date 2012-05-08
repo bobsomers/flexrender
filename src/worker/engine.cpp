@@ -56,6 +56,12 @@ namespace server {
 void Init(const string& ip, uint16_t port);
 void DispatchMessage(NetNode* node);
 void ScheduleJob();
+void ProcessRay(FatRay* ray, WorkResults* results);
+void ProcessIntersect(FatRay* ray, WorkResults* results);
+void ProcessIlluminate(FatRay* ray, WorkResults* results);
+void ProcessLight(FatRay* ray, WorkResults* results);
+void ForwardRay(FatRay* ray, WorkResults* results, uint64_t id);
+void ShadeRay(FatRay* ray, WorkResults* results);
 
 void OnConnection(uv_stream_t* stream, int status);
 uv_buf_t OnAlloc(uv_handle_t* handle, size_t suggested_size);
@@ -311,6 +317,96 @@ void server::ScheduleJob() {
     }
 }
 
+void server::ProcessRay(FatRay* ray, WorkResults* results) {
+    // !!! WARNING !!!
+    // Everything this function does and calls must be thread-safe. This
+    // function will NOT run in the main thread, it runs on the thread pool.
+    switch (ray->kind) {
+        case FatRay::Kind::INTERSECT:
+            ProcessIntersect(ray, results);
+            break;
+
+        case FatRay::Kind::ILLUMINATE:
+            ProcessIlluminate(ray, results);
+            break;
+
+        case FatRay::Kind::LIGHT:
+            ProcessLight(ray, results);
+            break;
+
+        default:
+            TERRLN("Unknown ray kind " << ray->kind << ".");
+            break;
+    }
+}
+
+void server::ProcessIntersect(FatRay* ray, WorkResults* results) {
+    // !!! WARNING !!!
+    // Everything this function does and calls must be thread-safe. This
+    // function will NOT run in the main thread, it runs on the thread pool.
+    Config* config = lib->LookupConfig();
+
+    // Our turn to check for a strong hit?
+    if (ray->weak.worker == me) {
+        lib->NaiveIntersect(ray, me);
+    }
+
+    // Move the ray to the next worker.
+    ray->weak.worker++;
+
+    // Have we checked every worker?
+    if (ray->weak.worker > config->workers.size()) {
+        // Yes, are we the strong hit?
+        if (ray->strong.worker == me) {
+            // Yes, let's do shading and kill the ray.
+            ShadeRay(ray, results);
+            delete ray;
+        } else if (ray->strong.worker != 0) {
+            // No, forward to the worker that is.
+            ForwardRay(ray, results, ray->strong.worker);
+        } else {
+            // There was no strong hit! Kill the ray.
+            delete ray;
+        }
+    } else {
+        // Forward it on.
+        ForwardRay(ray, results, ray->weak.worker);
+    }
+}
+
+void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
+    // !!! WARNING !!!
+    // Everything this function does and calls must be thread-safe. This
+    // function will NOT run in the main thread, it runs on the thread pool.
+
+    // TODO
+}
+
+void server::ProcessLight(FatRay* ray, WorkResults* results) {
+    // !!! WARNING !!!
+    // Everything this function does and calls must be thread-safe. This
+    // function will NOT run in the main thread, it runs on the thread pool.
+
+    // TODO
+}
+
+void server::ForwardRay(FatRay* ray, WorkResults* results, uint64_t id) {
+    if (id == me) {
+        // Push the ray back through the processing stack to save thread and
+        // network overhead.
+        ProcessRay(ray, results);
+    } else {
+        // Register the forwarding request.
+        NetNode* node = lib->LookupNetNode(id);
+        results->forwards.emplace_back(ray, node);
+    }
+}
+
+void server::ShadeRay(FatRay* ray, WorkResults* results) {
+    results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "intersection",
+     ray->x, ray->y, 1.0f * ray->transmittance);
+}
+
 void server::OnWork(uv_work_t* req) {
     // !!! WARNING !!!
     // Everything this function does and calls must be thread-safe. This
@@ -319,37 +415,11 @@ void server::OnWork(uv_work_t* req) {
     // Pull the ray out of the data baton.
     FatRay *ray = reinterpret_cast<FatRay*>(req->data);
 
-    Config* config = lib->LookupConfig();
+    // Allocate results of this work.
     WorkResults* results = new WorkResults;
 
-    if (ray->weak.worker == me) {
-naive_intersection:
-        lib->NaiveIntersect(ray, me);
-    }
-
-    ray->weak.worker++;
-
-    if (ray->weak.worker > config->workers.size()) {
-        if (ray->strong.worker == me) {
-            // TODO: shade!
-            results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "intersection",
-             ray->x, ray->y, 1.0f * ray->transmittance);
-            delete ray; // TODO: keep this?
-        } else if (ray->strong.worker != 0) {
-            // Forward to the strong hit.
-            NetNode* node = lib->LookupNetNode(ray->strong.worker);
-            results->forwards.emplace_back(ray, node);
-        } else {
-            // No hit! Kill off the ray.
-            delete ray;
-        }
-    } else if (ray->weak.worker == me) {
-        goto naive_intersection;
-    } else {
-        // Forward to the weak hit.
-        NetNode* node = lib->LookupNetNode(ray->weak.worker);
-        results->forwards.emplace_back(ray, node);
-    }
+    // Dispatch the ray.
+    ProcessRay(ray, results);
 
     // Pass the work results back through the data baton.
     req->data = results;

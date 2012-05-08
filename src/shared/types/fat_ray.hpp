@@ -15,9 +15,10 @@ struct Mesh;
 
 struct FatRay {
     enum Kind {
-        NONE      = 0,
-        INTERSECT = 1,
-        LIGHT     = 2
+        NONE       = 0,
+        INTERSECT  = 1,
+        ILLUMINATE = 2,
+        LIGHT      = 3
     };
 
     explicit FatRay(Kind kind, int16_t x, int16_t y);
