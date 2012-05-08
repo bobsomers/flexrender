@@ -66,6 +66,12 @@ bool IntersectRayTri(const SkinnyRay& ray, const Triangle& tri, float* t,
                     (b2 * tri.verts[2].n.z));
     local->n = normalize(local->n);
 
+    // Check the interpolated normal against the ray normal to cull back-facing
+    // intersections.
+    if (dot(local->n, ray.direction) > 0.0f) {
+        return false;
+    }
+
     // Compute the interpolated texture coordinate from the barycentric coords.
     local->t = vec2((b0 * tri.verts[0].t.x) + // first coordinate (u)
                     (b1 * tri.verts[1].t.x) +
