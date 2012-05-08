@@ -98,6 +98,12 @@ FR_SCRIPT_FUNCTION(ConfigScript, Render) {
     }
     PopField();
 
+    // "samples" is an optional uint16
+    if (PushField("samples", LUA_TNUMBER)) {
+        _config->samples = static_cast<uint16_t>(FetchFloat());
+    }
+    PopField();
+
     // "min" is a required float3
     if (!PushField("min", LUA_TTABLE)) {
         ScriptError("render.min is required");

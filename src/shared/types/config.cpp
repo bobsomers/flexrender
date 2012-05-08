@@ -17,6 +17,7 @@ Config::Config() :
  width(640),
  height(480),
  antialiasing(0),
+ samples(10),
  name("output"),
  workers(),
  buffers() {
@@ -38,6 +39,7 @@ string ToString(const Config& config, const string& indent) {
      indent << "| min = " << ToString(config.min) << endl <<
      indent << "| max = " << ToString(config.max) << endl <<
      indent << "| antialiasing = " << config.antialiasing << endl <<
+     indent << "| samples = " << config.samples << endl <<
      indent << "| name = " << config.name << endl <<
      indent << "| workers = {" << endl;
     for (const auto& worker : config.workers) {
