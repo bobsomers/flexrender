@@ -1,8 +1,8 @@
 #!/bin/bash -e
 
-PACKAGENAME="glm-0.9.3.2"
+function build_glm {
+    PACKAGENAME="glm-0.9.3.2"
 
-function build_glm() {
     echo ""
     echo "======================================================================"
     echo "    BUILDING $PACKAGENAME @ "`date`

@@ -1,8 +1,8 @@
 #!/bin/bash -e
 
-PACKAGENAME="msgpack-0.5.7"
+function build_msgpack {
+    PACKAGENAME="msgpack-0.5.7"
 
-function build_msgpack() {
     echo ""
     echo "======================================================================"
     echo "    BUILDING $PACKAGENAME @ "`date`

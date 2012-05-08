@@ -1,8 +1,8 @@
 #!/bin/bash -e
 
-PACKAGENAME="libuv-0.6"
+function build_libuv {
+    PACKAGENAME="libuv-0.6"
 
-function build_libuv() {
     echo ""
     echo "======================================================================"
     echo "    BUILDING $PACKAGENAME @ "`date`

@@ -1,8 +1,8 @@
 #!/bin/bash -e
 
-PACKAGENAME="LuaJIT-2.0.0-beta9"
+function build_luajit {
+    PACKAGENAME="LuaJIT-2.0.0-beta9"
 
-function build_luajit() {
     echo ""
     echo "======================================================================"
     echo "    BUILDING $PACKAGENAME @ "`date`

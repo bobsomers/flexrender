@@ -1,8 +1,8 @@
 #!/bin/bash -e
 
-PACKAGENAME="openexr-1.7.0"
+function build_openexr {
+    PACKAGENAME="openexr-1.7.0"
 
-function build_openexr() {
     echo ""
     echo "======================================================================"
     echo "    BUILDING $PACKAGENAME @ "`date`

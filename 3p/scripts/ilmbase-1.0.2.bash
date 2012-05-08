@@ -1,8 +1,8 @@
 #!/bin/bash -e
 
-PACKAGENAME="ilmbase-1.0.2"
+function build_ilmbase {
+    PACKAGENAME="ilmbase-1.0.2"
 
-function build_ilmbase() {
     echo ""
     echo "======================================================================"
     echo "    BUILDING $PACKAGENAME @ "`date`

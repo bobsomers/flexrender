@@ -4,6 +4,9 @@ echo "======================================================================"
 echo "    BUILD STARTING @ "`date`
 echo "======================================================================"
 
+source $BASEPATH/scripts/download.bash
+download_packages
+
 source $BASEPATH/scripts/luajit-2.0.0-beta9.bash
 build_luajit
 
