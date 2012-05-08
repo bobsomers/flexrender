@@ -1,15 +1,5 @@
--- Loads the FlexRender Shading Language source code into a FlexRender shader.
-local function frsl(filename)
-    local f = assert(io.open(filename, "r"))
-    local procedure = f:read("*a")
-    f:close()
-
-    return shader {
-        code = procedure
-    }
-end
-
--- Loads the procedural texture source code into a FlexRender texture.
+-- Loads a procedural texture source file into a FlexRender texture.
+-- Returns the resource ID of the texture.
 local function procedural(filename)
     local f = assert(io.open(filename, "r"))
     local procedure = f:read("*a")
@@ -21,7 +11,7 @@ local function procedural(filename)
     }
 end
 
--- Creates fake image data for testing FlexRender image textures.
+-- Fake image texture loader for testing only.
 local function fakeimg(filename)
     return texture {
         kind = "image",
@@ -35,7 +25,6 @@ end
 
 -- Module exports.
 return {
-    frsl = frsl,
     procedural = procedural,
     fakeimg = fakeimg
 }
