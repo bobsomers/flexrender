@@ -80,11 +80,35 @@ local function normalize(v)
     return v / length(v)
 end
 
+-- Computes the reflection vector based on the incident vector i and surface
+-- normal n.
+local function reflect(i, n)
+    n = normalize(n)
+    return i - 2 * dot(n, i) * n
+end
+
+-- Computes the refraction vector based on the incident vector i, surface
+-- normal n, and ratio of indices of refraction eta. Returns false (instead of
+-- a vector) if total internal reflection occurs.
+local function refract(i, n, eta)
+    i = normalize(i)
+    n = normalize(n)
+    local ndoti = dot(n, i)
+    local k = 1 - eta * eta * (1 - ndoti * ndoti)
+    if k < 0 then
+        return false
+    end
+
+    return eta * i - (eta * ndoti + math.sqrt(k)) * n
+end
+
 -- Module exports.
 return {
     length = length,
     distance = distance,
     dot = dot,
     cross = cross,
-    normalize = normalize
+    normalize = normalize,
+    reflect = reflect,
+    refract = refract
 }

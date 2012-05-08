@@ -30,6 +30,8 @@ return {
     dot = geometric.dot,
     cross = geometric.cross,
     normalize = geometric.normalize,
+    reflect = geometric.reflect,
+    refract = geometric.refract,
     scale = transform.scale,
     rotate = transform.rotate,
     translate = transform.translate
