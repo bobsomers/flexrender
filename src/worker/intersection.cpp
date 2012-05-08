@@ -12,6 +12,10 @@ using glm::normalize;
 
 namespace fr {
 
+/// Avoid self-intersection by only recognizing intersections that occur
+/// at this minimum t-value along the ray.
+const float INTERSECT_EPSILON = 0.0001f;
+
 bool IntersectRayTri(const SkinnyRay& ray, const Triangle& tri, float* t,
  LocalGeometry* local) {
     // From Physically Based Rendering, page 141.
@@ -44,6 +48,11 @@ bool IntersectRayTri(const SkinnyRay& ray, const Triangle& tri, float* t,
     // coordinate, b0.
     *t = dot(e2, s2) * inv_divisor;
     float b0 = 1.0f - b1 - b2;
+
+    // Bail if the intersection doesn't meet our epsilon requirements.
+    if (*t < INTERSECT_EPSILON) {
+        return false;
+    }
 
     // Compute the interpolated normal from the barycentric coordinates.
     local->n = vec3((b0 * tri.verts[0].n.x) + // first coordinate (x)
