@@ -10,5 +10,6 @@ return {
     frsl = sloaders.frsl,
     procedural = tloaders.procedural,
     fakeimg = tloaders.fakeimg,
+    plane = simple.plane,
     cube = simple.cube
 }

@@ -18,12 +18,24 @@ camera {
 
 material {
     name = "brushed metal",
-    emissive = true,
+    emissive = false,
     shader = fre.frsl("config.lua"),
     textures = {
         diffuse = fre.procedural("scenes/test.lua"),
         specular = fre.fakeimg("image.fake")
     }
+}
+
+material {
+    name = "light",
+    emissive = true,
+    shader = fre.frsl("config.lua")
+}
+
+mesh {
+    material = "light",
+    transform = translate(vec3(0, 3, 0)) * rotate(radians(90), vec3(1, 0, 0)),
+    data = fre.plane(5)
 }
 
 mesh {

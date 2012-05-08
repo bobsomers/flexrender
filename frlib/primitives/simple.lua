@@ -10,6 +10,40 @@ local geometric = require "base.geometric"
 local vec2 = types.vec2
 local vec3 = types.vec3
 
+-- Creates a function that returns geometry for a square in the xy-plane with
+-- sides of length n centered at the origin.
+local function plane(n)
+    return function()
+        local h = n / 2
+        triangle {{
+            v = vec3(-h, -h, 0),
+            n = vec3(0, 0, 1),
+            t = vec2(0, 0)
+        }, {
+            v = vec3(-h, h, 0),
+            n = vec3(0, 0, 1),
+            t = vec2(0, 1)
+        }, {
+            v = vec3(h, -h, 0),
+            n = vec3(0, 0, 1),
+            t = vec2(1, 0)
+        }}
+        triangle {{
+            v = vec3(h, h, 0),
+            n = vec3(0, 0, 1),
+            t = vec2(1, 1)
+        }, {
+            v = vec3(h, -h, 0),
+            n = vec3(0, 0, 1),
+            t = vec2(1, 0)
+        }, {
+            v = vec3(-h, h, 0),
+            n = vec3(0, 0, 1),
+            t = vec2(0, 1)
+        }}
+    end
+end
+
 -- Creates a function that returns geometry for a cube with sides of length n
 -- centered at the origin.
 local function cube(n)
@@ -188,5 +222,6 @@ end
 
 -- Module exports.
 return {
+    plane = plane,
     cube = cube
 }
