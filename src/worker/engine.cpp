@@ -380,6 +380,10 @@ void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
     // function will NOT run in the main thread, it runs on the thread pool.
 
     // TODO
+    TOUTLN(ToString(*ray));
+
+    // Kill the ray.
+    delete ray;
 }
 
 void server::ProcessLight(FatRay* ray, WorkResults* results) {
@@ -388,6 +392,9 @@ void server::ProcessLight(FatRay* ray, WorkResults* results) {
     // function will NOT run in the main thread, it runs on the thread pool.
 
     // TODO
+
+    // Kill the ray.
+    delete ray;
 }
 
 void server::ForwardRay(FatRay* ray, WorkResults* results, uint64_t id) {
@@ -403,8 +410,17 @@ void server::ForwardRay(FatRay* ray, WorkResults* results, uint64_t id) {
 }
 
 void server::ShadeRay(FatRay* ray, WorkResults* results) {
+    // TODO: just for debugging
     results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "intersection",
      ray->x, ray->y, 1.0f * ray->transmittance);
+
+    // Create ILLUMINATE rays and send them to each emissive node.
+    LightList* lights = lib->LookupLightList();
+    lights->ForEachEmissiveWorker([ray, results](uint64_t id) {
+        FatRay* illum = new FatRay(*ray);
+        illum->kind = FatRay::Kind::ILLUMINATE;
+        ForwardRay(illum, results, id);
+    });
 }
 
 void server::OnWork(uv_work_t* req) {
