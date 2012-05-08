@@ -6,9 +6,6 @@
 
 #include "types.hpp"
 #include "utils.hpp"
-#ifdef FR_WORKER
-#   include "intersection.hpp"
-#endif
 
 using std::string;
 using std::function;
@@ -147,7 +144,6 @@ void Library::BuildSpatialIndex() {
     _chunk_size = ((SPACECODE_MAX + 1) / (_nodes.size() - 1)) + 1;
 }
 
-#ifdef FR_WORKER
 void Library::NaiveIntersect(FatRay* ray, uint64_t me) {
     StrongHit nearest(0, 0, numeric_limits<float>::infinity());
 
@@ -180,6 +176,5 @@ void Library::NaiveIntersect(FatRay* ray, uint64_t me) {
          vec3(_meshes[ray->strong.mesh]->xform_inv_tr * n));
     }
 }
-#endif
 
 }

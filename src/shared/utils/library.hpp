@@ -22,9 +22,7 @@ struct Texture;
 struct Material;
 struct Mesh;
 class NetNode;
-#ifdef FR_WORKER
 struct FatRay;
-#endif
 
 class Library : private Uncopyable {
 public:
@@ -105,9 +103,7 @@ public:
         return _meshes[id];
     }
 
-#ifdef FR_WORKER
     void NaiveIntersect(FatRay* ray, uint64_t me);
-#endif
 
     // Net nodes...
     void StoreNetNode(uint64_t id, NetNode* node);

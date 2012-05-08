@@ -35,9 +35,23 @@ solution "flexrender"
             "`PKG_CONFIG_PATH=3p/build/lib/pkgconfig pkg-config --cflags OpenEXR`"
         }
         linkoptions {
+            "-Lbin -lfr", -- This is annoying, but necessary.
             "`PKG_CONFIG_PATH=3p/build/lib/pkgconfig pkg-config --libs --static luajit`",
             "`PKG_CONFIG_PATH=3p/build/lib/pkgconfig pkg-config --libs --static IlmBase`",
             "`PKG_CONFIG_PATH=3p/build/lib/pkgconfig pkg-config --libs --static OpenEXR`"
+        }
+
+    project "libfr"
+        kind "StaticLib"
+        language "C++"
+        targetdir "bin"
+        targetname "fr"
+        files {
+            "src/shared/**.cpp"
+        }
+        includedirs {
+            "src/shared",
+            "3p/build/include"
         }
 
     project "flexrender"
@@ -46,10 +60,7 @@ solution "flexrender"
         targetdir "bin"
         targetname "flexrender"
         files {
-            "src/render/**.hpp",
-            "src/render/**.cpp",
-            "src/shared/**.hpp",
-            "src/shared/**.cpp"
+            "src/render/**.cpp"
         }
         includedirs {
             "src/render",
@@ -57,15 +68,14 @@ solution "flexrender"
             "3p/build/include",
         }
         libdirs {
+            "bin",
             "3p/build/lib"
         }
         links {
+            "libfr",
             "rt",
             "uv",
             "msgpack"
-        }
-        defines {
-            "FR_RENDER"
         }
 
     project "flexworker"
@@ -74,10 +84,7 @@ solution "flexrender"
         targetdir "bin"
         targetname "flexworker"
         files {
-            "src/worker/**.hpp",
-            "src/worker/**.cpp",
-            "src/shared/**.hpp",
-            "src/shared/**.cpp"
+            "src/worker/**.cpp"
         }
         includedirs {
             "src/worker",
@@ -85,13 +92,12 @@ solution "flexrender"
             "3p/build/include",
         }
         libdirs {
+            "bin",
             "3p/build/lib"
         }
         links {
+            "libfr",
             "rt",
             "uv",
             "msgpack"
-        }
-        defines {
-            "FR_WORKER"
         }

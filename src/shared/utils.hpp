@@ -1,6 +1,7 @@
 #pragma once
 
 #include "utils/cmdline.hpp"
+#include "utils/intersection.hpp"
 #include "utils/library.hpp"
 #include "utils/network.hpp"
 #include "utils/printers.hpp"
