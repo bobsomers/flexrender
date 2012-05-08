@@ -1,7 +1,26 @@
+--[[
+    FlexRender scripting library base functionality.
+
+    Includes vector (vec2, vec3, vec4) types and a 4x4 matrix type (mat4) which
+    is a set of 4 column vectors.
+
+    Each vector type has component-wise arithmetic defined, including type
+    coersion where possible to include scalar/vector operations and stepping
+    up and down in vector dimensionality.
+
+    Also includes utility functions for common vector/matrix ops such as length,
+    distance, dot products, cross products, and normalization.
+
+    Lastly, there are helpers for constructing common 4D transformation
+    matrices, such as scaling (uniform and non-uniform), rotation about the
+    cardinal axes, and translation.
+]]
+
 local common = {}
 local vec2 = {}
 local vec3 = {}
 local vec4 = {}
+local mat4 = {}
 
 -- Common forwarding methods for all base types.
 function common.__call(parent, ...)
@@ -26,6 +45,15 @@ function common.__newindex(table, key, value)
         error("no member named '" .. key .. "'", 2)
     end
     func(table, value)
+end
+
+-- General utility functions.
+local function radians(d)
+    return math.pi / 180 * d
+end
+
+local function degrees(r)
+    return 180 / math.pi * r
 end
 
 -- 2D Vector
@@ -355,12 +383,7 @@ function vec4.__unm(v)
     return vec4.frnew(-v[1], -v[2], -v[3], -v[4])
 end
 
--- Parent base types to common type.
-setmetatable(vec2, common)
-setmetatable(vec3, common)
-setmetatable(vec4, common)
-
--- Utility functions.
+-- Vector utility functions.
 local function length(v)
     local mt = getmetatable(v)
 
@@ -427,14 +450,208 @@ local function normalize(v)
     return v / length(v)
 end
 
+-- 4x4 Matrix
+function mat4.new(...)
+    local m = nil
+
+    local nargs = select('#', ...)
+    if nargs == 0 then
+        m = {vec4.frnew(1, 0, 0, 0),
+             vec4.frnew(0, 1, 0, 0),
+             vec4.frnew(0, 0, 1, 0),
+             vec4.frnew(0, 0, 0, 1)}
+    elseif nargs == 1 then
+        local arg = select(1, ...)
+        local argmt = getmetatable(arg)
+        if type(arg) == "number" then
+            m = {vec4.frnew(arg, arg, arg, arg),
+                 vec4.frnew(arg, arg, arg, arg),
+                 vec4.frnew(arg, arg, arg, arg),
+                 vec4.frnew(arg, arg, arg, arg)}
+        elseif argmt == mat4 then
+            m = {vec4.frnew(arg[1][1], arg[1][2], arg[1][3], arg[1][4]),
+                 vec4.frnew(arg[2][1], arg[2][2], arg[2][3], arg[2][4]),
+                 vec4.frnew(arg[3][1], arg[3][2], arg[3][3], arg[3][4]),
+                 vec4.frnew(arg[4][1], arg[4][2], arg[4][3], arg[4][4])}
+        else
+            error("invalid construction of mat4", 3)
+        end
+    elseif nargs == 4 then
+        local args = {select(1, ...), select(2, ...), select(3, ...), select(4, ...)}
+        if getmetatable(args[1]) ~= vec4 or getmetatable(args[2]) ~= vec4 or getmetatable(args[3]) ~= vec4 or getmetatable(args[4]) ~= vec4 then
+            error("invalid construction of vec4", 3)
+        end
+        m = {vec4.frnew(args[1][1], args[1][2], args[1][3], args[1][4]),
+             vec4.frnew(args[2][1], args[2][2], args[2][3], args[2][4]),
+             vec4.frnew(args[3][1], args[3][2], args[3][3], args[3][4]),
+             vec4.frnew(args[4][1], args[4][2], args[4][3], args[4][4])}
+    elseif nargs == 16 then
+        local args = {select(1, ...), select(2, ...), select(3, ...), select(4, ...),
+                      select(5, ...), select(6, ...), select(7, ...), select(8, ...),
+                      select(9, ...), select(10, ...), select(11, ...), select(12, ...),
+                      select(13, ...), select(14, ...), select(15, ...), select(16, ...)}
+        if type(args[1]) ~= "number" or type(args[2]) ~= "number" or type(args[3]) ~= "number" or type(args[4]) ~= "number" or
+           type(args[5]) ~= "number" or type(args[6]) ~= "number" or type(args[7]) ~= "number" or type(args[8]) ~= "number" or
+           type(args[9]) ~= "number" or type(args[10]) ~= "number" or type(args[11]) ~= "number" or type(args[12]) ~= "number" or
+           type(args[13]) ~= "number" or type(args[14]) ~= "number" or type(args[15]) ~= "number" or type(args[16]) ~= "number" then
+            error("invalid construction of mat4", 3)
+        end
+        m = {vec4.frnew(args[1], args[2], args[3], args[4]),
+             vec4.frnew(args[5], args[6], args[7], args[8]),
+             vec4.frnew(args[9], args[10], args[11], args[12]),
+             vec4.frnew(args[13], args[14], args[15], args[16])}
+    else
+        error("invalid construction of mat4", 3)
+    end
+
+    setmetatable(m, mat4)
+    return m
+end
+
+function mat4.frnew(a, b, c, d)
+    local m = {a, b, c, d}
+    setmetatable(m, mat4)
+    return m
+end
+
+function mat4.frcoerce(val)
+    if getmetatable(val) == mat4 then
+        return val
+    end
+
+    local result, m = pcall(mat4.new, val)
+    if result then
+        return m
+    end
+
+    error("no known conversion to mat4", 3)
+end
+
+function mat4.__tostring(m)
+    return table.concat {
+        "mat4<",
+        tostring(m[1]), ", ",
+        tostring(m[2]), ", ",
+        tostring(m[3]), ", ",
+        tostring(m[4]), ">"
+    }
+end
+
+function mat4.__add(a, b)
+    a = mat4.frcoerce(a)
+    b = mat4.frcoerce(b)
+    return mat4.frnew(a[1] + b[1], a[2] + b[2], a[3] + b[3], a[4] + b[4])
+end
+
+function mat4.__sub(a, b)
+    a = mat4.frcoerce(a)
+    b = mat4.frcoerce(b)
+    return mat4.frnew(a[1] - b[1], a[2] - b[2], a[3] - b[3], a[4] - b[4])
+end
+
+function mat4.__mul(a, b)
+    local mta = getmetatable(a)
+    local mtb = getmetatable(b)
+
+    if mta == mat4 then
+        local rows = {vec4.frnew(a[1][1], a[2][1], a[3][1], a[4][1]),
+                      vec4.frnew(a[1][2], a[2][2], a[3][2], a[4][2]),
+                      vec4.frnew(a[1][3], a[2][3], a[3][3], a[4][3]),
+                      vec4.frnew(a[1][4], a[2][4], a[3][4], a[4][4])}
+        local cols = b
+        if mtb == mat4 then
+            return mat4.frnew(vec4.frnew(dot(rows[1], cols[1]), dot(rows[2], cols[1]), dot(rows[3], cols[1]), dot(rows[4], cols[1])),
+                              vec4.frnew(dot(rows[1], cols[2]), dot(rows[2], cols[2]), dot(rows[3], cols[2]), dot(rows[4], cols[2])),
+                              vec4.frnew(dot(rows[1], cols[3]), dot(rows[2], cols[3]), dot(rows[3], cols[3]), dot(rows[4], cols[3])),
+                              vec4.frnew(dot(rows[1], cols[4]), dot(rows[2], cols[4]), dot(rows[3], cols[4]), dot(rows[4], cols[4])))
+        elseif mtb == vec4 then
+            return vec4.frnew(dot(rows[1], cols),
+                              dot(rows[2], cols),
+                              dot(rows[3], cols),
+                              dot(rows[4], cols))
+        end
+    end
+
+    a = mat4.frcoerce(a)
+    b = mat4.frcoerce(b)
+    return mat4.frnew(a[1] * b[1], a[2] * b[2], a[3] * b[3], a[4] * b[4])
+end
+
+function mat4.__div(a, b)
+    a = mat4.frcoerce(a)
+    b = mat4.frcoerce(b)
+    return mat4.frnew(a[1] / b[1], a[2] / b[2], a[3] / b[3], a[4] / b[4])
+end
+
+function mat4.__unm(m)
+    return mat4.frnew(-m[1], -m[2], -m[3], -m[4])
+end
+
+-- Matrix utility functions.
+local function scale(v)
+    v = vec3.frcoerce(v)
+    return mat4.frnew(vec4.frnew(v[1], 0, 0, 0),
+                      vec4.frnew(0, v[2], 0, 0),
+                      vec4.frnew(0, 0, v[3], 0),
+                      vec4.frnew(0, 0, 0, 1))
+end
+
+local function rotate(a, v)
+    if type(a) ~= "number" then
+        error("rotate expects the angle to be a number (in radians)", 2)
+    end
+    v = vec3.frcoerce(v)
+
+    local c = math.cos(a)
+    local s = math.sin(a)
+    local axis = normalize(v)
+
+    -- Credit: GLM, in matrix_transform.inl
+    local d = vec4.frnew(c + (1 - c) * axis[1] * axis[1],
+                         (1 - c) * axis[1] * axis[2] + s * axis[3],
+                         (1 - c) * axis[1] * axis[3] - s * axis[2],
+                         0)
+    local e = vec4.frnew((1 - c) * axis[2] * axis[1] - s * axis[3],
+                         c + (1 - c) * axis[2] * axis[2],
+                         (1 - c) * axis[2] * axis[3] + s * axis[1],
+                         0)
+    local f = vec4.frnew((1 - c) * axis[3] * axis[1] + s * axis[2],
+                         (1 - c) * axis[3] * axis[2] - s * axis[1],
+                         c + (1 - c) * axis[3] * axis[3],
+                         0)
+
+    return mat4.frnew(d, e, f, vec4.frnew(0, 0, 0, 1))
+end
+
+local function translate(v)
+    v = vec3.frcoerce(v)
+
+    return mat4.frnew(vec4.frnew(1, 0, 0, 0),
+                      vec4.frnew(0, 1, 0, 0),
+                      vec4.frnew(0, 0, 1, 0),
+                      vec4(v, 1))
+end
+
+-- Parent base types to common type.
+setmetatable(vec2, common)
+setmetatable(vec3, common)
+setmetatable(vec4, common)
+setmetatable(mat4, common)
+
 -- Module exports.
 return {
+    radians = radians,
+    degrees = degrees,
     vec2 = vec2,
     vec3 = vec3,
     vec4 = vec4,
+    mat4 = mat4,
     length = length,
     distance = distance,
     dot = dot,
     cross = cross,
-    normalize = normalize
+    normalize = normalize,
+    scale = scale,
+    rotate = rotate,
+    translate = translate
 }
