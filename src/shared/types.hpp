@@ -5,6 +5,7 @@
 #include "types/config.hpp"
 #include "types/fat_ray.hpp"
 #include "types/image.hpp"
+#include "types/light_list.hpp"
 #include "types/local_geometry.hpp"
 #include "types/material.hpp"
 #include "types/mesh.hpp"

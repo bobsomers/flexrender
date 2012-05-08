@@ -35,6 +35,10 @@ SceneScript::SceneScript(SyncCallback syncer) :
 bool SceneScript::Parse(const string& filename, Library *lib) {
     _lib = lib;
 
+    // Create a new light list and save it in the library.
+    LightList* lights = new LightList;
+    _lib->StoreLightList(lights);
+
     // Evaluate the file.
     if (luaL_dofile(_state, filename.c_str())) {
         TERRLN(lua_tostring(_state, -1));

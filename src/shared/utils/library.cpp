@@ -23,6 +23,7 @@ Library::Library() :
  _config(nullptr),
  _camera(nullptr),
  _image(nullptr),
+ _lights(nullptr),
  _shaders(),
  _textures(),
  _materials(),
@@ -43,6 +44,7 @@ Library::~Library() {
     if (_config != nullptr) delete _config;
     if (_camera != nullptr) delete _camera;
     if (_image != nullptr) delete _image;
+    if (_lights != nullptr) delete _lights;
 
     for (size_t i = 0; i < _shaders.size(); i++) {
         if (_shaders[i] != nullptr) delete _shaders[i];
@@ -74,6 +76,11 @@ void Library::StoreCamera(Camera* camera) {
 void Library::StoreImage(Image* image) {
     if (_image != nullptr) delete _image;
     _image = image;
+}
+
+void Library::StoreLightList(LightList* lights) {
+    if (_lights != nullptr) delete _lights;
+    _lights = lights;
 }
 
 void Library::StoreShader(uint64_t id, Shader* shader) {

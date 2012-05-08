@@ -205,6 +205,8 @@ void client::OnConnect(uv_connect_t* req, int status) {
         request.body = &id;
         node->state = NetNode::State::INITIALIZING;
         node->Send(request);
+
+        node->me = id;
     });
 }
 
@@ -325,6 +327,12 @@ void client::OnOK(NetNode* node) {
             break;
 
         case NetNode::State::SYNCING_CAMERA:
+            node->state = NetNode::State::SYNCING_EMISSIVE;
+            TOUTLN("[" << node->ip << "] Syncing list of emissive workers.");
+            node->SendLightList(lib);
+            break;
+
+        case NetNode::State::SYNCING_EMISSIVE:
             node->state = NetNode::State::READY;
             TOUTLN("[" << node->ip << "] Ready to render.");
             num_workers_ready++;

@@ -27,6 +27,7 @@ public:
         CONFIGURING,
         SYNCING_ASSETS,
         SYNCING_CAMERA,
+        SYNCING_EMISSIVE,
         READY,
         RENDERING,
         SYNCING_IMAGES,
@@ -41,6 +42,9 @@ public:
 
     explicit NetNode(DispatchCallback dispatcher, const std::string& address);
     explicit NetNode(DispatchCallback dispatcher);
+
+    /// The resource ID of this net node.
+    uint64_t me;
 
     /// The TCP socket this net node is connected on.
     uv_tcp_t socket;
@@ -82,14 +86,20 @@ public:
     /// Receives the message in the net node's buffer as a config.
     void ReceiveConfig(Library* lib);
 
-    /// Sends the given config to this node.
+    /// Sends the config to this node.
     void SendConfig(const Library* lib);
 
     /// Receives the message in the net node's buffer as a camera.
     void ReceiveCamera(Library* lib);
 
-    /// Sends the given camera to this node.
+    /// Sends the camera to this node.
     void SendCamera(const Library* lib);
+
+    /// Receives the message in the net node's buffer as a light list.
+    void ReceiveLightList(Library* lib);
+
+    /// Sends the light list to this node.
+    void SendLightList(const Library* lib);
 
     /// Receives the message in the net node's buffer as a freshly allocated
     /// image.

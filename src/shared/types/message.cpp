@@ -64,6 +64,10 @@ string ToString(const Message& msg, const string& indent) {
             stream << indent << "| kind = SYNC_CAMERA" << endl;
             break;
 
+        case Message::Kind::SYNC_EMISSIVE:
+            stream << indent << "| kind = SYNC_EMISSIVE" << endl;
+            break;
+
         case Message::Kind::SYNC_IMAGE:
             stream << indent << "| kind = SYNC_IMAGE" << endl;
             break;

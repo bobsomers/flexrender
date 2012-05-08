@@ -16,6 +16,7 @@ namespace fr {
 struct Config;
 struct Camera;
 class Image;
+class LightList;
 struct Shader;
 struct Texture;
 struct Material;
@@ -44,6 +45,11 @@ public:
     void StoreImage(Image* image);
 
     inline Image* LookupImage() const { return _image; }
+
+    // Light lists...
+    void StoreLightList(LightList* lights);
+
+    inline LightList* LookupLightList() const { return _lights; }
 
     // Shaders...
     inline uint64_t NextShaderID() const { return _shaders.size(); }
@@ -143,6 +149,7 @@ private:
     Config *_config;
     Camera* _camera;
     Image* _image;
+    LightList* _lights;
     std::vector<Shader*> _shaders;
     std::vector<Texture*> _textures;
     std::vector<Material*> _materials;

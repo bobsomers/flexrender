@@ -16,6 +16,7 @@ using std::unordered_map;
 namespace fr {
 
 NetNode::NetNode(DispatchCallback dispatcher, const string& address) :
+ me(0),
  state(State::NONE),
  mode(ReadMode::HEADER),
  message(),
@@ -40,6 +41,7 @@ NetNode::NetNode(DispatchCallback dispatcher, const string& address) :
 }
 
 NetNode::NetNode(DispatchCallback dispatcher) :
+ me(0),
  state(State::NONE),
  ip(""),
  port(0),
@@ -278,6 +280,41 @@ void NetNode::SendCamera(const Library* lib) {
     Send(request);
 }
 
+void NetNode::ReceiveLightList(Library* lib) {
+    assert(message.size > 0);
+
+    // Deserialize the payload.
+    msgpack::unpacked mp_msg;
+    msgpack::unpack(&mp_msg, reinterpret_cast<const char*>(message.body), message.size);
+
+    // Unpack the light list.
+    LightList *lights = new LightList;
+    msgpack::object mp_obj = mp_msg.get();
+    mp_obj.convert(lights);
+
+    // Save it in the library.
+    lib->StoreLightList(lights);
+}
+
+void NetNode::SendLightList(const Library* lib) {
+    assert(lib != nullptr);
+
+    LightList* lights = lib->LookupLightList();
+    assert(lights != nullptr);
+
+    Message request(Message::Kind::SYNC_EMISSIVE);
+
+    // Serialize the payload.
+    msgpack::sbuffer buffer;
+    msgpack::pack(buffer, *lights);
+
+    // Pack the message body.
+    request.size = buffer.size();
+    request.body = buffer.data();
+
+    Send(request);
+}
+
 Image* NetNode::ReceiveImage() {
     assert(message.size > 0);
 
@@ -391,6 +428,13 @@ void NetNode::SendMaterial(const Library* lib, uint64_t id) {
     // Send each of the textures first.
     for (const auto& kv_pair : material->textures) {
         SendTexture(lib, kv_pair.second);
+    }
+
+    // Is this material emissive? If so, this worker should be in the light
+    // list.
+    if (material->emissive) {
+        LightList* lights = lib->LookupLightList();
+        lights->AddEmissiveWorker(me);
     }
 
     Message request(Message::Kind::SYNC_MATERIAL);

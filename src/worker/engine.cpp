@@ -73,6 +73,7 @@ void OnSyncMaterial(NetNode* node);
 void OnSyncTexture(NetNode* node);
 void OnSyncShader(NetNode* node);
 void OnSyncCamera(NetNode* node);
+void OnSyncEmissive(NetNode* node);
 void OnRenderStart(NetNode* node);
 void OnRenderStop(NetNode* node);
 
@@ -268,6 +269,10 @@ void server::DispatchMessage(NetNode* node) {
 
         case Message::Kind::SYNC_CAMERA:
             OnSyncCamera(node);
+            break;
+
+        case Message::Kind::SYNC_EMISSIVE:
+            OnSyncEmissive(node);
             break;
 
         case Message::Kind::RENDER_START:
@@ -511,6 +516,20 @@ void server::OnSyncCamera(NetNode* node) {
     TOUTLN("[" << node->ip << "] Received camera.");
 }
 
+void server::OnSyncEmissive(NetNode* node) {
+    assert(node != nullptr);
+    assert(lib != nullptr);
+
+    // Unpack the light list.
+    node->ReceiveLightList(lib);
+
+    // Reply with OK.
+    Message reply(Message::Kind::OK);
+    node->Send(reply);
+
+    TOUTLN("[" << node->ip << "] Received list of emissive workers.");
+}
+
 void server::OnRenderStart(NetNode* node) {
     assert(node != nullptr);
     assert(lib != nullptr);
@@ -527,6 +546,8 @@ void server::OnRenderStart(NetNode* node) {
     Camera* camera = lib->LookupCamera();
     assert(camera != nullptr);
     camera->SetRange(offset, chunk_size);
+
+    TOUTLN("Starting render with range " << offset << " -> " << (offset + chunk_size) << ".");
 
     // Start the stats timer.
     result = uv_timer_start(&stats_timer, OnStatsTimeout, FR_STATS_TIMEOUT_MS,
