@@ -360,9 +360,81 @@ setmetatable(vec2, common)
 setmetatable(vec3, common)
 setmetatable(vec4, common)
 
+-- Utility functions.
+local function length(v)
+    local mt = getmetatable(v)
+
+    if mt == vec2 then
+        return math.sqrt(v[1] * v[1] + v[2] * v[2])
+    elseif mt == vec3 then
+        return math.sqrt(v[1] * v[1] + v[2] * v[2] + v[3] * v[3])
+    elseif mt == vec4 then
+        return math.sqrt(v[1] * v[1] + v[2] * v[2] + v[3] * v[3] + v[4] * v[4])
+    end
+
+    error("length is only defined for vec2/vec3/vec4", 2)
+end
+
+local function distance(p1, p2)
+    local mt = getmetatable(p1)
+
+    if not(mt == vec2 or mt == vec3 or mt == vec4) then
+        error("distance is only defined for vec2/vec3/vec4", 2)
+    end
+    if mt ~= getmetatable(p2) then
+        error("arguments to distance must be of the same type", 2)
+    end
+
+    return length(p1 - p2)
+end
+
+local function dot(a, b)
+    local mt = getmetatable(a)
+
+    if not(mt == vec2 or mt == vec3 or mt == vec4) then
+        error("dot is only defined for vec2/vec3/vec4", 2)
+    end
+    if mt ~= getmetatable(b) then
+        error("arguments to dot must be of the same type", 2)
+    end
+
+    if mt == vec2 then
+        return a[1] * b[1] + a[2] * b[2]
+    elseif mt == vec3 then
+        return a[1] * b[1] + a[2] * b[2] + a[3] * b[3]
+    elseif mt == vec4 then
+        return a[1] * b[1] + a[2] * b[2] + a[3] * b[3] + a[4] * b[4]
+    end
+end
+
+local function cross(a, b)
+    if getmetatable(a) ~= vec3 or getmetatable(b) ~= vec3 then
+        error("cross is only defined for vec3", 2)
+    end
+
+    return vec3.frnew(a[2] * b[3] - b[2] * a[3],
+                      a[3] * b[1] - b[3] * a[1],
+                      a[1] * b[2] - b[1] * a[2])
+end
+
+local function normalize(v)
+    local mt = getmetatable(v)
+
+    if not(mt == vec2 or mt == vec3 or mt == vec4) then
+        error("normalize is only defined for vec2/vec3/vec4", 2)
+    end
+
+    return v / length(v)
+end
+
 -- Module exports.
 return {
     vec2 = vec2,
     vec3 = vec3,
-    vec4 = vec4
+    vec4 = vec4,
+    length = length,
+    distance = distance,
+    dot = dot,
+    cross = cross,
+    normalize = normalize
 }
