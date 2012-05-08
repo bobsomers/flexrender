@@ -234,9 +234,131 @@ function vec3.__unm(v)
     return vec3.frnew(-v[1], -v[2], -v[3])
 end
 
+-- 4D Vector
+vec4.getters = {
+    x = function(v) return v[1] end,
+    y = function(v) return v[2] end,
+    z = function(v) return v[3] end,
+    w = function(v) return v[4] end,
+    r = function(v) return v[1] end,
+    g = function(v) return v[2] end,
+    b = function(v) return v[3] end,
+    a = function(v) return v[4] end
+}
+
+vec4.setters = {
+    x = function(v, val) v[1] = val end,
+    y = function(v, val) v[2] = val end,
+    z = function(v, val) v[3] = val end,
+    w = function(v, val) v[4] = val end,
+    r = function(v, val) v[1] = val end,
+    g = function(v, val) v[2] = val end,
+    b = function(v, val) v[3] = val end,
+    a = function(v, val) v[3] = val end
+}
+
+vec4.__index = common.__index
+vec4.__newindex = common.__newindex
+
+function vec4.new(...)
+    local v = nil
+
+    local nargs = select("#", ...)
+    if nargs == 1 then
+        local arg = select(1, ...)
+        local argmt = getmetatable(arg)
+        if type(arg) == "number" then
+            v = {arg, arg, arg, arg}
+        elseif argmt == vec4 then
+            v = {arg[1], arg[2], arg[3], arg[4]}
+        else
+            error("invalid construction of vec4", 3)
+        end
+    elseif nargs == 2 then
+        local args = {select(1, ...), select(2, ...)}
+        local arg1mt = getmetatable(args[1])
+        if arg1mt ~= vec3 or type(args[2]) ~= "number" then
+            error("invalid construction of vec4", 3)
+        end
+        local v3 = args[1]
+        v = {v3[1], v3[2], v3[3], args[2]}
+    elseif nargs == 3 then
+        local args = {select(1, ...), select(2, ...), select(3, ...)}
+        local arg1mt = getmetatable(args[1])
+        if arg1mt ~= vec2 or type(args[2]) ~= "number" or type(args[3]) ~= "number" then
+            error("invalid construction of vec4", 3)
+        end
+        local v2 = args[1]
+        v = {v2[1], v2[2], args[2], args[3]}
+    elseif nargs == 4 then
+        local args = {select(1, ...), select(2, ...), select(3, ...), select(4, ...)}
+        if type(args[1]) ~= "number" or type(args[2]) ~= "number" or type(args[3]) ~= "number" or type(args[4]) ~= "number" then
+            error("invalid construction of vec4", 3)
+        end
+        v = {args[1], args[2], args[3], args[4]}
+    else
+        error("invalid construction of vec4", 3)
+    end
+
+    setmetatable(v, vec4)
+    return v
+end
+
+function vec4.frnew(x, y, z, w)
+    local v = {x, y, z, w}
+    setmetatable(v, vec4)
+    return v
+end
+
+function vec4.frcoerce(val)
+    if getmetatable(val) == vec4 then
+        return val
+    end
+
+    local result, v = pcall(vec4.new, val)
+    if result then
+        return v
+    end
+
+    error("no known conversion to vec4", 3)
+end
+
+function vec4.__tostring(v)
+    return table.concat {"vec4<", v[1], ", ", v[2], ", ", v[3], ", ", v[4], ">"}
+end
+
+function vec4.__add(a, b)
+    a = vec4.frcoerce(a)
+    b = vec4.frcoerce(b)
+    return vec4.frnew(a[1] + b[1], a[2] + b[2], a[3] + b[3], a[4] + b[4])
+end
+
+function vec4.__sub(a, b)
+    a = vec4.frcoerce(a)
+    b = vec4.frcoerce(b)
+    return vec4.frnew(a[1] - b[1], a[2] - b[2], a[3] - b[3], a[4] - b[4])
+end
+
+function vec4.__mul(a, b)
+    a = vec4.frcoerce(a)
+    b = vec4.frcoerce(b)
+    return vec4.frnew(a[1] * b[1], a[2] * b[2], a[3] * b[3], a[4] * b[4])
+end
+
+function vec4.__div(a, b)
+    a = vec4.frcoerce(a)
+    b = vec4.frcoerce(b)
+    return vec4.frnew(a[1] / b[1], a[2] / b[2], a[3] / b[3], a[4] / b[4])
+end
+
+function vec4.__unm(v)
+    return vec4.frnew(-v[1], -v[2], -v[3], -v[4])
+end
+
 -- Parent base types to common type.
 setmetatable(vec2, common)
 setmetatable(vec3, common)
+setmetatable(vec4, common)
 
 -- Module exports.
 return {
