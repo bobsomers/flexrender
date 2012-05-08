@@ -1,10 +1,15 @@
--- import functionality
-local base = require "frlib.base"
-local loaders = require "frlib.loaders"
-local primitives = require "frlib.primitives"
+-- Import frlib and extras.
+package.path = "frlib/?.lua;" .. package.path
+local fr = require "flexrender"
+local fre = require "extras"
 
--- local aliases
-local vec3 = base.vec3
+-- Handy aliases.
+local vec3 = fr.vec3
+local radians = fr.radians
+local normalize = fr.normalize
+local scale = fr.scale
+local rotate = fr.rotate
+local translate = fr.translate
 
 camera {
     eye = vec3(4, 2, 6),
@@ -14,53 +19,33 @@ camera {
 material {
     name = "brushed metal",
     emissive = true,
-    shader = loaders.frsl("config.lua"),
+    shader = fre.frsl("config.lua"),
     textures = {
-        diffuse = loaders.procedural("scenes/test.lua"),
-        specular = loaders.fakeimg("image.fake")
+        diffuse = fre.procedural("scenes/test.lua"),
+        specular = fre.fakeimg("image.fake")
     }
 }
 
 mesh {
     material = "brushed metal",
-    transform = {
-        {1, 0, 0, 0},
-        {0, 1, 0, 0},
-        {0, 0, 1, 0},
-        {2, 0, 2, 1}
-    },
-    data = primitives.cube(1)
+    transform = translate(vec3(2, 0, 2)),
+    data = fre.cube(1)
 }
 
 mesh {
     material = "brushed metal",
-    transform = {
-        {1, 0, 0, 0},
-        {0, 1, 0, 0},
-        {0, 0, 1, 0},
-        {-2, 0, 2, 1}
-    },
-    data = primitives.cube(1)
+    transform = translate(vec3(-2, 0, 2)) * scale(vec3(1, 3, 2)),
+    data = fre.cube(1)
 }
 
 mesh {
     material = "brushed metal",
-    transform = {
-        {1, 0, 0, 0},
-        {0, 1, 0, 0},
-        {0, 0, 1, 0},
-        {2, 0, -2, 1}
-    },
-    data = primitives.cube(1)
+    transform = translate(vec3(2, 0, -2)) * rotate(radians(45), vec3(0, 1, 0)),
+    data = fre.cube(1)
 }
 
 mesh {
     material = "brushed metal",
-    transform = {
-        {1, 0, 0, 0},
-        {0, 1, 0, 0},
-        {0, 0, 1, 0},
-        {-2, 0, -2, 1}
-    },
-    data = primitives.cube(1)
+    transform = translate(vec3(-2, 0, -2)) * rotate(radians(-30), normalize(vec3(-1, 1, -1))) * scale(2),
+    data = fre.cube(1)
 }
