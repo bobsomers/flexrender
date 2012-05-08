@@ -12,6 +12,9 @@ RayQueue::RayQueue(Camera* camera) :
  _intersect_front(nullptr),
  _intersect_back(nullptr),
  _intersect_size(0),
+ _illuminate_front(nullptr),
+ _illuminate_back(nullptr),
+ _illuminate_size(0),
  _light_front(nullptr),
  _light_back(nullptr),
  _light_size(0) {}
@@ -22,6 +25,12 @@ RayQueue::~RayQueue() {
     while (_light_front != nullptr) {
         ray = _light_front;
         _light_front = ray->next;
+        delete ray;
+    }
+
+    while (_illuminate_front != nullptr) {
+        ray = _illuminate_front;
+        _illuminate_front = ray->next;
         delete ray;
     }
 
@@ -45,6 +54,17 @@ void RayQueue::Push(FatRay* ray) {
             ray->next = nullptr;
             _intersect_back = ray;
             _intersect_size++;
+            break;
+
+        case FatRay::Kind::ILLUMINATE:
+            if (_illuminate_back != nullptr) {
+                _illuminate_back->next = ray;
+            } else {
+                _illuminate_front = ray;
+            }
+            ray->next = nullptr;
+            _illuminate_back = ray;
+            _illuminate_size++;
             break;
 
         case FatRay::Kind::LIGHT:
@@ -76,6 +96,18 @@ FatRay* RayQueue::Pop() {
             _light_back = nullptr;
         }
         _light_size--;
+        return ray;
+    }
+
+    // Pull from the illumination queue if the light queue is empty.
+    ray = _illuminate_front;
+    if (ray != nullptr) {
+        _illuminate_front = ray->next;
+        ray->next = nullptr;
+        if (_illuminate_front == nullptr) {
+            _illuminate_back = nullptr;
+        }
+        _illuminate_size--;
         return ray;
     }
 
