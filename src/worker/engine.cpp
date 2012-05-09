@@ -396,52 +396,47 @@ void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
         vec3 target = ray->EvaluateAt(ray->strong.t);
 
         for (const auto& tri : mesh->tris) {
-            // TODO: sample the tri config->samples times (begin sample loop)
-            // count # of samples and divide by that number, NOT the config's
-            // number of samples, because we may bail on a sample if it doesn't
-            // meet our criteria.
+            for (uint16_t i = 0; i < config->samples; i++) {
+                // Sample the triangle.
+                vec3 position, normal;
+                vec2 texcoord;
+                tri.Sample(&position, &normal, &texcoord);
 
-            // Sample the triangle.
-            vec3 position, normal;
-            vec2 texcoord;
-            tri.Sample(&position, &normal, &texcoord);
+                // Transform the position and normal into world space.
+                position = vec3(mesh->xform * vec4(position, 1.0f));
+                normal = vec3(mesh->xform_inv_tr * vec4(normal, 0.0f));
 
-            // Transform the position and normal into world space.
-            position = vec3(mesh->xform * vec4(position, 1.0f));
-            normal = vec3(mesh->xform_inv_tr * vec4(normal, 0.0f));
+                // The direction is toward the target.
+                vec3 direction = normalize(target - position);
 
-            // The direction is toward the target.
-            vec3 direction = normalize(target - position);
+                // Lights only emit in the hemisphere that their normal defines.
+                if (dot(normal, direction) < 0) {
+                    continue;
+                }
 
-            // Lights only emit in the hemisphere that their normal defines.
-            if (dot(normal, direction) < 0) {
-                continue;
+                // Create a new light ray that inherits the source <x, y> pixel.
+                FatRay* light = new FatRay(FatRay::Kind::LIGHT, ray->x, ray->y);
+
+                // The origin is at the sample position.
+                light->skinny.origin = position;
+
+                light->skinny.direction = direction;
+                light->target = target;
+
+                // TODO: run the shader's emissive() func instead, passing along
+                // the interpolated texture coordinates (texcoords)
+                light->emission = vec3(1.0f, 1.0f, 1.0f);
+
+                // Scale the transmittance by the number of samples.
+                light->transmittance = ray->transmittance / config->samples;
+
+                // It hasn't hit anything yet.
+                light->weak.worker = 0;
+                light->strong.worker = 0;
+
+                // Send it on it's way!
+                ProcessLight(light, results);
             }
-
-            // Create a new light ray that inherits the source <x, y> pixel.
-            FatRay* light = new FatRay(FatRay::Kind::LIGHT, ray->x, ray->y);
-
-            // The origin is at the sample position.
-            light->skinny.origin = position;
-
-            light->skinny.direction = direction;
-            light->target = target;
-
-            // TODO: run the shader's emissive() func instead, passing along
-            // the interpolated texture coordinates (texcoords)
-            light->emission = vec3(1.0f, 1.0f, 1.0f);
-
-            // TODO: Scale the transmittance by the number of samples.
-            light->transmittance = ray->transmittance / 1;
-
-            // It hasn't hit anything yet.
-            light->weak.worker = 0;
-            light->strong.worker = 0;
-
-            // Send it on it's way!
-            ProcessLight(light, results);
-
-            // TODO: (end sample loop)
         }
     });
 
