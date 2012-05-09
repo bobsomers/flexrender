@@ -116,6 +116,7 @@ void NetNode::Receive(const char* buf, ssize_t len) {
                 nread = 0;
                 _dispatcher(this);
 
+                free(message.body);
                 mode = ReadMode::HEADER;
                 continue;
             } else {
