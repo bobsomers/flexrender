@@ -103,6 +103,8 @@ public:
         return _meshes[id];
     }
 
+    void ForEachEmissiveMesh(std::function<void (uint64_t id, Mesh* mesh)> func);
+
     void NaiveIntersect(FatRay* ray, uint64_t me);
 
     // Net nodes...
@@ -153,6 +155,7 @@ private:
     std::vector<NetNode*> _nodes;
     std::unordered_map<std::string, uint64_t> _material_name_index;
     std::vector<uint64_t> _spatial_index;
+    std::vector<uint64_t> _emissive_index;
     uint64_t _chunk_size;
 };
 

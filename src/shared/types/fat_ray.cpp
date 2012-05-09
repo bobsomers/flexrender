@@ -33,6 +33,10 @@ FatRay::FatRay(Kind kind, int16_t x, int16_t y) :
     emission.x = numeric_limits<float>::quiet_NaN();
     emission.y = numeric_limits<float>::quiet_NaN();
     emission.z = numeric_limits<float>::quiet_NaN();
+
+    target.x = numeric_limits<float>::quiet_NaN();
+    target.y = numeric_limits<float>::quiet_NaN();
+    target.z = numeric_limits<float>::quiet_NaN();
 }
 
 FatRay::FatRay(Kind kind) :
@@ -51,6 +55,10 @@ FatRay::FatRay(Kind kind) :
     emission.x = numeric_limits<float>::quiet_NaN();
     emission.y = numeric_limits<float>::quiet_NaN();
     emission.z = numeric_limits<float>::quiet_NaN();
+
+    target.x = numeric_limits<float>::quiet_NaN();
+    target.y = numeric_limits<float>::quiet_NaN();
+    target.z = numeric_limits<float>::quiet_NaN();
 }
 
 FatRay::FatRay() :
@@ -69,9 +77,13 @@ FatRay::FatRay() :
     emission.x = numeric_limits<float>::quiet_NaN();
     emission.y = numeric_limits<float>::quiet_NaN();
     emission.z = numeric_limits<float>::quiet_NaN();
+
+    target.x = numeric_limits<float>::quiet_NaN();
+    target.y = numeric_limits<float>::quiet_NaN();
+    target.z = numeric_limits<float>::quiet_NaN();
 }
 
-SkinnyRay FatRay::TransformTo(const Mesh* mesh) {
+SkinnyRay FatRay::TransformTo(const Mesh* mesh) const {
     vec4 o(skinny.origin, 1.0f);
     vec4 d(skinny.direction, 0.0f);
     return SkinnyRay(vec3(mesh->xform_inv * o),
@@ -115,9 +127,10 @@ string ToString(const FatRay& ray, const string& indent) {
             stream << indent << "| kind = LIGHT" << endl <<
              indent << "| x = " << ray.x << endl <<
              indent << "| y = " << ray.y << endl <<
-             indent << "| skinny = " << ToString(ray.skinny) << endl <<
+             indent << "| skinny = " << ToString(ray.skinny, pad) << endl <<
              indent << "| transmittance = " << ray.transmittance << endl <<
              indent << "| emission = " << ToString(ray.emission) << endl <<
+             indent << "| target = " << ToString(ray.target) << endl <<
              indent << "| weak = " << ToString(ray.weak, pad) << endl <<
              indent << "| strong = " << ToString(ray.strong, pad) << endl <<
              indent << "| next = " << hex << showbase << ray.next << endl;

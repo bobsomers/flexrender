@@ -48,6 +48,9 @@ struct FatRay {
     /// The light emission along this ray, not affected by transmittance.
     glm::vec3 emission;
 
+    /// The target intersection point in world space.
+    glm::vec3 target;
+
     /// The next weak hit to check during scene traversal.
     WeakHit weak;
 
@@ -60,10 +63,10 @@ struct FatRay {
 
     /// Returns a skinny ray that represents this fat ray transformed into
     /// object space of the given mesh.
-    SkinnyRay TransformTo(const Mesh* mesh);
+    SkinnyRay TransformTo(const Mesh* mesh) const;
 
     /// Evaluate a point along the ray at a specific t value.
-    inline glm::vec3 operator()(float t) const { return skinny(t); }
+    inline glm::vec3 EvaluateAt(float t) const { return skinny.EvaluateAt(t); }
 
     TOSTRINGABLE(FatRay);
 };

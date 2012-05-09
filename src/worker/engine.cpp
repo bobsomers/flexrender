@@ -14,6 +14,10 @@
 #define FR_FLUSH_TIMEOUT_MS 10
 
 using std::string;
+using glm::vec2;
+using glm::vec3;
+using glm::vec4;
+using glm::normalize;
 
 namespace fr {
 
@@ -356,18 +360,13 @@ void server::ProcessIntersect(FatRay* ray, WorkResults* results) {
 
     // Have we checked every worker?
     if (ray->weak.worker > config->workers.size()) {
-        // Yes, are we the strong hit?
-        if (ray->strong.worker == me) {
-            // Yes, let's do shading and kill the ray.
+        // Yes, was there a strong hit?
+        if (ray->strong.worker != 0) {
+            // Yes, let's do shading.
             ShadeRay(ray, results);
-            delete ray;
-        } else if (ray->strong.worker != 0) {
-            // No, forward to the worker that is.
-            ForwardRay(ray, results, ray->strong.worker);
-        } else {
-            // There was no strong hit! Kill the ray.
-            delete ray;
         }
+        // Kill the intersect ray.
+        delete ray;
     } else {
         // Forward it on.
         ForwardRay(ray, results, ray->weak.worker);
@@ -378,9 +377,42 @@ void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
     // !!! WARNING !!!
     // Everything this function does and calls must be thread-safe. This
     // function will NOT run in the main thread, it runs on the thread pool.
+    Config* config = lib->LookupConfig();
 
-    // TODO
-    TOUTLN(ToString(*ray));
+    lib->ForEachEmissiveMesh([ray, results, config](uint64_t id, Mesh* mesh) {
+        // The target we're trying to hit is the original intersection.
+        vec3 target = ray->EvaluateAt(ray->strong.t);
+
+        for (const auto& tri : mesh->tris) {
+            // TODO: sample the tri config->samples times (begin sample loop)
+
+            // Create a new light ray that inherits the source <x, y> pixel.
+            FatRay* light = new FatRay(FatRay::Kind::LIGHT, ray->x, ray->y);
+
+            // The origin is at the sample point (transformed into world space).
+            vec2 texcoords;
+            light->skinny.origin = vec3(
+             mesh->xform * vec4(tri.Sample(&texcoords), 1.0f));
+
+            // The direction is toward the target.
+            light->skinny.direction = normalize(target - light->skinny.origin);
+
+            // The target is the the target, obviously.
+            light->target = target;
+
+            // TODO: run the shader's emissive() func instead, passing along
+            // the interpolated texture coordinates (texcoords)
+            light->emission = vec3(1.0f, 1.0f, 1.0f);
+
+            // TODO: Scale the transmittance by the number of samples.
+            light->transmittance = ray->transmittance / 1;
+
+            // Send it on it's way!
+            ProcessLight(light, results);
+
+            // TODO: (end sample loop)
+        }
+    });
 
     // Kill the ray.
     delete ray;
@@ -392,6 +424,7 @@ void server::ProcessLight(FatRay* ray, WorkResults* results) {
     // function will NOT run in the main thread, it runs on the thread pool.
 
     // TODO
+    TOUTLN(ToString(*ray));
 
     // Kill the ray.
     delete ray;
@@ -734,7 +767,7 @@ void client::Init() {
 }
 
 void client::DispatchMessage(NetNode* node) {
-
+    // Nothing yet.
 }
 
 void client::OnConnect(uv_connect_t* req, int status) {

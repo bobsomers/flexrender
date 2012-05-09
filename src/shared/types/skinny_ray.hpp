@@ -18,7 +18,7 @@ struct SkinnyRay {
     glm::vec3 direction;
 
     /// Evaluate a point along the ray at a specific t value.
-    inline glm::vec3 operator()(float t) const { return direction * t + origin; }
+    inline glm::vec3 EvaluateAt(float t) const { return direction * t + origin; }
 
     TOSTRINGABLE(SkinnyRay);
 };

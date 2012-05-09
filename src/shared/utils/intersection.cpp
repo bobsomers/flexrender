@@ -10,6 +10,8 @@ using glm::cross;
 using glm::dot;
 using glm::normalize;
 
+// TODO: Move this whole function to the Triangle class?
+
 namespace fr {
 
 /// Avoid self-intersection by only recognizing intersections that occur
@@ -18,7 +20,7 @@ const float INTERSECT_EPSILON = 0.0001f;
 
 bool IntersectRayTri(const SkinnyRay& ray, const Triangle& tri, float* t,
  LocalGeometry* local) {
-    // From Physically Based Rendering, page 141.
+    // Credit: Physically Based Rendering, page 141, with modifications.
     
     // First compute s1, edge vectors, and denominator.
     vec3 e1 = tri.verts[1].v - tri.verts[0].v;

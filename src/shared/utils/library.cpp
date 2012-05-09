@@ -28,6 +28,7 @@ Library::Library() :
  _nodes(),
  _material_name_index(),
  _spatial_index(),
+ _emissive_index(),
  _chunk_size(0) {
     // ID #0 is always reserved.
     _shaders.push_back(nullptr);
@@ -115,6 +116,21 @@ void Library::StoreMesh(uint64_t id, Mesh* mesh) {
         _meshes.resize(id + 1, nullptr);
     }
     _meshes[id] = mesh;
+
+    if (mesh != nullptr) {
+        Material* mat = _materials[mesh->material];
+        assert(mat != nullptr);
+        if (mat->emissive) {
+            _emissive_index.push_back(id);
+        }
+    }
+}
+
+void Library::ForEachEmissiveMesh(function<void (uint64_t, Mesh* mesh)> func) {
+    for (uint64_t id : _emissive_index) {
+        Mesh* mesh = _meshes[id];
+        func(id, mesh);
+    }
 }
 
 void Library::StoreNetNode(uint64_t id, NetNode* node) {

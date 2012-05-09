@@ -6,6 +6,8 @@
 using std::string;
 using std::stringstream;
 using std::endl;
+using glm::vec2;
+using glm::vec3;
 
 namespace fr {
 
@@ -19,6 +21,16 @@ Triangle::Triangle() {
     verts[0] = Vertex();
     verts[1] = Vertex();
     verts[2] = Vertex();
+}
+
+vec3 Triangle::Sample(vec2* texcoords) const {
+    // TODO: implement actual sampling
+
+    if (texcoords != nullptr) {
+        *texcoords = verts[0].t;
+    }
+
+    return verts[0].v;
 }
 
 string ToString(const Triangle& tri, const string& indent) {
