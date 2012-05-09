@@ -174,7 +174,7 @@ void Library::NaiveIntersect(FatRay* ray, uint64_t me) {
             float t = numeric_limits<float>::quiet_NaN();
             LocalGeometry local;
 
-            if (IntersectRayTri(xformed_ray, tri, &t, &local) && t < nearest.t) {
+            if (tri.Intersect(xformed_ray, &t, &local) && t < nearest.t) {
                 nearest.worker = me;
                 nearest.mesh = id;
                 nearest.t = t;

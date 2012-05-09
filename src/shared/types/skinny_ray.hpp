@@ -6,6 +6,14 @@
 
 namespace fr {
 
+/// Avoid self-intersection by only recognizing intersections that occur
+/// at this minimum t-value along the ray.
+extern const float SELF_INTERSECT_EPSILON;
+
+/// A light ray must hit within this distance of its target to say it has hit
+/// the target.
+extern const float TARGET_INTERSECT_EPSILON;
+
 struct SkinnyRay {
     explicit SkinnyRay(glm::vec3 origin, glm::vec3 direction);
 

@@ -14,6 +14,10 @@ using glm::vec3;
 
 namespace fr {
 
+const float SELF_INTERSECT_EPSILON = 0.0001f;
+
+const float TARGET_INTERSECT_EPSILON = 0.0001f;
+
 SkinnyRay::SkinnyRay(vec3 origin, vec3 direction) :
  origin(origin),
  direction(direction) {}
