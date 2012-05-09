@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <sstream>
+#include <cassert>
+#include <cstdlib>
 
 #include "types/skinny_ray.hpp"
 #include "types/local_geometry.hpp"
@@ -29,18 +31,26 @@ Triangle::Triangle() {
     verts[2] = Vertex();
 }
 
-vec3 Triangle::Sample(vec3* normal, vec2* texcoord) const {
-    // TODO: implement actual sampling
+void Triangle::Sample(vec3* position, vec3* normal, vec2* texcoord) const {
+    assert(position != nullptr);
+
+    // Credit: Physically Based Rendering, page 671.
+    float r1 = rand() / static_cast<float>(RAND_MAX);
+    float r2 = rand() / static_cast<float>(RAND_MAX);
+
+    float sqr1 = sqrtf(r1);
+    float u = 1.0f - sqr1;
+    float v = r2 * sqr1;
+
+    *position = InterpolatePosition(u, v);
 
     if (normal != nullptr) {
-        *normal = verts[0].n;
+        *normal = InterpolateNormal(u, v);
     }
 
     if (texcoord != nullptr) {
-        *texcoord = verts[0].t;
+        *texcoord = InterpolateTexCoord(u, v);
     }
-
-    return verts[0].v;
 }
 
 bool Triangle::Intersect(const SkinnyRay& ray, float* t, LocalGeometry* local) const {
@@ -70,10 +80,8 @@ bool Triangle::Intersect(const SkinnyRay& ray, float* t, LocalGeometry* local) c
         return false;
     }
 
-    // Compute the intersection parameter, t, and the final barycentric
-    // coordinate, b0.
+    // Compute the intersection parameter, t.
     *t = dot(e2, s2) * inv_divisor;
-    float b0 = 1.0f - b1 - b2;
 
     // Bail if the intersection doesn't meet our epsilon requirements.
     if (*t < SELF_INTERSECT_EPSILON) {
@@ -81,16 +89,7 @@ bool Triangle::Intersect(const SkinnyRay& ray, float* t, LocalGeometry* local) c
     }
 
     // Compute the interpolated normal from the barycentric coordinates.
-    local->n = vec3((b0 * verts[0].n.x) + // first coordinate (x)
-                    (b1 * verts[1].n.x) +
-                    (b2 * verts[2].n.x),
-                    (b0 * verts[0].n.y) + // second coordinate (y)
-                    (b1 * verts[1].n.y) +
-                    (b2 * verts[2].n.y),
-                    (b0 * verts[0].n.z) + // third coordinate (z)
-                    (b1 * verts[1].n.z) +
-                    (b2 * verts[2].n.z));
-    local->n = normalize(local->n);
+    local->n = InterpolateNormal(b1, b2);
 
     // Check the interpolated normal against the ray normal to cull back-facing
     // intersections.
@@ -99,15 +98,55 @@ bool Triangle::Intersect(const SkinnyRay& ray, float* t, LocalGeometry* local) c
     }
 
     // Compute the interpolated texture coordinate from the barycentric coords.
-    local->t = vec2((b0 * verts[0].t.x) + // first coordinate (u)
-                    (b1 * verts[1].t.x) +
-                    (b2 * verts[2].t.x),
-                    (b0 * verts[0].t.y) + // second coordinate (v)
-                    (b1 * verts[1].t.y) +
-                    (b2 * verts[2].t.y));
+    local->t = InterpolateTexCoord(b1, b2);
 
     // Intersection succeeded.
     return true;
+}
+
+vec3 Triangle::InterpolatePosition(float u, float v) const {
+    float w = 1.0f - u - v;
+
+    return vec3(
+        (u * verts[0].v.x) + // first coordinate (x)
+        (v * verts[1].v.x) +
+        (w * verts[2].v.x),
+        (u * verts[0].v.y) + // second coordinate (y)
+        (v * verts[1].v.y) +
+        (w * verts[2].v.y),
+        (u * verts[0].v.z) + // third coordinate (z)
+        (v * verts[1].v.z) +
+        (w * verts[2].v.z)
+    );
+}
+
+vec3 Triangle::InterpolateNormal(float u, float v) const {
+    float w = 1.0f - u - v;
+
+    return normalize(vec3(
+        (u * verts[0].n.x) + // first coordinate (x)
+        (v * verts[1].n.x) +
+        (w * verts[2].n.x),
+        (u * verts[0].n.y) + // second coordinate (y)
+        (v * verts[1].n.y) +
+        (w * verts[2].n.y),
+        (u * verts[0].n.z) + // third coordinate (z)
+        (v * verts[1].n.z) +
+        (w * verts[2].n.z)
+    ));
+}
+
+vec2 Triangle::InterpolateTexCoord(float u, float v) const {
+    float w = 1.0f - u - v;
+
+    return vec2(
+        (u * verts[0].t.x) + // first coordinate (u)
+        (v * verts[1].t.x) +
+        (w * verts[2].t.x),
+        (u * verts[0].t.y) + // second coordinate (v)
+        (v * verts[1].t.y) +
+        (w * verts[2].t.y)
+    );
 }
 
 string ToString(const Triangle& tri, const string& indent) {

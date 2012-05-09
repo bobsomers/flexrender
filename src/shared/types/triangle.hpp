@@ -23,7 +23,8 @@ struct Triangle {
     /// Generates a sample point on the triangle in object space. If normal or
     /// texcoord is non-null, they will be filled in with the interpolated
     /// normal and texture coordinates, respectively.
-    glm::vec3 Sample(glm::vec3* normal = nullptr, glm::vec2* texcoord = nullptr) const;
+    void Sample(glm::vec3* position, glm::vec3* normal = nullptr,
+     glm::vec2* texcoord = nullptr) const;
 
     /**
      * Intersects the given ray with this triangle and returns true if they
@@ -36,6 +37,19 @@ struct Triangle {
     MSGPACK_DEFINE(verts[0], verts[1], verts[2]);
 
     TOSTRINGABLE(Triangle);
+
+private:
+    /// Computes the interpolated position in object space at the barycentric
+    /// coordinates defined by <u, v, 1 - u - v>.
+    glm::vec3 InterpolatePosition(float u, float v) const;
+
+    /// Computes the interpolated surface normal in object space at the
+    /// barycentric coordinates defined by <u, v, 1 - u - v>.
+    glm::vec3 InterpolateNormal(float u, float v) const;
+
+    /// Computes the interpolated texture coordinates in object space at the
+    /// barycentric coordinates defined by <u, v, 1 - u - v>.
+    glm::vec2 InterpolateTexCoord(float u, float v) const;
 };
 
 std::string ToString(const Triangle& tri, const std::string& indent = "");

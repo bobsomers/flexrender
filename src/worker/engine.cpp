@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cstdlib>
+#include <ctime>
 
 #include "uv.h"
 
@@ -111,6 +112,9 @@ void EngineInit(const string& ip, uint16_t port, uint32_t jobs) {
     int result = 0;
 
     max_jobs = jobs;
+
+    // Randomize the world.
+    srand(time(0));
 
     server::Init(ip, port);
 
@@ -397,17 +401,17 @@ void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
             // number of samples, because we may bail on a sample if it doesn't
             // meet our criteria.
 
-            // The origin is at the sample point (transformed into world space).
-            vec3 normal;
+            // Sample the triangle.
+            vec3 position, normal;
             vec2 texcoord;
-            vec3 origin(mesh->xform *
-             vec4(tri.Sample(&normal, &texcoord), 1.0f));
+            tri.Sample(&position, &normal, &texcoord);
 
-            // The normal is object space, so transform it into world space.
-            normal = normalize(vec3(mesh->xform_inv_tr * vec4(normal, 0.0f)));
+            // Transform the position and normal into world space.
+            position = vec3(mesh->xform * vec4(position, 1.0f));
+            normal = vec3(mesh->xform_inv_tr * vec4(normal, 0.0f));
 
             // The direction is toward the target.
-            vec3 direction(normalize(target - origin));
+            vec3 direction = normalize(target - position);
 
             // Lights only emit in the hemisphere that their normal defines.
             if (dot(normal, direction) < 0) {
@@ -417,8 +421,9 @@ void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
             // Create a new light ray that inherits the source <x, y> pixel.
             FatRay* light = new FatRay(FatRay::Kind::LIGHT, ray->x, ray->y);
 
-            // Copy core data.
-            light->skinny.origin = origin;
+            // The origin is at the sample position.
+            light->skinny.origin = position;
+
             light->skinny.direction = direction;
             light->target = target;
 
