@@ -14,9 +14,9 @@ using glm::normalize;
 
 namespace fr {
 
-/// Avoid self-intersection by only recognizing intersections that occur
-/// at this minimum t-value along the ray.
-const float INTERSECT_EPSILON = 0.0001f;
+const float SELF_INTERSECT_EPSILON = 0.0001f;
+
+const float TARGET_INTERSECT_EPSILON = 0.0001f;
 
 bool IntersectRayTri(const SkinnyRay& ray, const Triangle& tri, float* t,
  LocalGeometry* local) {
@@ -52,7 +52,7 @@ bool IntersectRayTri(const SkinnyRay& ray, const Triangle& tri, float* t,
     float b0 = 1.0f - b1 - b2;
 
     // Bail if the intersection doesn't meet our epsilon requirements.
-    if (*t < INTERSECT_EPSILON) {
+    if (*t < SELF_INTERSECT_EPSILON) {
         return false;
     }
 

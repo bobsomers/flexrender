@@ -40,6 +40,12 @@ mesh {
 
 mesh {
     material = "brushed metal",
+    transform = translate(vec3(-2, -3, -2)) * rotate(radians(-90), vec3(1, 0, 0)),
+    data = fre.plane(10)
+}
+
+mesh {
+    material = "brushed metal",
     transform = translate(vec3(2, 0, 2)),
     data = fre.cube(1)
 }

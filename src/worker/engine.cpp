@@ -18,6 +18,8 @@ using glm::vec2;
 using glm::vec3;
 using glm::vec4;
 using glm::normalize;
+using glm::distance;
+using glm::dot;
 
 namespace fr {
 
@@ -65,7 +67,8 @@ void ProcessIntersect(FatRay* ray, WorkResults* results);
 void ProcessIlluminate(FatRay* ray, WorkResults* results);
 void ProcessLight(FatRay* ray, WorkResults* results);
 void ForwardRay(FatRay* ray, WorkResults* results, uint64_t id);
-void ShadeRay(FatRay* ray, WorkResults* results);
+void IlluminateIntersection(FatRay* ray, WorkResults* results);
+void ShadeIntersection(FatRay* ray, WorkResults* results);
 
 void OnConnection(uv_stream_t* stream, int status);
 uv_buf_t OnAlloc(uv_handle_t* handle, size_t suggested_size);
@@ -360,13 +363,18 @@ void server::ProcessIntersect(FatRay* ray, WorkResults* results) {
 
     // Have we checked every worker?
     if (ray->weak.worker > config->workers.size()) {
-        // Yes, was there a strong hit?
-        if (ray->strong.worker != 0) {
-            // Yes, let's do shading.
-            ShadeRay(ray, results);
+        // Yes, are we the strong hit?
+        if (ray->strong.worker == me) {
+            // Yes, let's illuminate the intersection and kill the ray.
+            IlluminateIntersection(ray, results);
+            delete ray;
+        } else if (ray->strong.worker != 0) {
+            // No, forward the ray to the strong hit worker.
+            ForwardRay(ray, results, ray->strong.worker);
+        } else {
+            // There was no strong hit. Kill the ray.
+            delete ray;
         }
-        // Kill the intersect ray.
-        delete ray;
     } else {
         // Forward it on.
         ForwardRay(ray, results, ray->weak.worker);
@@ -407,6 +415,10 @@ void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
             // TODO: Scale the transmittance by the number of samples.
             light->transmittance = ray->transmittance / 1;
 
+            // It hasn't hit anything yet.
+            light->weak.worker = 0;
+            light->strong.worker = 0;
+
             // Send it on it's way!
             ProcessLight(light, results);
 
@@ -422,12 +434,34 @@ void server::ProcessLight(FatRay* ray, WorkResults* results) {
     // !!! WARNING !!!
     // Everything this function does and calls must be thread-safe. This
     // function will NOT run in the main thread, it runs on the thread pool.
+    Config* config = lib->LookupConfig();
 
-    // TODO
-    TOUTLN(ToString(*ray));
+    // Our turn to check for a strong hit?
+    if (ray->weak.worker == me) {
+        lib->NaiveIntersect(ray, me);
+    }
 
-    // Kill the ray.
-    delete ray;
+    // Move the ray to the next worker.
+    ray->weak.worker++;
+
+    // Have we checked every worker?
+    if (ray->weak.worker > config->workers.size()) {
+        // Yes, are we the strong hit?
+        if (ray->strong.worker == me) {
+            // Yes, shade the intersection and kill the ray.
+            ShadeIntersection(ray, results);
+            delete ray;
+        } else if (ray->strong.worker != 0) {
+            // No, forward the ray to the strong hit worker.
+            ForwardRay(ray, results, ray->strong.worker);
+        } else {
+            // There was no strong hit. Kill the ray.
+            delete ray;
+        }
+    } else {
+        // Forward it on.
+        ForwardRay(ray, results, ray->weak.worker);
+    }
 }
 
 void server::ForwardRay(FatRay* ray, WorkResults* results, uint64_t id) {
@@ -442,10 +476,16 @@ void server::ForwardRay(FatRay* ray, WorkResults* results, uint64_t id) {
     }
 }
 
-void server::ShadeRay(FatRay* ray, WorkResults* results) {
-    // TODO: just for debugging
-    results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "intersection",
-     ray->x, ray->y, 1.0f * ray->transmittance);
+void server::IlluminateIntersection(FatRay* ray, WorkResults* results) {
+    // TODO: replace this with evaluating the shader's ambient function
+    vec3 albedo(0.196f, 0.486f, 0.796f);
+    vec3 ambient(0.3f * albedo.r, 0.3f * albedo.g, 0.3f * albedo.b);
+    results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "R", ray->x, ray->y,
+     ambient.r * ray->transmittance);
+    results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "G", ray->x, ray->y,
+     ambient.g * ray->transmittance);
+    results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "B", ray->x, ray->y,
+     ambient.b * ray->transmittance);
 
     // Create ILLUMINATE rays and send them to each emissive node.
     LightList* lights = lib->LookupLightList();
@@ -454,6 +494,31 @@ void server::ShadeRay(FatRay* ray, WorkResults* results) {
         illum->kind = FatRay::Kind::ILLUMINATE;
         ForwardRay(illum, results, id);
     });
+}
+
+void server::ShadeIntersection(FatRay* ray, WorkResults* results) {
+    // TODO: Verify it hit the same mesh? The epsilons are pretty small here...
+    // in practice we might not need to check.
+
+    // Did it hit close enough to the target?
+    vec3 hit = ray->EvaluateAt(ray->strong.t);
+    if (distance(hit, ray->target) > TARGET_INTERSECT_EPSILON) {
+        // Nope, ignore.
+        return;
+    }
+
+    // TODO: replace this with evaluating the shader
+    float NdotL = dot(ray->strong.geom.n, normalize(ray->skinny.direction * -1.0f));
+    vec3 albedo(0.196f, 0.486f, 0.796f);
+    vec3 diffuse(0.7f * albedo.r * ray->emission.r * NdotL,
+                 0.7f * albedo.g * ray->emission.g * NdotL,
+                 0.7f * albedo.b * ray->emission.b * NdotL);
+    results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "R", ray->x, ray->y,
+     diffuse.r * ray->transmittance);
+    results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "G", ray->x, ray->y,
+     diffuse.g * ray->transmittance);
+    results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "B", ray->x, ray->y,
+     diffuse.b * ray->transmittance);
 }
 
 void server::OnWork(uv_work_t* req) {
