@@ -17,10 +17,10 @@ struct Triangle {
     /// Vertices of the triangle.
     Vertex verts[3];
 
-    /// Generates a sample point on the triangle in object space. If texcoords
-    /// is non-null, it will be filled in with the calculated interpoated
-    /// texture coordinates.
-    glm::vec3 Sample(glm::vec2* texcoords = nullptr) const;
+    /// Generates a sample point on the triangle in object space. If normal or
+    /// texcoord is non-null, they will be filled in with the interpolated
+    /// normal and texture coordinates, respectively.
+    glm::vec3 Sample(glm::vec3* normal = nullptr, glm::vec2* texcoord = nullptr) const;
 
     MSGPACK_DEFINE(verts[0], verts[1], verts[2]);
 

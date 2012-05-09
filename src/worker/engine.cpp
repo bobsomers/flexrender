@@ -393,19 +393,33 @@ void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
 
         for (const auto& tri : mesh->tris) {
             // TODO: sample the tri config->samples times (begin sample loop)
+            // count # of samples and divide by that number, NOT the config's
+            // number of samples, because we may bail on a sample if it doesn't
+            // meet our criteria.
+
+            // The origin is at the sample point (transformed into world space).
+            vec3 normal;
+            vec2 texcoord;
+            vec3 origin(mesh->xform *
+             vec4(tri.Sample(&normal, &texcoord), 1.0f));
+
+            // The normal is object space, so transform it into world space.
+            normal = normalize(vec3(mesh->xform_inv_tr * vec4(normal, 0.0f)));
+
+            // The direction is toward the target.
+            vec3 direction(normalize(target - origin));
+
+            // Lights only emit in the hemisphere that their normal defines.
+            if (dot(normal, direction) < 0) {
+                continue;
+            }
 
             // Create a new light ray that inherits the source <x, y> pixel.
             FatRay* light = new FatRay(FatRay::Kind::LIGHT, ray->x, ray->y);
 
-            // The origin is at the sample point (transformed into world space).
-            vec2 texcoords;
-            light->skinny.origin = vec3(
-             mesh->xform * vec4(tri.Sample(&texcoords), 1.0f));
-
-            // The direction is toward the target.
-            light->skinny.direction = normalize(target - light->skinny.origin);
-
-            // The target is the the target, obviously.
+            // Copy core data.
+            light->skinny.origin = origin;
+            light->skinny.direction = direction;
             light->target = target;
 
             // TODO: run the shader's emissive() func instead, passing along
@@ -486,6 +500,20 @@ void server::IlluminateIntersection(FatRay* ray, WorkResults* results) {
      ambient.g * ray->transmittance);
     results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "B", ray->x, ray->y,
      ambient.b * ray->transmittance);
+
+    Mesh* mesh = lib->LookupMesh(ray->strong.mesh);
+    assert(mesh != nullptr);
+    Material* mat = lib->LookupMaterial(mesh->material);
+    assert(mat != nullptr);
+    if (mat->emissive) {
+        // TODO: replace this with evaluating the shader's emissive function
+        results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "R", ray->x, ray->y,
+         1.0f * ray->transmittance);
+        results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "G", ray->x, ray->y,
+         1.0f * ray->transmittance);
+        results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "B", ray->x, ray->y,
+         1.0f * ray->transmittance);
+    }
 
     // Create ILLUMINATE rays and send them to each emissive node.
     LightList* lights = lib->LookupLightList();

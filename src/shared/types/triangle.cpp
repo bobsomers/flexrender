@@ -23,11 +23,15 @@ Triangle::Triangle() {
     verts[2] = Vertex();
 }
 
-vec3 Triangle::Sample(vec2* texcoords) const {
+vec3 Triangle::Sample(vec3* normal, vec2* texcoord) const {
     // TODO: implement actual sampling
 
-    if (texcoords != nullptr) {
-        *texcoords = verts[0].t;
+    if (normal != nullptr) {
+        *normal = verts[0].n;
+    }
+
+    if (texcoord != nullptr) {
+        *texcoord = verts[0].t;
     }
 
     return verts[0].v;
