@@ -1,4 +1,5 @@
 -- Import frlib and extras.
+package.cpath = "3p/build/lib/?.so;" .. package.cpath
 package.path = "frlib/?.lua;" .. package.path
 local fr = require "flexrender"
 local fre = require "extras"
@@ -15,12 +16,17 @@ camera {
     look = vec3(0, 0, 0)
 }
 
+local bob_r, bob_g, bob_b = fre.targa("scenes/bob.tga")
+
 material {
     name = "white",
     emissive = false,
     shader = fre.frsl("scenes/phong.lua"), -- TODO
     textures = {
-        ramp = fre.procedural("scenes/ramp.lua")
+        ramp = fre.procedural("scenes/ramp.lua"),
+        face_r = bob_r,
+        face_g = bob_g,
+        face_b = bob_b
     }
 }
 
@@ -29,7 +35,10 @@ material {
     emissive = false,
     shader = fre.frsl("scenes/phong.lua"), -- TODO
     textures = {
-        ramp = fre.procedural("scenes/ramp.lua")
+        ramp = fre.procedural("scenes/ramp.lua"),
+        face_r = bob_r,
+        face_g = bob_g,
+        face_b = bob_b
     }
 }
 
@@ -38,7 +47,10 @@ material {
     emissive = false,
     shader = fre.frsl("scenes/phong.lua"), -- TODO
     textures = {
-        ramp = fre.procedural("scenes/ramp.lua")
+        ramp = fre.procedural("scenes/ramp.lua"),
+        face_r = bob_r,
+        face_g = bob_g,
+        face_b = bob_b
     }
 }
 
@@ -47,7 +59,10 @@ material {
     emissive = true,
     shader = fre.frsl("scenes/phong.lua"), -- TODO
     textures = {
-        ramp = fre.procedural("scenes/ramp.lua")
+        ramp = fre.procedural("scenes/ramp.lua"),
+        face_r = bob_r,
+        face_g = bob_g,
+        face_b = bob_b
     }
 }
 

@@ -11,6 +11,7 @@ using std::numeric_limits;
 using std::string;
 using std::stringstream;
 using std::endl;
+using glm::vec2;
 
 namespace fr {
 
@@ -51,6 +52,35 @@ Texture::Texture() :
  image(),
  script(nullptr) {
     id = numeric_limits<uint64_t>::max();
+}
+
+float Texture::Sample(vec2 texcoord) {
+    float value = 0.0f;
+
+    switch (kind) {
+        case Kind::PROCEDURAL:
+            value = script->Evaluate(texcoord);
+            break;
+
+        case Kind::IMAGE:
+            value = Image(texcoord.x, texcoord.y);
+            break;
+
+        default:
+            TERRLN("Attempt to sample unknown texture kind!");
+            exit(EXIT_FAILURE);
+            break;
+    }
+
+    return value;
+}
+
+float Texture::Image(float u, float v) {
+    // TODO: make this a lot better... filtering?
+    int16_t x = static_cast<int16_t>(u * width);
+    int16_t y = static_cast<int16_t>(v * height);
+    uint32_t index = y * width + x;
+    return image[index];
 }
 
 string ToString(const Texture& tex, const string& indent) {

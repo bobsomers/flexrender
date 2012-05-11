@@ -47,7 +47,7 @@ TextureScript::TextureScript(const string& code) :
     }
 }
 
-vec3 TextureScript::Evaluate(vec2 texcoord) {
+float TextureScript::Evaluate(vec2 texcoord) {
     // Acquire the interpreter lock.
     if (sem_wait(&_lock) < 0) {
         perror("sem_wait");
@@ -68,8 +68,8 @@ vec3 TextureScript::Evaluate(vec2 texcoord) {
 
     // Call the function.
     CallFunc(1, 1);
-    luaL_checktype(_state, -1, LUA_TTABLE);
-    vec3 value = FetchFloat3();
+    luaL_checktype(_state, -1, LUA_TNUMBER);
+    float value = FetchFloat();
     lua_pop(_state, 1);
 
     // Release the interpreter lock.

@@ -12,7 +12,7 @@ class TextureScript : public Script {
 public:
     explicit TextureScript(const std::string& code);
 
-    glm::vec3 Evaluate(glm::vec2 texcoord);
+    float Evaluate(glm::vec2 texcoord);
 
 private:
     bool _has_vec2;

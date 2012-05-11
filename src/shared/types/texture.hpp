@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "glm/glm.hpp"
 #include "msgpack.hpp"
 
 #include "utils/tostring.hpp"
@@ -45,12 +46,19 @@ struct Texture {
     /// If the texture is an image, store flat array of pixel values.
     std::vector<float> image;
 
+    /// Samples the texture at the given texture coordinate.
+    float Sample(glm::vec2 texcoord);
+
     MSGPACK_DEFINE(id, kind, width, height, code, image);
 
     TOSTRINGABLE(Texture);
 
     /// The texture script we actually execute (if procedural).
     TextureScript* script;
+
+private:
+    /// Samples the image data at texture coordinates <u, v>
+    float Image(float u, float v);
 };
 
 std::string ToString(const Texture& tex, const std::string& indent = "");

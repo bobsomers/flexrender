@@ -388,28 +388,10 @@ FR_SCRIPT_FUNCTION(ShaderScript, Texture) {
     assert(tex != nullptr);
 
     // Sample the texture.
-    vec3 value = vec3(0.0f, 0.0f, 0.0f);
-    switch (tex->kind) {
-        case Texture::Kind::PROCEDURAL:
-            value = tex->script->Evaluate(texcoord);
-            break;
+    float value = tex->Sample(texcoord);
 
-        case Texture::Kind::IMAGE:
-            // TODO
-            break;
-
-        default:
-            TERRLN("Attempt to sample unknown texture kind!");
-            exit(EXIT_FAILURE);
-            break;
-    }
-
-    // Return the sampled value, setting it's metatable appropriately if we can.
-    PushFloat3(value);
-    if (_has_vec3) {
-        lua_getglobal(_state, "vec3");
-        lua_setmetatable(_state, -2); // view (metatable is at -1)
-    }
+    // Return the sampled value.
+    PushFloat(value);
 
     return 1;
 }

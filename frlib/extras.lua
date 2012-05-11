@@ -9,7 +9,7 @@ local simple = require "primitives.simple"
 return {
     frsl = sloaders.frsl,
     procedural = tloaders.procedural,
-    fakeimg = tloaders.fakeimg,
+    targa = tloaders.targa,
     plane = simple.plane,
     cube = simple.cube
 }

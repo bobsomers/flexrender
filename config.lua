@@ -14,7 +14,7 @@ network {
 }
 
 output {
-    size = vec2(640, 480),
+    size = vec2(512, 512),
     name = "test",
     buffers = {
         "intersection"
@@ -23,7 +23,7 @@ output {
 
 render {
     antialiasing = 1,
-    samples = 1,
+    samples = 5,
     min = vec3(-100, -100, -100),
     max = vec3(100, 100, 100),
 }
