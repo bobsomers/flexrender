@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <cassert>
+#include <limits>
 #include <stdio.h>
 #include <errno.h>
 
@@ -9,6 +10,7 @@
 #include "types.hpp"
 #include "utils.hpp"
 
+using std::numeric_limits;
 using std::string;
 using glm::vec2;
 using glm::vec3;
@@ -28,6 +30,10 @@ ShaderScript::ShaderScript(const string& code, const Library* lib) :
  _has_vec2(false),
  _has_vec3(false),
  _has_vec4(false) {
+     _hit.x = numeric_limits<float>::quiet_NaN();
+     _hit.y = numeric_limits<float>::quiet_NaN();
+     _hit.z = numeric_limits<float>::quiet_NaN();
+
     // TODO: Shader scripts shouldn't have access to the whole standard
     // library...
     FR_SCRIPT_INIT(ShaderScript, ScriptLibs::STANDARD_LIBS);
@@ -107,6 +113,7 @@ void ShaderScript::Direct(const FatRay* ray, vec3 hit, WorkResults *results) {
 
     // Set the current data we're operating on.
     _ray = ray;
+    _hit = hit;
     _results = results;
 
     // Locate the function.
@@ -164,6 +171,7 @@ void ShaderScript::Indirect(const FatRay* ray, vec3 hit, WorkResults* results) {
 
     // Set the current data we're operating on.
     _ray = ray;
+    _hit = hit;
     _results = results;
 
     // Locate the function.
@@ -573,6 +581,35 @@ FR_SCRIPT_FUNCTION(ShaderScript, Trace) {
     lua_pushvalue(_state, 1);
     vec3 direction = FetchFloat3();
     lua_pop(_state, 1);
+
+    float partial = luaL_checknumber(_state, 2);
+
+    int16_t bounce = _ray->bounces + 1;
+    float transmittance = _ray->transmittance * partial;
+
+    // TODO: bounce/transmittance threshold rejection checks
+    if (bounce > 2 || transmittance < 0.001f) {
+        return 0;
+    }
+
+    // Create a new tracer ray that inherits many of its properties from the
+    // source ray.
+    FatRay* tracer = new FatRay(FatRay::Kind::INTERSECT, _ray->x, _ray->y);
+
+    // The origin is at the intersection point, plus some epsilon along the
+    // new direction to ensure no self intersection.
+    tracer->skinny.origin = _hit + direction * SELF_INTERSECT_EPSILON;
+    tracer->skinny.direction = direction;
+
+    // Set the bounce number and transmittance.
+    tracer->bounces = bounce;
+    tracer->transmittance = transmittance;
+
+    // It hasn't hit anything yet.
+    tracer->weak.worker = 0;
+    tracer->strong.worker = 0;
+
+    _results->forwards.emplace_back(tracer, nullptr);
 
     return 0;
 }

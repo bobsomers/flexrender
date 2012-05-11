@@ -590,8 +590,14 @@ void server::AfterWork(uv_work_t* req) {
     
     // Forward rays and kill them off.
     for (auto& forward : results->forwards) {
-        forward.node->SendRay(forward.ray);
-        delete forward.ray;
+        if (forward.node == nullptr) {
+            // We didn't know where to send it, so queue it for processing.
+            rayq->Push(forward.ray);
+        } else {
+            // Send it and kill the local copy.
+            forward.node->SendRay(forward.ray);
+            delete forward.ray;
+        }
     }
 
     delete results;

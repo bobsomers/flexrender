@@ -55,6 +55,7 @@ public:
 private:
     const Library* _lib;
     const FatRay* _ray;
+    glm::vec3 _hit;
     WorkResults* _results;
     bool _has_direct;
     bool _has_indirect;

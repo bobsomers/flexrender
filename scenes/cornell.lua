@@ -19,6 +19,12 @@ camera {
 local bob_r, bob_g, bob_b = fre.targa("scenes/bob.tga")
 
 material {
+    name = "mirror",
+    emissive = false,
+    shader = fre.frsl("scenes/mirror.lua")
+}
+
+material {
     name = "white",
     emissive = false,
     shader = fre.frsl("scenes/phong.lua"), -- TODO
@@ -57,13 +63,7 @@ material {
 material {
     name = "light",
     emissive = true,
-    shader = fre.frsl("scenes/phong.lua"), -- TODO
-    textures = {
-        ramp = fre.procedural("scenes/ramp.lua"),
-        face_r = bob_r,
-        face_g = bob_g,
-        face_b = bob_b
-    }
+    shader = fre.frsl("scenes/light.lua") -- TODO
 }
 
 -- Light.
@@ -110,14 +110,14 @@ mesh {
 
 -- Tall box.
 mesh {
-    material = "white",
+    material = "mirror",
     transform = translate(vec3(-0.9, -1.1, -0.9)) * rotate(radians(20), vec3(0, 1, 0)) * scale(vec3(1.7, 3.3, 1.7)),
     data = fre.cube(1)
 }
 
 -- Short box.
 mesh {
-    material = "white",
+    material = "mirror",
     transform = translate(vec3(1, -1.95, 1)) * rotate(radians(-20), vec3(0, 1, 0)) * scale(1.6),
     data = fre.cube(1)
 }
