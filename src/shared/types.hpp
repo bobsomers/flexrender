@@ -19,3 +19,4 @@
 #include "types/triangle.hpp"
 #include "types/vertex.hpp"
 #include "types/weak_hit.hpp"
+#include "types/work_results.hpp"

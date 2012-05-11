@@ -10,7 +10,6 @@
 #include "types.hpp"
 #include "utils.hpp"
 #include "ray_queue.hpp"
-#include "work_results.hpp"
 
 /// How long to wait for more data before flushing the send buffer.
 #define FR_FLUSH_TIMEOUT_MS 10
@@ -493,14 +492,14 @@ void server::ForwardRay(FatRay* ray, WorkResults* results, uint64_t id) {
 
 void server::IlluminateIntersection(FatRay* ray, WorkResults* results) {
     // TODO: replace this with evaluating the shader's indirect function
-    vec3 albedo(0.196f, 0.486f, 0.796f);
-    vec3 ambient(0.3f * albedo.r, 0.3f * albedo.g, 0.3f * albedo.b);
-    results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "R", ray->x, ray->y,
-     ambient.r * ray->transmittance);
-    results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "G", ray->x, ray->y,
-     ambient.g * ray->transmittance);
-    results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "B", ray->x, ray->y,
-     ambient.b * ray->transmittance);
+    //vec3 albedo(0.196f, 0.486f, 0.796f);
+    //vec3 ambient(0.3f * albedo.r, 0.3f * albedo.g, 0.3f * albedo.b);
+    //results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "R", ray->x, ray->y,
+    // ambient.r * ray->transmittance);
+    //results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "G", ray->x, ray->y,
+    // ambient.g * ray->transmittance);
+    //results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "B", ray->x, ray->y,
+    // ambient.b * ray->transmittance);
 
     Mesh* mesh = lib->LookupMesh(ray->strong.mesh);
     assert(mesh != nullptr);
@@ -536,33 +535,24 @@ void server::ShadeIntersection(FatRay* ray, WorkResults* results) {
         return;
     }
 
-    Camera* cam = lib->LookupCamera();
-
-    // Compute the vectors we're passing to the shader.
-    vec3 view = normalize(cam->eye - hit);
-    vec3 normal = ray->strong.geom.n;
-    vec2 texcoord = ray->strong.geom.t;
-    vec3 light = -ray->skinny.direction;
-    vec3 illumination = ray->emission;
-
     // Find the shader and run the direct() function.
     Mesh* mesh = lib->LookupMesh(ray->strong.mesh);
     Material* mat = lib->LookupMaterial(mesh->material);
     Shader* shader = lib->LookupShader(mat->shader);
-    shader->script->Direct(view, normal, texcoord, light, illumination, results);
+    shader->script->Direct(ray, hit, results);
 
     // TODO: replace this with evaluating the shader
-    float NdotL = dot(ray->strong.geom.n, normalize(ray->skinny.direction * -1.0f));
-    vec3 albedo(0.196f, 0.486f, 0.796f);
-    vec3 diffuse(0.7f * albedo.r * ray->emission.r * NdotL,
-                 0.7f * albedo.g * ray->emission.g * NdotL,
-                 0.7f * albedo.b * ray->emission.b * NdotL);
-    results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "R", ray->x, ray->y,
-     diffuse.r * ray->transmittance);
-    results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "G", ray->x, ray->y,
-     diffuse.g * ray->transmittance);
-    results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "B", ray->x, ray->y,
-     diffuse.b * ray->transmittance);
+    //float NdotL = dot(ray->strong.geom.n, normalize(ray->skinny.direction * -1.0f));
+    //vec3 albedo(0.196f, 0.486f, 0.796f);
+    //vec3 diffuse(0.7f * albedo.r * ray->emission.r * NdotL,
+    //             0.7f * albedo.g * ray->emission.g * NdotL,
+    //             0.7f * albedo.b * ray->emission.b * NdotL);
+    //results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "R", ray->x, ray->y,
+    // diffuse.r * ray->transmittance);
+    //results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "G", ray->x, ray->y,
+    // diffuse.g * ray->transmittance);
+    //results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "B", ray->x, ray->y,
+    // diffuse.b * ray->transmittance);
 }
 
 void server::OnWork(uv_work_t* req) {

@@ -2,8 +2,8 @@
 package.path = "frlib/?.lua;" .. package.path
 local fr = require "flexrender"
 
-local vec2 = fr.vec2
-local vec3 = fr.vec3
+vec2 = fr.vec2
+vec3 = fr.vec3
 
 --[[
     V = normalized view vector (vec3)
@@ -14,17 +14,8 @@ local vec3 = fr.vec3
 ]]
 
 function direct(V, N, T, L, I)
-    setmetatable(V, vec3)
-    setmetatable(N, vec3)
-    setmetatable(T, vec2)
-    setmetatable(L, vec3)
-    setmetatable(I, vec3)
-
-    print("V = " .. tostring(V))
-    print("N = " .. tostring(N))
-    print("T = " .. tostring(T))
-    print("L = " .. tostring(L))
-    print("I = " .. tostring(I))
+    accumulate3("R", "G", "B", vec3(0.196, 0.486, 0.796))
+    write("intersection", 1)
 end
 
 function indirect(V, N, T)
