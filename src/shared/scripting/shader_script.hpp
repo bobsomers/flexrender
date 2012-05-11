@@ -61,6 +61,7 @@ private:
     bool _has_emissive;
     bool _has_vec2;
     bool _has_vec3;
+    bool _has_vec4;
     sem_t _lock;
 };
 

@@ -24,7 +24,10 @@ ShaderScript::ShaderScript(const string& code, const Library* lib) :
  _results(nullptr),
  _has_direct(false),
  _has_indirect(false),
- _has_emissive(false) {
+ _has_emissive(false),
+ _has_vec2(false),
+ _has_vec3(false),
+ _has_vec4(false) {
     // TODO: Shader scripts shouldn't have access to the whole standard
     // library...
     FR_SCRIPT_INIT(ShaderScript, ScriptLibs::STANDARD_LIBS);
@@ -63,7 +66,7 @@ ShaderScript::ShaderScript(const string& code, const Library* lib) :
     _has_emissive = lua_isfunction(_state, -1) != 0;
     lua_pop(_state, 1);
 
-    // Do they have local aliases for vec2's and vec3's? If so, we can set
+    // Do they have global aliases for vector types? If so, we can set
     // vector metatables appropriately when we push arguments onto the stack.
     lua_getglobal(_state, "vec2");
     _has_vec2 = lua_istable(_state, -1) != 0;
@@ -71,6 +74,10 @@ ShaderScript::ShaderScript(const string& code, const Library* lib) :
 
     lua_getglobal(_state, "vec3");
     _has_vec3 = lua_istable(_state, -1) != 0;
+    lua_pop(_state, 1);
+
+    lua_getglobal(_state, "vec4");
+    _has_vec4 = lua_istable(_state, -1) != 0;
     lua_pop(_state, 1);
 
     // Initialize lock.
@@ -397,22 +404,176 @@ FR_SCRIPT_FUNCTION(ShaderScript, Texture) {
 }
 
 FR_SCRIPT_FUNCTION(ShaderScript, Texture2) {
-    // TODO
-    return 0;
+    string sampler1(luaL_checkstring(_state, 1));
+    string sampler2(luaL_checkstring(_state, 2));
+
+    luaL_checktype(_state, 3, LUA_TTABLE);
+    lua_pushvalue(_state, 3);
+    vec2 texcoord = FetchFloat2();
+    lua_pop(_state, 1);
+
+    // Look up the material to get texture bindings.
+    Mesh* mesh = _lib->LookupMesh(_ray->strong.mesh);
+    assert(mesh != nullptr);
+    Material* mat = _lib->LookupMaterial(mesh->material);
+    assert(mat != nullptr);
+
+    auto iter1 = mat->textures.find(sampler1);
+    if (iter1 == mat->textures.end()) {
+        TERRLN("No texture bound with name '" << sampler1 << "'!");
+        exit(EXIT_FAILURE);
+    }
+    Texture* tex1 = _lib->LookupTexture((*iter1).second);
+    assert(tex1 != nullptr);
+
+    auto iter2 = mat->textures.find(sampler2);
+    if (iter2 == mat->textures.end()) {
+        TERRLN("No texture bound with name '" << sampler2 << "'!");
+        exit(EXIT_FAILURE);
+    }
+    Texture* tex2 = _lib->LookupTexture((*iter2).second);
+    assert(tex2 != nullptr);
+
+    // Sample the texture.
+    vec2 value(tex1->Sample(texcoord),
+               tex2->Sample(texcoord));
+
+    // Return the sampled value.
+    PushFloat2(value);
+    if (_has_vec2) {
+        lua_getglobal(_state, "vec2");
+        lua_setmetatable(_state, -2); // value (metatable is at -1)
+    }
+
+    return 1;
 }
 
 FR_SCRIPT_FUNCTION(ShaderScript, Texture3) {
-    // TODO
-    return 0;
+    string sampler1(luaL_checkstring(_state, 1));
+    string sampler2(luaL_checkstring(_state, 2));
+    string sampler3(luaL_checkstring(_state, 3));
+
+    luaL_checktype(_state, 4, LUA_TTABLE);
+    lua_pushvalue(_state, 4);
+    vec2 texcoord = FetchFloat2();
+    lua_pop(_state, 1);
+
+    // Look up the material to get texture bindings.
+    Mesh* mesh = _lib->LookupMesh(_ray->strong.mesh);
+    assert(mesh != nullptr);
+    Material* mat = _lib->LookupMaterial(mesh->material);
+    assert(mat != nullptr);
+
+    auto iter1 = mat->textures.find(sampler1);
+    if (iter1 == mat->textures.end()) {
+        TERRLN("No texture bound with name '" << sampler1 << "'!");
+        exit(EXIT_FAILURE);
+    }
+    Texture* tex1 = _lib->LookupTexture((*iter1).second);
+    assert(tex1 != nullptr);
+
+    auto iter2 = mat->textures.find(sampler2);
+    if (iter2 == mat->textures.end()) {
+        TERRLN("No texture bound with name '" << sampler2 << "'!");
+        exit(EXIT_FAILURE);
+    }
+    Texture* tex2 = _lib->LookupTexture((*iter2).second);
+    assert(tex2 != nullptr);
+
+    auto iter3 = mat->textures.find(sampler3);
+    if (iter3 == mat->textures.end()) {
+        TERRLN("No texture bound with name '" << sampler3 << "'!");
+        exit(EXIT_FAILURE);
+    }
+    Texture* tex3 = _lib->LookupTexture((*iter3).second);
+    assert(tex3 != nullptr);
+
+    // Sample the texture.
+    vec3 value(tex1->Sample(texcoord),
+               tex2->Sample(texcoord),
+               tex3->Sample(texcoord));
+
+    // Return the sampled value.
+    PushFloat3(value);
+    if (_has_vec3) {
+        lua_getglobal(_state, "vec3");
+        lua_setmetatable(_state, -2); // value (metatable is at -1)
+    }
+
+    return 1;
 }
 
 FR_SCRIPT_FUNCTION(ShaderScript, Texture4) {
-    // TODO
-    return 0;
+    string sampler1(luaL_checkstring(_state, 1));
+    string sampler2(luaL_checkstring(_state, 2));
+    string sampler3(luaL_checkstring(_state, 3));
+    string sampler4(luaL_checkstring(_state, 4));
+
+    luaL_checktype(_state, 5, LUA_TTABLE);
+    lua_pushvalue(_state, 5);
+    vec2 texcoord = FetchFloat2();
+    lua_pop(_state, 1);
+
+    // Look up the material to get texture bindings.
+    Mesh* mesh = _lib->LookupMesh(_ray->strong.mesh);
+    assert(mesh != nullptr);
+    Material* mat = _lib->LookupMaterial(mesh->material);
+    assert(mat != nullptr);
+
+    auto iter1 = mat->textures.find(sampler1);
+    if (iter1 == mat->textures.end()) {
+        TERRLN("No texture bound with name '" << sampler1 << "'!");
+        exit(EXIT_FAILURE);
+    }
+    Texture* tex1 = _lib->LookupTexture((*iter1).second);
+    assert(tex1 != nullptr);
+
+    auto iter2 = mat->textures.find(sampler2);
+    if (iter2 == mat->textures.end()) {
+        TERRLN("No texture bound with name '" << sampler2 << "'!");
+        exit(EXIT_FAILURE);
+    }
+    Texture* tex2 = _lib->LookupTexture((*iter2).second);
+    assert(tex2 != nullptr);
+
+    auto iter3 = mat->textures.find(sampler3);
+    if (iter3 == mat->textures.end()) {
+        TERRLN("No texture bound with name '" << sampler3 << "'!");
+        exit(EXIT_FAILURE);
+    }
+    Texture* tex3 = _lib->LookupTexture((*iter3).second);
+    assert(tex3 != nullptr);
+
+    auto iter4 = mat->textures.find(sampler4);
+    if (iter4 == mat->textures.end()) {
+        TERRLN("No texture bound with name '" << sampler4 << "'!");
+        exit(EXIT_FAILURE);
+    }
+    Texture* tex4 = _lib->LookupTexture((*iter4).second);
+    assert(tex4 != nullptr);
+
+    // Sample the texture.
+    vec4 value(tex1->Sample(texcoord),
+               tex2->Sample(texcoord),
+               tex3->Sample(texcoord),
+               tex4->Sample(texcoord));
+
+    // Return the sampled value.
+    PushFloat4(value);
+    if (_has_vec4) {
+        lua_getglobal(_state, "vec4");
+        lua_setmetatable(_state, -2); // value (metatable is at -1)
+    }
+
+    return 1;
 }
 
 FR_SCRIPT_FUNCTION(ShaderScript, Trace) {
-    // TODO
+    luaL_checktype(_state, 1, LUA_TTABLE);
+    lua_pushvalue(_state, 1);
+    vec3 direction = FetchFloat3();
+    lua_pop(_state, 1);
+
     return 0;
 }
 

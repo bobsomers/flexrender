@@ -18,17 +18,12 @@ local diffuse = 0.8
 local ambient = 0.2
 
 function direct(V, N, T, L, I)
-    local bob = vec3(texture("face_r", T),
-                     texture("face_g", T),
-                     texture("face_b", T))
+    local bob = texture3("face_r", "face_g", "face_b", T);
     accumulate3("R", "G", "B", diffuse * bob * I * dot(N, L))
 end
 
 function indirect(V, N, T)
-    local bob = vec3(texture("face_r", T),
-                     texture("face_g", T),
-                     texture("face_b", T))
-
+    local bob = texture3("face_r", "face_g", "face_b", T);
     accumulate3("R", "G", "B", ambient * bob)
 end
 
