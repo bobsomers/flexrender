@@ -395,6 +395,14 @@ void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
         // The target we're trying to hit is the original intersection.
         vec3 target = ray->EvaluateAt(ray->strong.t);
 
+        // Find the shader.
+        Material* mat = lib->LookupMaterial(mesh->material);
+        assert(mat != nullptr);
+
+        Shader* shader = lib->LookupShader(mat->shader);
+        assert(shader != nullptr);
+        assert(shader->script != nullptr);
+
         for (const auto& tri : mesh->tris) {
             for (uint16_t i = 0; i < config->samples; i++) {
                 // Sample the triangle.
@@ -423,9 +431,8 @@ void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
                 light->skinny.direction = direction;
                 light->target = target;
 
-                // TODO: run the shader's emissive() func instead, passing along
-                // the interpolated texture coordinates (texcoords)
-                light->emission = vec3(1.0f, 1.0f, 1.0f);
+                // Run the shader's emissive() function.
+                light->emission = shader->script->Emissive(texcoord);
 
                 // Scale the transmittance by the number of samples.
                 light->transmittance = ray->transmittance / config->samples;
@@ -491,29 +498,21 @@ void server::ForwardRay(FatRay* ray, WorkResults* results, uint64_t id) {
 }
 
 void server::IlluminateIntersection(FatRay* ray, WorkResults* results) {
-    // TODO: replace this with evaluating the shader's indirect function
-    //vec3 albedo(0.196f, 0.486f, 0.796f);
-    //vec3 ambient(0.3f * albedo.r, 0.3f * albedo.g, 0.3f * albedo.b);
-    //results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "R", ray->x, ray->y,
-    // ambient.r * ray->transmittance);
-    //results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "G", ray->x, ray->y,
-    // ambient.g * ray->transmittance);
-    //results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "B", ray->x, ray->y,
-    // ambient.b * ray->transmittance);
+    // Where did we hit?
+    vec3 hit = ray->EvaluateAt(ray->strong.t);
 
+    // Find the shader and run the indirect() function.
     Mesh* mesh = lib->LookupMesh(ray->strong.mesh);
     assert(mesh != nullptr);
+
     Material* mat = lib->LookupMaterial(mesh->material);
     assert(mat != nullptr);
-    if (mat->emissive) {
-        // TODO: replace this with evaluating the shader's emissive function
-        results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "R", ray->x, ray->y,
-         1.0f * ray->transmittance);
-        results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "G", ray->x, ray->y,
-         1.0f * ray->transmittance);
-        results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "B", ray->x, ray->y,
-         1.0f * ray->transmittance);
-    }
+
+    Shader* shader = lib->LookupShader(mat->shader);
+    assert(shader != nullptr);
+    assert(shader->script != nullptr);
+
+    shader->script->Indirect(ray, hit, results);
 
     // Create ILLUMINATE rays and send them to each emissive node.
     LightList* lights = lib->LookupLightList();
@@ -537,22 +536,16 @@ void server::ShadeIntersection(FatRay* ray, WorkResults* results) {
 
     // Find the shader and run the direct() function.
     Mesh* mesh = lib->LookupMesh(ray->strong.mesh);
-    Material* mat = lib->LookupMaterial(mesh->material);
-    Shader* shader = lib->LookupShader(mat->shader);
-    shader->script->Direct(ray, hit, results);
+    assert(mesh != nullptr);
 
-    // TODO: replace this with evaluating the shader
-    //float NdotL = dot(ray->strong.geom.n, normalize(ray->skinny.direction * -1.0f));
-    //vec3 albedo(0.196f, 0.486f, 0.796f);
-    //vec3 diffuse(0.7f * albedo.r * ray->emission.r * NdotL,
-    //             0.7f * albedo.g * ray->emission.g * NdotL,
-    //             0.7f * albedo.b * ray->emission.b * NdotL);
-    //results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "R", ray->x, ray->y,
-    // diffuse.r * ray->transmittance);
-    //results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "G", ray->x, ray->y,
-    // diffuse.g * ray->transmittance);
-    //results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "B", ray->x, ray->y,
-    // diffuse.b * ray->transmittance);
+    Material* mat = lib->LookupMaterial(mesh->material);
+    assert(mat != nullptr);
+
+    Shader* shader = lib->LookupShader(mat->shader);
+    assert(shader != nullptr);
+    assert(shader->script != nullptr);
+
+    shader->script->Direct(ray, hit, results);
 }
 
 void server::OnWork(uv_work_t* req) {

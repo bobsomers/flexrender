@@ -54,11 +54,11 @@ ShaderScript::ShaderScript(const string& code, const Library* lib) :
     lua_pop(_state, 1);
 
     lua_getglobal(_state, "indirect");
-    _has_direct = lua_isfunction(_state, -1) != 0;
+    _has_indirect = lua_isfunction(_state, -1) != 0;
     lua_pop(_state, 1);
 
     lua_getglobal(_state, "emissive");
-    _has_direct = lua_isfunction(_state, -1) != 0;
+    _has_emissive = lua_isfunction(_state, -1) != 0;
     lua_pop(_state, 1);
 
     // Do they have local aliases for vec2's and vec3's? If so, we can set
@@ -137,38 +137,91 @@ void ShaderScript::Direct(const FatRay* ray, vec3 hit, WorkResults *results) {
     }
 }
 
-void ShaderScript::Indirect(vec3 view, vec3 normal, vec2 texcoord,
- WorkResults* results) {
+void ShaderScript::Indirect(const FatRay* ray, vec3 hit, WorkResults* results) {
     if (!_has_indirect) return;
 
+    Camera* cam = _lib->LookupCamera();
+
+    // Compute the vectors we're passing to the shader.
+    vec3 view = normalize(cam->eye - hit);
+    vec3 normal = ray->strong.geom.n;
+    vec2 texcoord = ray->strong.geom.t;
+
+    // Acquire the interpreter lock.
     if (sem_wait(&_lock) < 0) {
         perror("sem_wait");
         exit(EXIT_FAILURE);
     }
 
-    // TODO
-    
+    // Set the current data we're operating on.
+    _ray = ray;
+    _results = results;
+
+    // Locate the function.
+    lua_getglobal(_state, "indirect");
+
+    // Push the arguments onto the stack.
+    PushFloat3(view);
+    PushFloat3(normal);
+    PushFloat2(texcoord);
+
+    // Set metatables for arguments if we can.
+    if (_has_vec2) {
+        lua_getglobal(_state, "vec2");
+        lua_setmetatable(_state, -2); // texcoord (metatable is at -1)
+    }
+    if (_has_vec3) {
+        lua_getglobal(_state, "vec3");
+        lua_setmetatable(_state, -4); // view (metatable is at -1)
+        lua_getglobal(_state, "vec3");
+        lua_setmetatable(_state, -3); // normal (metatable is at -1)
+    }
+
+    // Call the function.
+    CallFunc(3, 0);
+    // No need to pop, 0 return values.
+
+    // Release the interpreter lock.
     if (sem_post(&_lock) < 0) {
         perror("sem_post");
         exit(EXIT_FAILURE);
     }
 }
 
-void ShaderScript::Emissive(vec3 view, vec3 normal, vec2 texcoord,
- WorkResults* results) {
-    if (!_has_emissive) return;
+vec3 ShaderScript::Emissive(vec2 texcoord) {
+    if (!_has_emissive) return vec3(0.0f, 0.0f, 0.0f);
 
+    // Acquire the interpreter lock.
     if (sem_wait(&_lock) < 0) {
         perror("sem_wait");
         exit(EXIT_FAILURE);
     }
 
-    // TODO
-    
+    // Locate the function.
+    lua_getglobal(_state, "emissive");
+
+    // Push the arguments onto the stack.
+    PushFloat2(texcoord);
+
+    // Set metatables for arguments if we can.
+    if (_has_vec2) {
+        lua_getglobal(_state, "vec2");
+        lua_setmetatable(_state, -2); // texcoord (metatable is at -1)
+    }
+
+    // Call the function.
+    CallFunc(1, 1);
+    luaL_checktype(_state, -1, LUA_TTABLE);
+    vec3 value = FetchFloat3();
+    lua_pop(_state, 1);
+
+    // Release the interpreter lock.
     if (sem_post(&_lock) < 0) {
         perror("sem_post");
         exit(EXIT_FAILURE);
     }
+
+    return value;
 }
 
 FR_SCRIPT_FUNCTION(ShaderScript, Accumulate) {

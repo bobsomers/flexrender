@@ -28,16 +28,13 @@ public:
      * the given arguments, potentially appending buffer writes to the work
      * results.
      */
-    void Indirect(glm::vec3 view, glm::vec3 normal, glm::vec2 texcoord,
-     WorkResults* results);
+    void Indirect(const FatRay* ray, glm::vec3 hit, WorkResults* results);
 
     /**
      * Runs the emissive lighting function of the shader (if it exists) with
-     * the given arguments, potentially appending buffer writes to the work
-     * results.
+     * the given arguments. Returns the emission of the surface.
      */
-    void Emissive(glm::vec3 view, glm::vec3 normal, glm::vec2 texcoord,
-     WorkResults *results);
+    glm::vec3 Emissive(glm::vec2 texcoord);
 
     // Shader built-ins.
     FR_SCRIPT_DECLARE(Accumulate);
