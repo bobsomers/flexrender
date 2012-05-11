@@ -15,6 +15,7 @@ function download_packages {
     echo "======================================================================"
 
     download "LuaJIT-2.0.0-beta9"
+    download "lpack"
     download "libuv-0.6"
     download "glm-0.9.3.2"
     download "msgpack-0.5.7"

@@ -10,6 +10,9 @@ download_packages
 source $BASEPATH/scripts/luajit-2.0.0-beta9.bash
 build_luajit
 
+source $BASEPATH/scripts/lpack.bash
+build_lpack
+
 source $BASEPATH/scripts/libuv-0.6.bash
 build_libuv
 

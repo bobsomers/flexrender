@@ -1,0 +1,28 @@
+diff -Naur pack/Makefile pack-patch/Makefile
+--- pack/Makefile	2007-06-29 15:22:54.000000000 -0700
++++ pack-patch/Makefile	2012-05-11 13:27:29.777076507 -0700
+@@ -1,13 +1,13 @@
+ # makefile for pack library for Lua
+ 
+ # change these to reflect your Lua installation
+-LUA= /tmp/lhf/lua-5.1.2
++LUA= $(BASEPATH)/tmp/LuaJIT-2.0.0-beta9
+ LUAINC= $(LUA)/src
+ LUALIB= $(LUA)/src
+ LUABIN= $(LUA)/src
+ 
+ # probably no need to change anything below here
+-CFLAGS= $(INCS) $(WARN) -O2 $G
++CFLAGS= $(INCS) $(WARN) -fPIC -O2 $G
+ WARN= -ansi -pedantic -Wall
+ INCS= -I$(LUAINC)
+ 
+@@ -20,7 +20,7 @@
+ all:	test
+ 
+ test:	$T
+-	$(LUABIN)/lua $(TEST)
++	$(LUABIN)/luajit $(TEST)
+ 
+ o:	$(MYLIB).o
+ 
