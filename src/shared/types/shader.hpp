@@ -8,6 +8,8 @@
 
 namespace fr {
 
+class ShaderScript;
+
 struct Shader {
     explicit Shader(uint64_t id);
 
@@ -15,6 +17,8 @@ struct Shader {
 
     // FOR MSGPACK ONLY!
     explicit Shader();
+
+    ~Shader();
 
     /// Resource ID of the shader.
     uint64_t id;
@@ -25,6 +29,9 @@ struct Shader {
     MSGPACK_DEFINE(id, code);
 
     TOSTRINGABLE(Shader);
+
+    /// The shader script we actually execute.
+    ShaderScript* script;
 };
 
 std::string ToString(const Shader& shader, const std::string& indent = "");

@@ -23,7 +23,7 @@ output {
 
 render {
     antialiasing = 1,
-    samples = 2,
+    samples = 1,
     min = vec3(-100, -100, -100),
     max = vec3(100, 100, 100),
 }

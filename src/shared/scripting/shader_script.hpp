@@ -59,6 +59,8 @@ private:
     bool _has_direct;
     bool _has_indirect;
     bool _has_emissive;
+    bool _has_vec2;
+    bool _has_vec3;
     sem_t _lock;
 
     // Do a single accumulation. TODO: change this signature

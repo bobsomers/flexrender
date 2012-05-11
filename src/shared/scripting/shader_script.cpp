@@ -43,7 +43,28 @@ ShaderScript::ShaderScript(const string& code, const Library* lib) :
         exit(EXIT_FAILURE);
     }
     
-    // TODO: update has* flags
+    // Check to see which function exist.
+    lua_getglobal(_state, "direct");
+    _has_direct = lua_isfunction(_state, -1) != 0;
+    lua_pop(_state, 1);
+
+    lua_getglobal(_state, "indirect");
+    _has_direct = lua_isfunction(_state, -1) != 0;
+    lua_pop(_state, 1);
+
+    lua_getglobal(_state, "emissive");
+    _has_direct = lua_isfunction(_state, -1) != 0;
+    lua_pop(_state, 1);
+
+    // Do they have local aliases for vec2's and vec3's? If so, we can set
+    // vector metatables appropriately when we push arguments onto the stack.
+    lua_getglobal(_state, "vec2");
+    _has_vec2 = lua_istable(_state, -1) != 0;
+    lua_pop(_state, 1);
+
+    lua_getglobal(_state, "vec3");
+    _has_vec3 = lua_istable(_state, -1) != 0;
+    lua_pop(_state, 1);
 
     // Initialize lock.
     if (sem_init(&_lock, 0, 1) < 0) {
@@ -54,13 +75,29 @@ ShaderScript::ShaderScript(const string& code, const Library* lib) :
 
 void ShaderScript::Direct(vec3 view, vec3 normal, vec2 texcoord, vec3 light,
  vec3 illumination, WorkResults* results) {
+    if (!_has_direct) return;
+
+    // Acquire the interpreter lock.
     if (sem_wait(&_lock) < 0) {
         perror("sem_wait");
         exit(EXIT_FAILURE);
     }
 
-    // TODO
-    
+    // Locate the function.
+    lua_getglobal(_state, "direct");
+
+    // Push the arguments onto the stack.
+    PushFloat3(view);
+    PushFloat3(normal);
+    PushFloat2(texcoord);
+    PushFloat3(light);
+    PushFloat3(illumination);
+
+    // Call the function.
+    CallFunc(5, 0);
+    lua_pop(_state, 1);
+
+    // Release the interpreter lock.
     if (sem_post(&_lock) < 0) {
         perror("sem_post");
         exit(EXIT_FAILURE);
@@ -69,6 +106,8 @@ void ShaderScript::Direct(vec3 view, vec3 normal, vec2 texcoord, vec3 light,
 
 void ShaderScript::Indirect(vec3 view, vec3 normal, vec2 texcoord,
  WorkResults* results) {
+    if (!_has_indirect) return;
+
     if (sem_wait(&_lock) < 0) {
         perror("sem_wait");
         exit(EXIT_FAILURE);
@@ -84,6 +123,8 @@ void ShaderScript::Indirect(vec3 view, vec3 normal, vec2 texcoord,
 
 void ShaderScript::Emissive(vec3 view, vec3 normal, vec2 texcoord,
  WorkResults* results) {
+    if (!_has_emissive) return;
+
     if (sem_wait(&_lock) < 0) {
         perror("sem_wait");
         exit(EXIT_FAILURE);

@@ -171,10 +171,21 @@ protected:
     float FetchFloat();
 
     /**
+     * Pushes the given float onto the top of the stack.
+     */
+    void PushFloat(float f);
+
+    /**
      * Fetches a 2-dimensional vector as a table of 2 floats. It typechecks the
      * elements of the vector. Assumes the table is on the top of the stack.
      */
     glm::vec2 FetchFloat2();
+
+    /**
+     * Pushes the given 2-dimensional vector as a table of 2 floats onto the
+     * top of the stack.
+     */
+    void PushFloat2(glm::vec2 v);
 
     /**
      * Fetches a 3-dimensional vector as a table of 3 floats. It typechecks the
@@ -183,10 +194,22 @@ protected:
     glm::vec3 FetchFloat3();
 
     /**
+     * Pushes the given 3-dimensional vector as a table of 3 floats onto the
+     * top of the stack.
+     */
+    void PushFloat3(glm::vec3 v);
+
+    /**
      * Fetches a 4-dimensional vector as a table of 4 floats. It typechecks the
      * elements of the vector. Assumes the table is on the top of the stack.
      */
     glm::vec4 FetchFloat4();
+
+    /**
+     * Pushes the given 4-dimensional vector as a table of 4 floats onto the
+     * top of the stack.
+     */
+    void PushFloat4(glm::vec4 v);
 
     /**
      * Helper function for squirreling away a pointer to the object instance

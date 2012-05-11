@@ -6,6 +6,7 @@
 
 #include "uv.h"
 
+#include "scripting.hpp"
 #include "types.hpp"
 #include "utils.hpp"
 #include "ray_queue.hpp"
@@ -491,7 +492,7 @@ void server::ForwardRay(FatRay* ray, WorkResults* results, uint64_t id) {
 }
 
 void server::IlluminateIntersection(FatRay* ray, WorkResults* results) {
-    // TODO: replace this with evaluating the shader's ambient function
+    // TODO: replace this with evaluating the shader's indirect function
     vec3 albedo(0.196f, 0.486f, 0.796f);
     vec3 ambient(0.3f * albedo.r, 0.3f * albedo.g, 0.3f * albedo.b);
     results->ops.emplace_back(BufferOp::Kind::ACCUMULATE, "R", ray->x, ray->y,
@@ -534,6 +535,21 @@ void server::ShadeIntersection(FatRay* ray, WorkResults* results) {
         // Nope, ignore.
         return;
     }
+
+    Camera* cam = lib->LookupCamera();
+
+    // Compute the vectors we're passing to the shader.
+    vec3 view = normalize(cam->eye - hit);
+    vec3 normal = ray->strong.geom.n;
+    vec2 texcoord = ray->strong.geom.t;
+    vec3 light = -ray->skinny.direction;
+    vec3 illumination = ray->emission;
+
+    // Find the shader and run the direct() function.
+    Mesh* mesh = lib->LookupMesh(ray->strong.mesh);
+    Material* mat = lib->LookupMaterial(mesh->material);
+    Shader* shader = lib->LookupShader(mat->shader);
+    shader->script->Direct(view, normal, texcoord, light, illumination, results);
 
     // TODO: replace this with evaluating the shader
     float NdotL = dot(ray->strong.geom.n, normalize(ray->skinny.direction * -1.0f));
@@ -706,6 +722,10 @@ void server::OnSyncShader(NetNode* node) {
 
     // Unpack the shader.
     uint64_t id = node->ReceiveShader(lib);
+
+    // Prepare the shader for execution.
+    Shader* shader = lib->LookupShader(id);
+    shader->script = new ShaderScript(shader->code, lib);
 
     TOUTLN("[" << node->ip << "] Received shader " << id << ".");
 }

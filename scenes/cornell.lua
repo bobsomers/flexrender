@@ -18,25 +18,25 @@ camera {
 material {
     name = "white",
     emissive = false,
-    shader = fre.frsl("config.lua") -- TODO
+    shader = fre.frsl("scenes/phong.lua") -- TODO
 }
 
 material {
     name = "red",
     emissive = false,
-    shader = fre.frsl("config.lua") -- TODO
+    shader = fre.frsl("scenes/phong.lua") -- TODO
 }
 
 material {
     name = "green",
     emissive = false,
-    shader = fre.frsl("config.lua") -- TODO
+    shader = fre.frsl("scenes/phong.lua") -- TODO
 }
 
 material {
     name = "light",
     emissive = true,
-    shader = fre.frsl("config.lua") -- TODO
+    shader = fre.frsl("scenes/phong.lua") -- TODO
 }
 
 -- Light.

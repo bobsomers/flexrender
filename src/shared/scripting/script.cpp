@@ -169,6 +169,10 @@ float Script::FetchFloat() {
     return static_cast<float>(lua_tonumber(_state, -1));
 }
 
+void Script::PushFloat(float f) {
+    lua_pushnumber(_state, f);
+}
+
 vec2 Script::FetchFloat2() {
     vec2 vec;
     vec.x = numeric_limits<float>::quiet_NaN();
@@ -191,6 +195,14 @@ vec2 Script::FetchFloat2() {
     }
 
     return vec;
+}
+
+void Script::PushFloat2(vec2 v) {
+    lua_newtable(_state);
+    lua_pushnumber(_state, v.x);
+    lua_rawseti(_state, -2, 1);
+    lua_pushnumber(_state, v.y);
+    lua_rawseti(_state, -2, 2);
 }
 
 vec3 Script::FetchFloat3() {
@@ -218,6 +230,16 @@ vec3 Script::FetchFloat3() {
     return vec;
 }
 
+void Script::PushFloat3(vec3 v) {
+    lua_newtable(_state);
+    lua_pushnumber(_state, v.x);
+    lua_rawseti(_state, -2, 1);
+    lua_pushnumber(_state, v.y);
+    lua_rawseti(_state, -2, 2);
+    lua_pushnumber(_state, v.z);
+    lua_rawseti(_state, -2, 3);
+}
+
 vec4 Script::FetchFloat4() {
     vec4 vec;
     vec.x = numeric_limits<float>::quiet_NaN();
@@ -242,6 +264,18 @@ vec4 Script::FetchFloat4() {
     }
 
     return vec;
+}
+
+void Script::PushFloat4(vec4 v) {
+    lua_newtable(_state);
+    lua_pushnumber(_state, v.x);
+    lua_rawseti(_state, -2, 1);
+    lua_pushnumber(_state, v.y);
+    lua_rawseti(_state, -2, 2);
+    lua_pushnumber(_state, v.z);
+    lua_rawseti(_state, -2, 3);
+    lua_pushnumber(_state, v.w);
+    lua_rawseti(_state, -2, 4);
 }
 
 } // namespace fr
