@@ -108,15 +108,15 @@ vec3 Triangle::InterpolatePosition(float u, float v) const {
     float w = 1.0f - u - v;
 
     return vec3(
-        (u * verts[0].v.x) + // first coordinate (x)
-        (v * verts[1].v.x) +
-        (w * verts[2].v.x),
-        (u * verts[0].v.y) + // second coordinate (y)
-        (v * verts[1].v.y) +
-        (w * verts[2].v.y),
-        (u * verts[0].v.z) + // third coordinate (z)
-        (v * verts[1].v.z) +
-        (w * verts[2].v.z)
+        (w * verts[0].v.x) + // first coordinate (x)
+        (u * verts[1].v.x) +
+        (v * verts[2].v.x),
+        (w * verts[0].v.y) + // second coordinate (y)
+        (u * verts[1].v.y) +
+        (v * verts[2].v.y),
+        (w * verts[0].v.z) + // third coordinate (z)
+        (u * verts[1].v.z) +
+        (v * verts[2].v.z)
     );
 }
 
@@ -124,15 +124,15 @@ vec3 Triangle::InterpolateNormal(float u, float v) const {
     float w = 1.0f - u - v;
 
     return normalize(vec3(
-        (u * verts[0].n.x) + // first coordinate (x)
-        (v * verts[1].n.x) +
-        (w * verts[2].n.x),
-        (u * verts[0].n.y) + // second coordinate (y)
-        (v * verts[1].n.y) +
-        (w * verts[2].n.y),
-        (u * verts[0].n.z) + // third coordinate (z)
-        (v * verts[1].n.z) +
-        (w * verts[2].n.z)
+        (w * verts[0].n.x) + // first coordinate (x)
+        (u * verts[1].n.x) +
+        (v * verts[2].n.x),
+        (w * verts[0].n.y) + // second coordinate (y)
+        (u * verts[1].n.y) +
+        (v * verts[2].n.y),
+        (w * verts[0].n.z) + // third coordinate (z)
+        (u * verts[1].n.z) +
+        (v * verts[2].n.z)
     ));
 }
 
@@ -140,12 +140,12 @@ vec2 Triangle::InterpolateTexCoord(float u, float v) const {
     float w = 1.0f - u - v;
 
     return vec2(
-        (u * verts[0].t.x) + // first coordinate (u)
-        (v * verts[1].t.x) +
-        (w * verts[2].t.x),
-        (u * verts[0].t.y) + // second coordinate (v)
-        (v * verts[1].t.y) +
-        (w * verts[2].t.y)
+        (w * verts[0].t.x) + // first coordinate (u)
+        (u * verts[1].t.x) +
+        (v * verts[2].t.x),
+        (w * verts[0].t.y) + // second coordinate (v)
+        (u * verts[1].t.y) +
+        (v * verts[2].t.y)
     );
 }
 
