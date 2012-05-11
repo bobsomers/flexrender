@@ -9,6 +9,8 @@
 
 namespace fr {
 
+class TextureScript;
+
 struct Texture {
     enum Kind {
         NONE       = 0,
@@ -46,6 +48,9 @@ struct Texture {
     MSGPACK_DEFINE(id, kind, width, height, code, image);
 
     TOSTRINGABLE(Texture);
+
+    /// The texture script we actually execute (if procedural).
+    TextureScript* script;
 };
 
 std::string ToString(const Texture& tex, const std::string& indent = "");

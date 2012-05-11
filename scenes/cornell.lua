@@ -18,25 +18,37 @@ camera {
 material {
     name = "white",
     emissive = false,
-    shader = fre.frsl("scenes/phong.lua") -- TODO
+    shader = fre.frsl("scenes/phong.lua"), -- TODO
+    textures = {
+        ramp = fre.procedural("scenes/ramp.lua")
+    }
 }
 
 material {
     name = "red",
     emissive = false,
-    shader = fre.frsl("scenes/phong.lua") -- TODO
+    shader = fre.frsl("scenes/phong.lua"), -- TODO
+    textures = {
+        ramp = fre.procedural("scenes/ramp.lua")
+    }
 }
 
 material {
     name = "green",
     emissive = false,
-    shader = fre.frsl("scenes/phong.lua") -- TODO
+    shader = fre.frsl("scenes/phong.lua"), -- TODO
+    textures = {
+        ramp = fre.procedural("scenes/ramp.lua")
+    }
 }
 
 material {
     name = "light",
     emissive = true,
-    shader = fre.frsl("scenes/phong.lua") -- TODO
+    shader = fre.frsl("scenes/phong.lua"), -- TODO
+    textures = {
+        ramp = fre.procedural("scenes/ramp.lua")
+    }
 }
 
 -- Light.

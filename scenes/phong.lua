@@ -14,16 +14,16 @@ dot = fr.dot
     I = illumination from the light (vec3)
 ]]
 
-local diffuse = 0.7
-local ambient = 0.3
-local color = vec3(0.196, 0.486, 0.796)
+local diffuse = 0.9
+local ambient = 0.1
 
 function direct(V, N, T, L, I)
-    accumulate3("R", "G", "B", diffuse * color * I * dot(N, L))
+    local ramp = texture("ramp", T)
+    accumulate3("R", "G", "B", diffuse * ramp * I * dot(N, L))
 end
 
 function indirect(V, N, T)
-    accumulate3("R", "G", "B", ambient * color)
+    accumulate3("R", "G", "B", ambient * vec3(1, 1, 1))
 end
 
 function emissive(T)

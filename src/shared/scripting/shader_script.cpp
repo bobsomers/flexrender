@@ -1,10 +1,11 @@
 #include "scripting/shader_script.hpp"
 
 #include <cstdlib>
+#include <cassert>
 #include <stdio.h>
 #include <errno.h>
-#include <string>
 
+#include "scripting/texture_script.hpp"
 #include "types.hpp"
 #include "utils.hpp"
 
@@ -17,6 +18,7 @@ using glm::normalize;
 namespace fr {
 
 ShaderScript::ShaderScript(const string& code, const Library* lib) :
+ Script(),
  _lib(lib),
  _ray(nullptr),
  _results(nullptr),
@@ -365,8 +367,51 @@ FR_SCRIPT_FUNCTION(ShaderScript, Write4) {
 }
 
 FR_SCRIPT_FUNCTION(ShaderScript, Texture) {
-    // TODO
-    return 0;
+    string sampler(luaL_checkstring(_state, 1));
+
+    luaL_checktype(_state, 2, LUA_TTABLE);
+    lua_pushvalue(_state, 2);
+    vec2 texcoord = FetchFloat2();
+    lua_pop(_state, 1);
+
+    // Look up the material to get texture bindings.
+    Mesh* mesh = _lib->LookupMesh(_ray->strong.mesh);
+    assert(mesh != nullptr);
+    Material* mat = _lib->LookupMaterial(mesh->material);
+    assert(mat != nullptr);
+    auto iter = mat->textures.find(sampler);
+    if (iter == mat->textures.end()) {
+        TERRLN("No texture bound with name '" << sampler << "'!");
+        exit(EXIT_FAILURE);
+    }
+    Texture* tex = _lib->LookupTexture((*iter).second);
+    assert(tex != nullptr);
+
+    // Sample the texture.
+    vec3 value = vec3(0.0f, 0.0f, 0.0f);
+    switch (tex->kind) {
+        case Texture::Kind::PROCEDURAL:
+            value = tex->script->Evaluate(texcoord);
+            break;
+
+        case Texture::Kind::IMAGE:
+            // TODO
+            break;
+
+        default:
+            TERRLN("Attempt to sample unknown texture kind!");
+            exit(EXIT_FAILURE);
+            break;
+    }
+
+    // Return the sampled value, setting it's metatable appropriately if we can.
+    PushFloat3(value);
+    if (_has_vec3) {
+        lua_getglobal(_state, "vec3");
+        lua_setmetatable(_state, -2); // view (metatable is at -1)
+    }
+
+    return 1;
 }
 
 FR_SCRIPT_FUNCTION(ShaderScript, Texture2) {

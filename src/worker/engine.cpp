@@ -696,6 +696,12 @@ void server::OnSyncTexture(NetNode* node) {
     // Unpack the texture.
     uint64_t id = node->ReceiveTexture(lib);
 
+    // Prepare the texture for execution (if it's procedural).
+    Texture* tex = lib->LookupTexture(id);
+    if (tex->kind == Texture::Kind::PROCEDURAL) {
+        tex->script = new TextureScript(tex->code);
+    }
+
     TOUTLN("[" << node->ip << "] Received texture " << id << ".");
 }
 

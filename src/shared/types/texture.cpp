@@ -5,6 +5,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "scripting/texture_script.hpp"
+
 using std::numeric_limits;
 using std::string;
 using std::stringstream;
@@ -18,7 +20,8 @@ Texture::Texture(uint64_t id) :
  width(0),
  height(0),
  code(""),
- image() {}
+ image(),
+ script(nullptr) {}
 
 Texture::Texture(uint64_t id, const string& code) :
  id(id),
@@ -26,14 +29,16 @@ Texture::Texture(uint64_t id, const string& code) :
  width(0),
  height(0),
  code(code),
- image() {}
+ image(),
+ script(nullptr) {}
 
 Texture::Texture(uint64_t id, int16_t width, int16_t height, const float* data) :
  id(id),
  kind(Kind::IMAGE),
  width(width),
  height(height),
- code("") {
+ code(""),
+ script(nullptr) {
     image.resize(sizeof(float) * width * height);
     memcpy(&image[0], data, sizeof(float) * width * height);
 }
@@ -43,7 +48,8 @@ Texture::Texture() :
  width(0),
  height(0),
  code(""),
- image() {
+ image(),
+ script(nullptr) {
     id = numeric_limits<uint64_t>::max();
 }
 
