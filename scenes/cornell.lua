@@ -16,54 +16,34 @@ camera {
     look = vec3(0, 0, 0)
 }
 
-local bob_r, bob_g, bob_b = fre.targa("scenes/bob.tga")
-
-material {
-    name = "mirror",
-    emissive = false,
-    shader = fre.frsl("scenes/mirror.lua")
-}
-
 material {
     name = "white",
     emissive = false,
-    shader = fre.frsl("scenes/phong.lua"), -- TODO
-    textures = {
-        ramp = fre.procedural("scenes/ramp.lua"),
-        face_r = bob_r,
-        face_g = bob_g,
-        face_b = bob_b
-    }
+    shader = fre.phong(0.8, vec3(0.730, 0.739, 0.729),
+                       0.2, vec3(0.730, 0.739, 0.729),
+                       0.2, 8)
 }
 
 material {
     name = "red",
     emissive = false,
-    shader = fre.frsl("scenes/phong.lua"), -- TODO
-    textures = {
-        ramp = fre.procedural("scenes/ramp.lua"),
-        face_r = bob_r,
-        face_g = bob_g,
-        face_b = bob_b
-    }
+    shader = fre.phong(0.6, vec3(0.610, 0.056, 0.062),
+                       0.2, vec3(0.610, 0.056, 0.062),
+                       0.2, 8)
 }
 
 material {
     name = "green",
     emissive = false,
-    shader = fre.frsl("scenes/phong.lua"), -- TODO
-    textures = {
-        ramp = fre.procedural("scenes/ramp.lua"),
-        face_r = bob_r,
-        face_g = bob_g,
-        face_b = bob_b
-    }
+    shader = fre.phong(0.6, vec3(0.117, 0.435, 0.115),
+                       0.2, vec3(0.117, 0.435, 0.115),
+                       0.2, 8)
 }
 
 material {
     name = "light",
     emissive = true,
-    shader = fre.frsl("scenes/light.lua") -- TODO
+    shader = fre.light(vec3(0.924, 0.489, 0.326))
 }
 
 -- Light.
@@ -103,21 +83,21 @@ mesh {
 
 -- Right wall.
 mesh {
-    material = "red",
+    material = "green",
     transform = translate(vec3(2.75, 0, 0)) * rotate(radians(-90), vec3(0, 1, 0)),
     data = fre.plane(5.5)
 }
 
 -- Tall box.
 mesh {
-    material = "mirror",
+    material = "white",
     transform = translate(vec3(-0.9, -1.1, -0.9)) * rotate(radians(20), vec3(0, 1, 0)) * scale(vec3(1.7, 3.3, 1.7)),
     data = fre.cube(1)
 }
 
 -- Short box.
 mesh {
-    material = "mirror",
+    material = "white",
     transform = translate(vec3(1, -1.95, 1)) * rotate(radians(-20), vec3(0, 1, 0)) * scale(1.6),
     data = fre.cube(1)
 }
