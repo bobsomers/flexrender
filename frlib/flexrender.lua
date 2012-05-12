@@ -16,6 +16,7 @@ setmetatable(types.mat4, types.common)
 local trig = require "base.trig"
 local geometric = require "base.geometric"
 local transform = require "base.transform"
+local sample = require "base.sample"
 
 -- Module exports.
 return {
@@ -34,5 +35,6 @@ return {
     refract = geometric.refract,
     scale = transform.scale,
     rotate = transform.rotate,
-    translate = transform.translate
+    translate = transform.translate,
+    hemisample = sample.hemisample
 }

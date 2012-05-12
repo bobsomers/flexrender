@@ -17,5 +17,6 @@ return {
     plane = simple.plane,
     cube = simple.cube,
     phong = phong.phong,
+    montecarlo = phong.montecarlo,
     light = lights.light
 }

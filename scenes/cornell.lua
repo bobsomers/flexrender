@@ -19,25 +19,25 @@ camera {
 material {
     name = "white",
     emissive = false,
-    shader = fre.phong(0.8, vec3(0.730, 0.739, 0.729),
-                       0.2, vec3(0.730, 0.739, 0.729),
-                       0.2, 8)
+    shader = fre.montecarlo(0.6, vec3(0.730, 0.739, 0.729),
+                            0.2, 32,
+                            0.2, 8)
 }
 
 material {
     name = "red",
     emissive = false,
-    shader = fre.phong(0.6, vec3(0.610, 0.056, 0.062),
-                       0.2, vec3(0.610, 0.056, 0.062),
-                       0.2, 8)
+    shader = fre.montecarlo(0.6, vec3(0.610, 0.056, 0.062),
+                            0.2, 32,
+                            0.2, 8)
 }
 
 material {
     name = "green",
     emissive = false,
-    shader = fre.phong(0.6, vec3(0.117, 0.435, 0.115),
-                       0.2, vec3(0.117, 0.435, 0.115),
-                       0.2, 8)
+    shader = fre.montecarlo(0.6, vec3(0.117, 0.435, 0.115),
+                            0.2, 32,
+                            0.2, 8)
 }
 
 material {

@@ -8,8 +8,8 @@ local vec3 = fr.vec3
 
 network {
     workers = {
-        "127.0.0.1",
-        "127.0.0.1:19401"
+        "10.11.12.1",
+        "10.11.12.1:19401"
     }
 }
 
@@ -22,8 +22,8 @@ output {
 }
 
 render {
-    antialiasing = 1,
-    samples = 2,
+    antialiasing = 2,
+    samples = 32,
     min = vec3(-100, -100, -100),
     max = vec3(100, 100, 100),
 }
