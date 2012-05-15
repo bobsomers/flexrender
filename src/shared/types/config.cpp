@@ -18,6 +18,8 @@ Config::Config() :
  height(480),
  antialiasing(0),
  samples(10),
+ bounce_limit(5),
+ transmittance_threshold(0.0f),
  name("output"),
  workers(),
  buffers() {
@@ -40,6 +42,8 @@ string ToString(const Config& config, const string& indent) {
      indent << "| max = " << ToString(config.max) << endl <<
      indent << "| antialiasing = " << config.antialiasing << endl <<
      indent << "| samples = " << config.samples << endl <<
+     indent << "| bounce_limit = " << config.bounce_limit << endl <<
+     indent << "| transmittance_threshold = " << config.transmittance_threshold << endl <<
      indent << "| name = " << config.name << endl <<
      indent << "| workers = {" << endl;
     for (const auto& worker : config.workers) {

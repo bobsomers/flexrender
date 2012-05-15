@@ -587,8 +587,11 @@ FR_SCRIPT_FUNCTION(ShaderScript, Trace) {
     int16_t bounce = _ray->bounces + 1;
     float transmittance = _ray->transmittance * partial;
 
-    // TODO: bounce/transmittance threshold rejection checks
-    if (bounce > 2 || transmittance < 0.001f) {
+    Config* config = _lib->LookupConfig();
+
+    // Bounce limit and transmittance threshold rejection checks.
+    if (bounce > config->bounce_limit ||
+        transmittance < config->transmittance_threshold) {
         return 0;
     }
 

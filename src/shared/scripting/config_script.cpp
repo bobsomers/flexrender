@@ -104,6 +104,18 @@ FR_SCRIPT_FUNCTION(ConfigScript, Render) {
     }
     PopField();
 
+    // "bounces" is an optional int16
+    if (PushField("bounces", LUA_TNUMBER)) {
+        _config->bounce_limit = static_cast<int16_t>(FetchFloat());
+    }
+    PopField();
+
+    // "threshold" is an optional float
+    if (PushField("threshold", LUA_TNUMBER)) {
+        _config->transmittance_threshold = FetchFloat();
+    }
+    PopField();
+
     // "min" is a required float3
     if (!PushField("min", LUA_TTABLE)) {
         ScriptError("render.min is required");

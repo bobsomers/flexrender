@@ -24,6 +24,8 @@ output {
 render {
     antialiasing = 1,
     samples = 1,
+    bounces = 2,
+    threshold = 0.0001,
     min = vec3(-5, -5, -5),
     max = vec3(15, 15, 15),
 }
