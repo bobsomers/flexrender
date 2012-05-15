@@ -102,7 +102,7 @@ void ShaderScript::Direct(const FatRay* ray, vec3 hit, WorkResults *results) {
     vec3 view = normalize(cam->eye - hit);
     vec3 normal = ray->strong.geom.n;
     vec2 texcoord = ray->strong.geom.t;
-    vec3 light = -ray->skinny.direction;
+    vec3 light = -ray->slim.direction;
     vec3 illumination = ray->emission;
 
     // Acquire the interpreter lock.
@@ -598,8 +598,8 @@ FR_SCRIPT_FUNCTION(ShaderScript, Trace) {
 
     // The origin is at the intersection point, plus some epsilon along the
     // new direction to ensure no self intersection.
-    tracer->skinny.origin = _hit + direction * SELF_INTERSECT_EPSILON;
-    tracer->skinny.direction = direction;
+    tracer->slim.origin = _hit + direction * SELF_INTERSECT_EPSILON;
+    tracer->slim.direction = direction;
 
     // Set the bounce number and transmittance.
     tracer->bounces = bounce;

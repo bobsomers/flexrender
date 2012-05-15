@@ -426,9 +426,9 @@ void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
                 FatRay* light = new FatRay(FatRay::Kind::LIGHT, ray->x, ray->y);
 
                 // The origin is at the sample position.
-                light->skinny.origin = position;
+                light->slim.origin = position;
 
-                light->skinny.direction = direction;
+                light->slim.direction = direction;
                 light->target = target;
 
                 // Run the shader's emissive() function.

@@ -4,7 +4,7 @@
 
 #include "glm/glm.hpp"
 
-#include "types/skinny_ray.hpp"
+#include "types/slim_ray.hpp"
 #include "types/weak_hit.hpp"
 #include "types/strong_hit.hpp"
 #include "utils/tostring.hpp"
@@ -39,8 +39,8 @@ struct FatRay {
     /// The number of times this ray has bounced (zero is primary).
     int16_t bounces;
 
-    /// The embedded skinny ray (origin and direction).
-    SkinnyRay skinny;
+    /// The embedded slim ray (origin and direction).
+    SlimRay slim;
 
     /// The transmittance of light along this ray. Range is not enforced.
     float transmittance;
@@ -63,10 +63,10 @@ struct FatRay {
 
     /// Returns a skinny ray that represents this fat ray transformed into
     /// object space of the given mesh.
-    SkinnyRay TransformTo(const Mesh* mesh) const;
+    SlimRay TransformTo(const Mesh* mesh) const;
 
     /// Evaluate a point along the ray at a specific t value.
-    inline glm::vec3 EvaluateAt(float t) const { return skinny.EvaluateAt(t); }
+    inline glm::vec3 EvaluateAt(float t) const { return slim.EvaluateAt(t); }
 
     TOSTRINGABLE(FatRay);
 };

@@ -1,4 +1,4 @@
-#include "types/skinny_ray.hpp"
+#include "types/slim_ray.hpp"
 
 #include <limits>
 #include <iostream>
@@ -18,11 +18,11 @@ const float SELF_INTERSECT_EPSILON = 0.0001f;
 
 const float TARGET_INTERSECT_EPSILON = 0.0001f;
 
-SkinnyRay::SkinnyRay(vec3 origin, vec3 direction) :
+SlimRay::SlimRay(vec3 origin, vec3 direction) :
  origin(origin),
  direction(direction) {}
 
-SkinnyRay::SkinnyRay() {
+SlimRay::SlimRay() {
     origin.x = numeric_limits<float>::quiet_NaN();
     origin.y = numeric_limits<float>::quiet_NaN();
     origin.z = numeric_limits<float>::quiet_NaN();
@@ -32,10 +32,10 @@ SkinnyRay::SkinnyRay() {
     direction.z = numeric_limits<float>::quiet_NaN();
 }
 
-string ToString(const SkinnyRay& ray, const string& indent) {
+string ToString(const SlimRay& ray, const string& indent) {
     stringstream stream;
     string pad = indent + "| ";
-    stream << "SkinnyRay {" << endl <<
+    stream << "SlimRay {" << endl <<
      indent << "| origin = " << ToString(ray.origin) << endl <<
      indent << "| direction = " << ToString(ray.direction) << endl <<
      indent << "}";

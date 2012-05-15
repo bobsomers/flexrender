@@ -176,8 +176,8 @@ bool Camera::GeneratePrimary(FatRay* ray) {
     ray->x = _x;
     ray->y = _y;
     ray->bounces = 0;
-    ray->skinny.origin = eye;
-    ray->skinny.direction = normalize(screen_pt - eye);
+    ray->slim.origin = eye;
+    ray->slim.direction = normalize(screen_pt - eye);
     ray->transmittance = transmittance;
     ray->weak.worker = 0;
     ray->strong.worker = 0;

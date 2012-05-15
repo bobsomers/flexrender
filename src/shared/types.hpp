@@ -13,7 +13,7 @@
 #include "types/net_node.hpp"
 #include "types/render_stats.hpp"
 #include "types/shader.hpp"
-#include "types/skinny_ray.hpp"
+#include "types/slim_ray.hpp"
 #include "types/strong_hit.hpp"
 #include "types/texture.hpp"
 #include "types/triangle.hpp"

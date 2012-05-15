@@ -5,7 +5,7 @@
 #include <cassert>
 #include <cstdlib>
 
-#include "types/skinny_ray.hpp"
+#include "types/slim_ray.hpp"
 #include "types/local_geometry.hpp"
 
 using std::string;
@@ -53,7 +53,7 @@ void Triangle::Sample(vec3* position, vec3* normal, vec2* texcoord) const {
     }
 }
 
-bool Triangle::Intersect(const SkinnyRay& ray, float* t, LocalGeometry* local) const {
+bool Triangle::Intersect(const SlimRay& ray, float* t, LocalGeometry* local) const {
     // Credit: Physically Based Rendering, page 141, with modifications.
 
     // First compute s1, edge vectors, and denominator.

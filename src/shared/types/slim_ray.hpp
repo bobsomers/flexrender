@@ -14,10 +14,10 @@ extern const float SELF_INTERSECT_EPSILON;
 /// the target.
 extern const float TARGET_INTERSECT_EPSILON;
 
-struct SkinnyRay {
-    explicit SkinnyRay(glm::vec3 origin, glm::vec3 direction);
+struct SlimRay {
+    explicit SlimRay(glm::vec3 origin, glm::vec3 direction);
 
-    explicit SkinnyRay();
+    explicit SlimRay();
 
     /// The origin position of the ray.
     glm::vec3 origin;
@@ -28,9 +28,9 @@ struct SkinnyRay {
     /// Evaluate a point along the ray at a specific t value.
     inline glm::vec3 EvaluateAt(float t) const { return direction * t + origin; }
 
-    TOSTRINGABLE(SkinnyRay);
+    TOSTRINGABLE(SlimRay);
 };
 
-std::string ToString(const SkinnyRay& ray, const std::string& indent = "");
+std::string ToString(const SlimRay& ray, const std::string& indent = "");
 
 } // namespace fr

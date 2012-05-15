@@ -168,7 +168,7 @@ void Library::NaiveIntersect(FatRay* ray, uint64_t me) {
         if (mesh == nullptr) continue;
 
         // Get a skinny ray in the mesh's object space.
-        SkinnyRay xformed_ray = ray->TransformTo(mesh);
+        SlimRay xformed_ray = ray->TransformTo(mesh);
 
         for (const auto& tri : mesh->tris) {
             float t = numeric_limits<float>::quiet_NaN();

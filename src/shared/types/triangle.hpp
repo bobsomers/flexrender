@@ -8,7 +8,7 @@
 
 namespace fr {
 
-struct SkinnyRay;
+struct SlimRay;
 struct LocalGeometry;
 
 struct Triangle {
@@ -32,7 +32,7 @@ struct Triangle {
      * geometry structure are filled in with information about the point of
      * intersection.
      */
-    bool Intersect(const SkinnyRay& ray, float* t, LocalGeometry* local) const;
+    bool Intersect(const SlimRay& ray, float* t, LocalGeometry* local) const;
 
     MSGPACK_DEFINE(verts[0], verts[1], verts[2]);
 
