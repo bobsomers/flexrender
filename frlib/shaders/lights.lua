@@ -27,8 +27,6 @@ end
 
     ]]}
 
-    print(code)
-
     return shader {
         code = code
     }

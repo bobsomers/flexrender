@@ -41,8 +41,6 @@ end
 
     ]]}
 
-    print(code)
-
     return shader {
         code = code
     }
@@ -92,8 +90,6 @@ function indirect(V, N, T)
 end
 
     ]]}
-
-    print(code)
 
     return shader {
         code = code
