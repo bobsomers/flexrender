@@ -8,22 +8,22 @@ local vec3 = fr.vec3
 
 network {
     workers = {
-        "10.11.12.1",
-        "10.11.12.1:19401"
+        "127.0.0.1",
+        "127.0.0.1:19401"
     }
 }
 
 output {
-    size = vec2(512, 512),
+    size = vec2(640, 480),
     name = "test",
     buffers = {
-        "intersection"
+        -- none
     }
 }
 
 render {
-    antialiasing = 2,
-    samples = 32,
-    min = vec3(-100, -100, -100),
-    max = vec3(100, 100, 100),
+    antialiasing = 1,
+    samples = 1,
+    min = vec3(-5, -5, -5),
+    max = vec3(15, 15, 15),
 }

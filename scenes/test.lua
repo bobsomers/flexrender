@@ -1,4 +1,5 @@
 -- Import frlib and extras.
+package.cpath = "3p/build/lib/?.so;" .. package.cpath
 package.path = "frlib/?.lua;" .. package.path
 local fr = require "flexrender"
 local fre = require "extras"
@@ -12,58 +13,43 @@ local rotate = fr.rotate
 local translate = fr.translate
 
 camera {
-    eye = vec3(4, 2, 6),
-    look = vec3(0, 0, 0)
-}
-
-material {
-    name = "brushed metal",
-    emissive = false,
-    shader = fre.frsl("config.lua"),
-    textures = {
-        diffuse = fre.procedural("scenes/test.lua"),
-        specular = fre.fakeimg("image.fake")
-    }
+    eye = vec3(8, 15, 15),
+    look = vec3(2, 0, 0)
 }
 
 material {
     name = "light",
     emissive = true,
-    shader = fre.frsl("config.lua")
+    shader = fre.light(vec3(1, 1, 1))
 }
 
 mesh {
     material = "light",
-    transform = translate(vec3(0, 3, 0)) * rotate(radians(90), vec3(1, 0, 0)),
-    data = fre.plane(5)
+    transform = translate(vec3(5, 15, 5)) * rotate(radians(90), vec3(1, 0, 0)),
+    data = fre.plane(2)
 }
 
-mesh {
-    material = "brushed metal",
-    transform = translate(vec3(-2, -3, -2)) * rotate(radians(-90), vec3(1, 0, 0)),
-    data = fre.plane(10)
-}
+for i = 1, 10 do
+    for j = 1, 10 do
+        for k = 1, 10 do
+            local matname = table.concat {
+                "mat-", tostring(i),
+                "-", tostring(j),
+                "-", tostring(k)
+            }
+            local color = vec3(i / 10, j / 10, j / 10)
 
-mesh {
-    material = "brushed metal",
-    transform = translate(vec3(2, 0, 2)),
-    data = fre.cube(1)
-}
+            material {
+                name = matname,
+                emissive = false,
+                shader = fre.phong(0.6, color, 0.2, color, 0.2, 8)
+            }
 
-mesh {
-    material = "brushed metal",
-    transform = translate(vec3(-2, 0, 2)) * scale(vec3(1, 3, 2)),
-    data = fre.cube(1)
-}
-
-mesh {
-    material = "brushed metal",
-    transform = translate(vec3(2, 0, -2)) * rotate(radians(45), vec3(0, 1, 0)),
-    data = fre.cube(1)
-}
-
-mesh {
-    material = "brushed metal",
-    transform = translate(vec3(-2, 0, -2)) * rotate(radians(-30), normalize(vec3(-1, 1, -1))) * scale(2),
-    data = fre.cube(1)
-}
+            mesh {
+                material = matname,
+                transform = translate(vec3(i, j, k)),
+                data = fre.cube(0.5)
+            }
+        end
+    end
+end
