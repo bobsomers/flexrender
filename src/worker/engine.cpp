@@ -774,7 +774,7 @@ void server::OnRenderStart(NetNode* node) {
     assert(camera != nullptr);
     camera->SetRange(offset, chunk_size);
 
-    TOUTLN("Starting render with range " << offset << " -> " << (offset + chunk_size) << ".");
+    TOUTLN("Starting render with range " << offset << " -> " << (offset + chunk_size - 1) << ".");
 
     // Start the stats timer.
     result = uv_timer_start(&stats_timer, OnStatsTimeout, FR_STATS_TIMEOUT_MS,
