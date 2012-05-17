@@ -290,11 +290,13 @@ void client::OnInterestingTimeout(uv_timer_t* timer, int status) {
     }
 
     // Display some information about the total number of rays being processed.
-    uint64_t total_rays = 0;
-    lib->ForEachNetNode([&total_rays](uint64_t id, NetNode* node) {
-        total_rays += node->RaysProcessed(max_intervals / 2);
+    uint64_t total_produced = 0;
+    uint16_t total_killed = 0;
+    lib->ForEachNetNode([&total_produced, &total_killed](uint64_t id, NetNode* node) {
+        total_produced += node->RaysProduced(max_intervals / 2);
+        total_killed += node->RaysKilled(max_intervals / 2);
     });
-    TOUTLN(total_rays << " rays processed.");
+    TOUTLN("RAYS:  +" << total_produced << "  -" << total_killed);
 }
 
 void client::OnOK(NetNode* node) {

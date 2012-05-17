@@ -8,10 +8,11 @@ namespace fr {
 
 struct FatRay;
 struct Camera;
+struct RenderStats;
 
 class RayQueue : private Uncopyable {
 public:
-    explicit RayQueue(Camera* camera);
+    explicit RayQueue(Camera* camera, RenderStats* stats);
 
     ~RayQueue();
 
@@ -32,6 +33,7 @@ public:
 
 private:
     Camera* _camera;
+    RenderStats* _stats;
     FatRay* _intersect_front;
     FatRay* _intersect_back;
     size_t _intersect_size;

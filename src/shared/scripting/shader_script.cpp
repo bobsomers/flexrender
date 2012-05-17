@@ -613,6 +613,7 @@ FR_SCRIPT_FUNCTION(ShaderScript, Trace) {
     tracer->strong.worker = 0;
 
     _results->forwards.emplace_back(tracer, nullptr);
+    _results->intersects_produced++;
 
     return 0;
 }

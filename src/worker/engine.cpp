@@ -159,7 +159,7 @@ void server::OnConnection(uv_stream_t* stream, int status) {
     int result = 0;
 
     // Create a net node to track the machine that just connected.
-    NetNode* node = new NetNode(DispatchMessage);
+    NetNode* node = new NetNode(DispatchMessage, &stats);
     result = uv_tcp_init(uv_default_loop(), &node->socket);
     CheckUVResult(result, "tcp_init");
 
@@ -226,6 +226,8 @@ void server::OnRead(uv_stream_t* stream, ssize_t nread, uv_buf_t buf) {
     } else if (nread > 0) {
         // Data is available, parse any new messages out.
         node->Receive(buf.base, nread);
+
+        stats.bytes_rx += nread;
     }
 
     if (buf.base) {
@@ -372,12 +374,14 @@ void server::ProcessIntersect(FatRay* ray, WorkResults* results) {
             // Yes, let's illuminate the intersection and kill the ray.
             IlluminateIntersection(ray, results);
             delete ray;
+            results->intersects_killed++;
         } else if (ray->strong.worker != 0) {
             // No, forward the ray to the strong hit worker.
             ForwardRay(ray, results, ray->strong.worker);
         } else {
             // There was no strong hit. Kill the ray.
             delete ray;
+            results->intersects_killed++;
         }
     } else {
         // Forward it on.
@@ -424,6 +428,7 @@ void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
 
                 // Create a new light ray that inherits the source <x, y> pixel.
                 FatRay* light = new FatRay(FatRay::Kind::LIGHT, ray->x, ray->y);
+                results->lights_produced++;
 
                 // The origin is at the sample position.
                 light->slim.origin = position;
@@ -449,6 +454,7 @@ void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
 
     // Kill the ray.
     delete ray;
+    results->illuminates_killed++;
 }
 
 void server::ProcessLight(FatRay* ray, WorkResults* results) {
@@ -472,12 +478,14 @@ void server::ProcessLight(FatRay* ray, WorkResults* results) {
             // Yes, shade the intersection and kill the ray.
             ShadeIntersection(ray, results);
             delete ray;
+            results->lights_killed++;
         } else if (ray->strong.worker != 0) {
             // No, forward the ray to the strong hit worker.
             ForwardRay(ray, results, ray->strong.worker);
         } else {
             // There was no strong hit. Kill the ray.
             delete ray;
+            results->lights_killed++;
         }
     } else {
         // Forward it on.
@@ -486,6 +494,9 @@ void server::ProcessLight(FatRay* ray, WorkResults* results) {
 }
 
 void server::ForwardRay(FatRay* ray, WorkResults* results, uint64_t id) {
+    // !!! WARNING !!!
+    // Everything this function does and calls must be thread-safe. This
+    // function will NOT run in the main thread, it runs on the thread pool.
     if (id == me) {
         // Push the ray back through the processing stack to save thread and
         // network overhead.
@@ -498,6 +509,10 @@ void server::ForwardRay(FatRay* ray, WorkResults* results, uint64_t id) {
 }
 
 void server::IlluminateIntersection(FatRay* ray, WorkResults* results) {
+    // !!! WARNING !!!
+    // Everything this function does and calls must be thread-safe. This
+    // function will NOT run in the main thread, it runs on the thread pool.
+
     // Where did we hit?
     vec3 hit = ray->EvaluateAt(ray->strong.t);
 
@@ -519,11 +534,16 @@ void server::IlluminateIntersection(FatRay* ray, WorkResults* results) {
     lights->ForEachEmissiveWorker([ray, results](uint64_t id) {
         FatRay* illum = new FatRay(*ray);
         illum->kind = FatRay::Kind::ILLUMINATE;
+        results->illuminates_produced++;
         ForwardRay(illum, results, id);
     });
 }
 
 void server::ShadeIntersection(FatRay* ray, WorkResults* results) {
+    // !!! WARNING !!!
+    // Everything this function does and calls must be thread-safe. This
+    // function will NOT run in the main thread, it runs on the thread pool.
+
     // TODO: Verify it hit the same mesh? The epsilons are pretty small here...
     // in practice we might not need to check.
 
@@ -600,10 +620,16 @@ void server::AfterWork(uv_work_t* req) {
         }
     }
 
+    // Merge render stats.
+    stats.intersects_produced += results->intersects_produced;
+    stats.illuminates_produced += results->illuminates_produced;
+    stats.lights_produced += results->lights_produced;
+    stats.intersects_killed += results->intersects_killed;
+    stats.illuminates_killed += results->illuminates_killed;
+    stats.lights_killed += results->lights_killed;
+
     delete results;
     free(req);
-
-    stats.rays_processed++;
 
     // This job is done. Schedule more work.
     active_jobs--;
@@ -734,7 +760,7 @@ void server::OnSyncCamera(NetNode* node) {
 
     // Create a fresh ray queue.
     if (rayq != nullptr) delete rayq;
-    rayq = new RayQueue(lib->LookupCamera());
+    rayq = new RayQueue(lib->LookupCamera(), &stats);
 
     // Reply with OK.
     Message reply(Message::Kind::OK);
@@ -835,6 +861,11 @@ void server::OnStatsTimeout(uv_timer_t* timer, int status) {
     assert(timer == &stats_timer);
     assert(status == 0);
     assert(renderer != nullptr);
+    assert(rayq != nullptr);
+
+    stats.intersect_queue = rayq->IntersectSize();
+    stats.illuminate_queue = rayq->IlluminateSize();
+    stats.light_queue = rayq->LightSize();
 
     renderer->SendRenderStats(&stats);
     stats.Reset();
@@ -854,7 +885,7 @@ void client::Init() {
 
         const auto& worker = config->workers[i];
 
-        NetNode* node = new NetNode(DispatchMessage, worker);
+        NetNode* node = new NetNode(DispatchMessage, worker, &stats);
 
         // Initialize the TCP socket.
         result = uv_tcp_init(uv_default_loop(), &node->socket);
@@ -943,7 +974,6 @@ void client::OnRead(uv_stream_t* stream, ssize_t nread, uv_buf_t buf) {
     } else if (nread > 0) {
         // Data is available, parse any new messages out.
         node->Receive(buf.base, nread);
-        stats.bytes_rx += nread;
     }
 
     if (buf.base) {

@@ -15,7 +15,8 @@ using std::unordered_map;
 
 namespace fr {
 
-NetNode::NetNode(DispatchCallback dispatcher, const string& address) :
+NetNode::NetNode(DispatchCallback dispatcher, const string& address,
+ RenderStats* stats) :
  me(0),
  state(State::NONE),
  mode(ReadMode::HEADER),
@@ -28,6 +29,7 @@ NetNode::NetNode(DispatchCallback dispatcher, const string& address) :
  _textures(),
  _shaders(),
  _stats_log(),
+ _current_stats(stats),
  _num_uninteresting(0) {
     size_t pos = address.find(':');
     if (pos == string::npos) {
@@ -40,7 +42,7 @@ NetNode::NetNode(DispatchCallback dispatcher, const string& address) :
     }
 }
 
-NetNode::NetNode(DispatchCallback dispatcher) :
+NetNode::NetNode(DispatchCallback dispatcher, RenderStats* stats) :
  me(0),
  state(State::NONE),
  ip(""),
@@ -55,6 +57,7 @@ NetNode::NetNode(DispatchCallback dispatcher) :
  _textures(),
  _shaders(),
  _stats_log(),
+ _current_stats(stats),
  _num_uninteresting(0) {}
 
 void NetNode::Receive(const char* buf, ssize_t len) {
@@ -550,6 +553,10 @@ FatRay* NetNode::ReceiveRay() {
     FatRay* ray = new FatRay;
     memcpy(ray, message.body, sizeof(FatRay));
 
+    if (_current_stats != nullptr) {
+        _current_stats->rays_rx++;
+    }
+
     return ray;
 }
 
@@ -559,6 +566,10 @@ void NetNode::SendRay(FatRay* ray) {
     // Forgo safe serialization for speed.
     msg.size = sizeof(FatRay);
     msg.body = ray;
+
+    if (_current_stats != nullptr) {
+        _current_stats->rays_tx++;
+    }
 
     Send(msg);
 }
@@ -579,7 +590,8 @@ void NetNode::ReceiveRenderStats() {
     _stats_log.push_back(stats);
 
     // Are they interesting?
-    if (stats->rays_processed > 0) {
+    if (stats->intersects_killed > 0 || stats->illuminates_killed > 0 ||
+     stats->lights_killed > 0) {
         _num_uninteresting = 0;
     } else {
         _num_uninteresting++;
@@ -606,13 +618,29 @@ bool NetNode::IsInteresting(uint32_t intervals) {
     return _num_uninteresting < intervals;
 }
 
-uint64_t NetNode::RaysProcessed(uint32_t intervals) {
+uint64_t NetNode::RaysProduced(uint32_t intervals) {
     uint64_t rays = 0;
 
     uint32_t count = 0;
     auto iter = _stats_log.rbegin();
     while (iter != _stats_log.rend() && count < intervals) {
-        rays += (*iter)->rays_processed;
+        rays += (*iter)->intersects_produced + (*iter)->illuminates_produced +
+         (*iter)->lights_produced;
+        iter++;
+        count++;
+    }
+
+    return rays;
+}
+
+uint64_t NetNode::RaysKilled(uint32_t intervals) {
+    uint64_t rays = 0;
+
+    uint32_t count = 0;
+    auto iter = _stats_log.rbegin();
+    while (iter != _stats_log.rend() && count < intervals) {
+        rays += (*iter)->intersects_killed + (*iter)->illuminates_killed +
+         (*iter)->lights_killed;
         iter++;
         count++;
     }

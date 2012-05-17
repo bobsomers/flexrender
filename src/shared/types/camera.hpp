@@ -35,6 +35,8 @@ struct Camera {
     inline void SetConfig(const Config* config) { _config = config; }
 
     inline void SetRange(int16_t offset, uint16_t chunk_size) {
+        _offset = offset;
+        _chunk_size = chunk_size;
         _x = offset;
         _end = offset + chunk_size;
     }
@@ -58,6 +60,8 @@ private:
     uint16_t _i;
     uint16_t _j;
     int16_t _end;
+    int16_t _offset;
+    uint16_t _chunk_size;
     float _l;
     float _t;
     glm::vec3 _u, _v, _w;

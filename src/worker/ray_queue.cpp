@@ -7,8 +7,9 @@
 
 namespace fr {
 
-RayQueue::RayQueue(Camera* camera) :
+RayQueue::RayQueue(Camera* camera, RenderStats* stats) :
  _camera(camera),
+ _stats(stats),
  _intersect_front(nullptr),
  _intersect_back(nullptr),
  _intersect_size(0),
@@ -126,6 +127,7 @@ FatRay* RayQueue::Pop() {
     // Generate a primary ray if the intersection queue is empty.
     ray = new FatRay;
     if (_camera->GeneratePrimary(ray)) {
+        _stats->intersects_produced++;
         return ray;
     }
 

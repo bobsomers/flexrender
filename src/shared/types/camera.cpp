@@ -7,15 +7,19 @@
 #include <iostream>
 #include <sstream>
 #include <limits>
+#include <iomanip>
 
 #include "types/config.hpp"
 #include "types/fat_ray.hpp"
 #include "utils/printers.hpp"
+#include "utils/tout.hpp"
 
 using std::numeric_limits;
 using std::string;
 using std::stringstream;
 using std::endl;
+using std::fixed;
+using std::setprecision;
 using glm::vec3;
 using glm::normalize;
 using glm::cross;
@@ -56,6 +60,8 @@ Camera::Camera(const Config* config) :
     _w.z = numeric_limits<float>::quiet_NaN();
 
     _end = numeric_limits<int16_t>::min();
+    _offset = numeric_limits<int16_t>::min();
+    _chunk_size = numeric_limits<uint16_t>::min();
 }
 
 Camera::Camera() :
@@ -195,6 +201,11 @@ bool Camera::GeneratePrimary(FatRay* ray) {
                 _x++;
             }
         }
+    }
+
+    if (_y == 0) {
+        float progress = 100.0f * (_x - _offset) / _chunk_size;
+        TOUTLN(fixed << setprecision(3) << progress << "% of primary rays cast.");
     }
 
     return true;

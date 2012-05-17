@@ -40,8 +40,9 @@ public:
 
     typedef void (*DispatchCallback)(NetNode* node);
 
-    explicit NetNode(DispatchCallback dispatcher, const std::string& address);
-    explicit NetNode(DispatchCallback dispatcher);
+    explicit NetNode(DispatchCallback dispatcher, const std::string& address,
+     RenderStats* stats = nullptr);
+    explicit NetNode(DispatchCallback dispatcher, RenderStats* stats = nullptr);
 
     /// The resource ID of this net node.
     uint64_t me;
@@ -151,9 +152,13 @@ public:
     /// Has this net node been interesting in the last intervals intervals?
     bool IsInteresting(uint32_t intervals);
 
-    /// Returns the number of rays processed at this node (from the stats logs)
+    /// Returns the number of rays produced at this node (from the stats logs)
     /// in the last intervals intervals.
-    uint64_t RaysProcessed(uint32_t intervals);
+    uint64_t RaysProduced(uint32_t intervals);
+
+    /// Returns the number of rays killed at this node (from the stats logs)
+    /// in the last intervals intervals.
+    uint64_t RaysKilled(uint32_t intervals);
 
 private:
     DispatchCallback _dispatcher;
@@ -161,6 +166,7 @@ private:
     std::unordered_map<uint64_t, bool> _textures;
     std::unordered_map<uint64_t, bool> _shaders;
     std::deque<RenderStats*> _stats_log;
+    RenderStats* _current_stats;
     uint32_t _num_uninteresting;
 
     /// Post-write callback from libuv.
