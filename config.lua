@@ -30,5 +30,5 @@ render {
     bounces = 2,
     threshold = 0.0001,
     min = vec3(-5, -5, -5),
-    max = vec3(15, 15, 15),
+    max = vec3(30, 30, 30),
 }

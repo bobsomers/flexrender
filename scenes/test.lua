@@ -13,8 +13,8 @@ local rotate = fr.rotate
 local translate = fr.translate
 
 camera {
-    eye = vec3(8, 15, 15),
-    look = vec3(2, 0, 0)
+    eye = vec3(12.5, 35, 35),
+    look = vec3(12.5, 0, 0)
 }
 
 material {
@@ -25,13 +25,13 @@ material {
 
 mesh {
     material = "light",
-    transform = translate(vec3(5, 15, 5)) * rotate(radians(90), vec3(1, 0, 0)),
+    transform = translate(vec3(12.5, 35, 12.5)) * rotate(radians(90), vec3(1, 0, 0)),
     data = fre.plane(2)
 }
 
-for i = 1, 10 do
-    for j = 1, 10 do
-        for k = 1, 10 do
+for i = 1, 25 do
+    for j = 1, 25 do
+        for k = 1, 25 do
             local matname = table.concat {
                 "mat-", tostring(i),
                 "-", tostring(j),
