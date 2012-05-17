@@ -30,7 +30,8 @@ NetNode::NetNode(DispatchCallback dispatcher, const string& address,
  _shaders(),
  _stats_log(),
  _current_stats(stats),
- _num_uninteresting(0) {
+ _num_uninteresting(0),
+ _last_progress(0.0f) {
     size_t pos = address.find(':');
     if (pos == string::npos) {
         ip = address;
@@ -58,7 +59,8 @@ NetNode::NetNode(DispatchCallback dispatcher, RenderStats* stats) :
  _shaders(),
  _stats_log(),
  _current_stats(stats),
- _num_uninteresting(0) {}
+ _num_uninteresting(0),
+ _last_progress(0.0f) {}
 
 void NetNode::Receive(const char* buf, ssize_t len) {
     if (buf == nullptr || len <= 0) return;
@@ -582,7 +584,7 @@ void NetNode::ReceiveRenderStats() {
     msgpack::unpack(&mp_msg, reinterpret_cast<const char*>(message.body), message.size);
 
     // Unpack the render stats.
-    RenderStats *stats = new RenderStats;
+    RenderStats* stats = new RenderStats;
     msgpack::object mp_obj = mp_msg.get();
     mp_obj.convert(stats);
 
@@ -596,6 +598,9 @@ void NetNode::ReceiveRenderStats() {
     } else {
         _num_uninteresting++;
     }
+
+    // Save the progress.
+    _last_progress = stats->primary_progress;
 }
 
 void NetNode::SendRenderStats(RenderStats* stats) {
@@ -641,6 +646,21 @@ uint64_t NetNode::RaysKilled(uint32_t intervals) {
     while (iter != _stats_log.rend() && count < intervals) {
         rays += (*iter)->intersects_killed + (*iter)->illuminates_killed +
          (*iter)->lights_killed;
+        iter++;
+        count++;
+    }
+
+    return rays;
+}
+
+uint64_t NetNode::RaysQueued(uint32_t intervals) {
+    uint64_t rays = 0;
+
+    uint32_t count = 0;
+    auto iter = _stats_log.rbegin();
+    while (iter != _stats_log.rend() && count < intervals) {
+        rays += (*iter)->intersect_queue + (*iter)->illuminate_queue +
+         (*iter)->light_queue;
         iter++;
         count++;
     }

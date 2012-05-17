@@ -160,6 +160,12 @@ public:
     /// in the last intervals intervals.
     uint64_t RaysKilled(uint32_t intervals);
 
+    /// Returns the number of rays currently queued at this node (from the
+    /// stats logs) in the last intervals intervals.
+    uint64_t RaysQueued(uint32_t intervals);
+
+    inline float Progress() const { return _last_progress; }
+
 private:
     DispatchCallback _dispatcher;
     std::unordered_map<uint64_t, bool> _materials;
@@ -168,6 +174,7 @@ private:
     std::deque<RenderStats*> _stats_log;
     RenderStats* _current_stats;
     uint32_t _num_uninteresting;
+    float _last_progress;
 
     /// Post-write callback from libuv.
     static void AfterFlush(uv_write_t* req, int status);

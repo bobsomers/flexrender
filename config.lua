@@ -11,7 +11,7 @@ network {
         "127.0.0.1",
         "127.0.0.1:19401"
     },
-    runaway = 2.5 -- percent
+    runaway = 10 -- percent
 }
 
 output {

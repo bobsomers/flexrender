@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <sstream>
+#include <limits>
 #include <semaphore.h>
 #include <stdio.h>
 #include <errno.h>
@@ -17,6 +18,7 @@
 
 using std::string;
 using std::stringstream;
+using std::numeric_limits;
 
 namespace fr {
 
@@ -289,14 +291,37 @@ void client::OnInterestingTimeout(uv_timer_t* timer, int status) {
         return;
     }
 
+    // How far along is the slowest worker?
+    float slowest = numeric_limits<float>::infinity();
+    lib->ForEachNetNode([&slowest](uint64_t id, NetNode* node) {
+        float progress = node->Progress();
+        if (progress < slowest) {
+            slowest = progress;
+        }
+    });
+
+    Config* config = lib->LookupConfig();
+    float runaway = config->runaway;
+
+    // Pause each worker that is more than runaway ahead of the slowest.
+    lib->ForEachNetNode([slowest, runaway](uint64_t id, NetNode* node) {
+        float progress = node->Progress();
+        if (progress > slowest + runaway) {
+            TOUTLN("[" << node->ip << "] Runaway detected. Pausing work generation.");
+            // TODO: actually pause
+        }
+    });
+
     // Display some information about the total number of rays being processed.
     uint64_t total_produced = 0;
     uint16_t total_killed = 0;
-    lib->ForEachNetNode([&total_produced, &total_killed](uint64_t id, NetNode* node) {
+    uint64_t total_queued = 0;
+    lib->ForEachNetNode([&total_produced, &total_killed, &total_queued](uint64_t id, NetNode* node) {
         total_produced += node->RaysProduced(max_intervals / 2);
         total_killed += node->RaysKilled(max_intervals / 2);
+        total_queued += node->RaysQueued(max_intervals / 2);
     });
-    TOUTLN("RAYS:  +" << total_produced << "  -" << total_killed);
+    TOUTLN("RAYS:  +" << total_produced << "  -" << total_killed << "  ~" << total_queued);
 }
 
 void client::OnOK(NetNode* node) {

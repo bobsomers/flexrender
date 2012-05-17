@@ -205,7 +205,7 @@ bool Camera::GeneratePrimary(FatRay* ray) {
         }
     }
 
-    float _progress = 100.0f * (_x - _offset) / _chunk_size;
+    _progress = 100.0f * (_x - _offset) / _chunk_size;
 
     if (_y == 0) {
         TOUTLN(fixed << setprecision(3) << _progress << "% of primary rays cast.");
