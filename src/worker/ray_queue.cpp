@@ -18,7 +18,8 @@ RayQueue::RayQueue(Camera* camera, RenderStats* stats) :
  _illuminate_size(0),
  _light_front(nullptr),
  _light_back(nullptr),
- _light_size(0) {}
+ _light_size(0),
+ _paused(false) {}
 
 RayQueue::~RayQueue() {
     FatRay* ray = nullptr;
@@ -122,6 +123,11 @@ FatRay* RayQueue::Pop() {
         }
         _intersect_size--; 
         return ray;
+    }
+
+    // If primary ray generation is paused, we're done.
+    if (_paused) {
+        return nullptr;
     }
 
     // Generate a primary ray if the intersection queue is empty.

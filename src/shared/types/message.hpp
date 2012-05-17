@@ -23,6 +23,8 @@ struct Message {
         RENDER_START  = 300,
         RENDER_STOP   = 301,
         RENDER_STATS  = 302,
+        RENDER_PAUSE  = 303,
+        RENDER_RESUME = 304,
         RAY           = 400
     };
 

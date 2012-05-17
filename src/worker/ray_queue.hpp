@@ -31,6 +31,12 @@ public:
     /// Returns the size of the internal light ray queue.
     inline size_t LightSize() const { return _light_size; }
 
+    /// Pauses primary ray generation.
+    void Pause() { _paused = true; }
+
+    /// Resumes primary ray generation.
+    void Resume() { _paused = false; }
+
 private:
     Camera* _camera;
     RenderStats* _stats;
@@ -43,6 +49,7 @@ private:
     FatRay* _light_front;
     FatRay* _light_back;
     size_t _light_size;
+    bool _paused;
 };
 
 } // namespace fr

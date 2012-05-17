@@ -30,6 +30,7 @@ public:
         SYNCING_EMISSIVE,
         READY,
         RENDERING,
+        PAUSED,
         SYNCING_IMAGES,
     };
 

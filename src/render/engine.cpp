@@ -307,8 +307,19 @@ void client::OnInterestingTimeout(uv_timer_t* timer, int status) {
     lib->ForEachNetNode([slowest, runaway](uint64_t id, NetNode* node) {
         float progress = node->Progress();
         if (progress > slowest + runaway) {
-            TOUTLN("[" << node->ip << "] Runaway detected. Pausing work generation.");
-            // TODO: actually pause
+            if (node->state != NetNode::State::PAUSED) {
+                TOUTLN("[" << node->ip << "] Runaway detected. Pausing work generation.");
+                Message request(Message::Kind::RENDER_PAUSE);
+                node->state = NetNode::State::PAUSED;
+                node->Send(request);
+            }
+        } else {
+            if (node->state == NetNode::State::PAUSED) {
+                TOUTLN("[" << node->ip << "] Runaway eliminated. Resuming work generation.");
+                Message request(Message::Kind::RENDER_RESUME);
+                node->state = NetNode::State::RENDERING;
+                node->Send(request);
+            }
         }
     });
 

@@ -84,6 +84,14 @@ string ToString(const Message& msg, const string& indent) {
             stream << indent << "| kind = RENDER_STATS" << endl;
             break;
 
+        case Message::Kind::RENDER_PAUSE:
+            stream << indent << "| kind = RENDER_PAUSE" << endl;
+            break;
+
+        case Message::Kind::RENDER_RESUME:
+            stream << indent << "| kind = RENDER_RESUME" << endl;
+            break;
+
         case Message::Kind::RAY:
             stream << indent << "| kind = RAY" << endl;
             break;

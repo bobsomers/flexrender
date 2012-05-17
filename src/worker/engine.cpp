@@ -90,6 +90,8 @@ void OnSyncCamera(NetNode* node);
 void OnSyncEmissive(NetNode* node);
 void OnRenderStart(NetNode* node);
 void OnRenderStop(NetNode* node);
+void OnRenderPause(NetNode* node);
+void OnRenderResume(NetNode* node);
 
 } // namespace server
 
@@ -300,6 +302,14 @@ void server::DispatchMessage(NetNode* node) {
 
         case Message::Kind::RENDER_STOP:
             OnRenderStop(node);
+            break;
+
+        case Message::Kind::RENDER_PAUSE:
+            OnRenderPause(node);
+            break;
+
+        case Message::Kind::RENDER_RESUME:
+            OnRenderResume(node);
             break;
 
         default:
@@ -826,6 +836,20 @@ void server::OnRenderStop(NetNode* node) {
     node->SendImage(lib);
 
     TOUTLN("[" << node->ip << "] Sending image to renderer.");
+}
+
+void server::OnRenderPause(NetNode* node) {
+    assert(rayq != nullptr);
+
+    rayq->Pause();
+    TOUTLN("Pausing work generation.");
+}
+
+void server::OnRenderResume(NetNode* node) {
+    assert(rayq != nullptr);
+
+    rayq->Resume();
+    TOUTLN("Resuming work generation.");
 }
 
 void OnFlushTimeout(uv_timer_t* timer, int status) {
