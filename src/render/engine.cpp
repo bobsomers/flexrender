@@ -508,7 +508,7 @@ void client::StartRender() {
 
     // Start the interesting timer.
     result = uv_timer_start(&interesting_timer, OnInterestingTimeout,
-     FR_STATS_TIMEOUT_MS * max_intervals / 2, FR_STATS_TIMEOUT_MS * max_intervals / 2);
+     FR_STATS_TIMEOUT_MS * max_intervals, FR_STATS_TIMEOUT_MS * max_intervals);
     CheckUVResult(result, "timer_start");
 
     TOUTLN("Rendering has started.");
