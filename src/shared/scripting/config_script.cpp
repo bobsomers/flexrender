@@ -54,6 +54,12 @@ FR_SCRIPT_FUNCTION(ConfigScript, Network) {
     });
     PopField();
 
+    // "runaway" is an optional float
+    if (PushField("runaway", LUA_TNUMBER)) {
+        _config->runaway = FetchFloat();
+    }
+    PopField();
+
     EndTableCall();
     return 0;
 }

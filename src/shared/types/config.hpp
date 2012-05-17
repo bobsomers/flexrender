@@ -37,6 +37,10 @@ struct Config {
     /// The threshold below which we consider the transmittance of a ray 0.
     float transmittance_threshold;
 
+    /// The maximum amount (in percent, 0.0f -> 100.0f) that any worker is
+    /// allowed to get ahead of the slowest worker in generating primary rays.
+    float runaway;
+
     /// Name of the scene.
     std::string name;
 
@@ -47,7 +51,7 @@ struct Config {
     std::vector<std::string> buffers;
 
     MSGPACK_DEFINE(width, height, min, max, antialiasing, samples, bounce_limit,
-     transmittance_threshold, name, workers, buffers);
+     transmittance_threshold, runaway, name, workers, buffers);
 
     TOSTRINGABLE(Config);
 };

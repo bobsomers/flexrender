@@ -867,6 +867,10 @@ void server::OnStatsTimeout(uv_timer_t* timer, int status) {
     stats.illuminate_queue = rayq->IlluminateSize();
     stats.light_queue = rayq->LightSize();
 
+    Camera* cam = lib->LookupCamera();
+    assert(cam != nullptr);
+    stats.primary_progress = cam->Progress();
+
     renderer->SendRenderStats(&stats);
     stats.Reset();
 }

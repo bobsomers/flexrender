@@ -26,6 +26,7 @@ struct RenderStats {
     uint64_t intersect_queue;
     uint64_t illuminate_queue;
     uint64_t light_queue;
+    float primary_progress;
 
     // Resets all the stats counters.
     inline void Reset() {
@@ -41,11 +42,12 @@ struct RenderStats {
         intersect_queue = 0;
         illuminate_queue = 0;
         light_queue = 0;
+        primary_progress = 0.0f;
     }
 
     MSGPACK_DEFINE(intersects_produced, illuminates_produced, lights_produced,
      intersects_killed, illuminates_killed, lights_killed, rays_rx, rays_tx,
-     bytes_rx, intersect_queue, illuminate_queue, light_queue);
+     bytes_rx, intersect_queue, illuminate_queue, light_queue, primary_progress);
 };
 
 } // namespace fr

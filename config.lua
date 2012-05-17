@@ -10,7 +10,8 @@ network {
     workers = {
         "127.0.0.1",
         "127.0.0.1:19401"
-    }
+    },
+    runaway = 2.5 -- percent
 }
 
 output {

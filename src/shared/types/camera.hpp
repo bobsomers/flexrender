@@ -49,6 +49,8 @@ struct Camera {
      */
     bool GeneratePrimary(FatRay* ray);
 
+    inline float Progress() const { return _progress; }
+
     MSGPACK_DEFINE(eye, look, up, rotation, ratio);
 
     TOSTRINGABLE(Camera);
@@ -66,6 +68,7 @@ private:
     float _t;
     glm::vec3 _u, _v, _w;
     bool _initialized;
+    float _progress;
 };
 
 std::string ToString(const Camera& camera, const std::string& indent = "");

@@ -20,6 +20,7 @@ Config::Config() :
  samples(10),
  bounce_limit(5),
  transmittance_threshold(0.0f),
+ runaway(2.5f),
  name("output"),
  workers(),
  buffers() {
@@ -44,6 +45,7 @@ string ToString(const Config& config, const string& indent) {
      indent << "| samples = " << config.samples << endl <<
      indent << "| bounce_limit = " << config.bounce_limit << endl <<
      indent << "| transmittance_threshold = " << config.transmittance_threshold << endl <<
+     indent << "| runaway = " << config.runaway << endl <<
      indent << "| name = " << config.name << endl <<
      indent << "| workers = {" << endl;
     for (const auto& worker : config.workers) {

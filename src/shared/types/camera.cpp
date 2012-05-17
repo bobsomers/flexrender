@@ -35,7 +35,8 @@ Camera::Camera(const Config* config) :
  _y(0),
  _i(0),
  _j(0),
- _initialized(false) {
+ _initialized(false),
+ _progress(0.0f) {
     eye.x = numeric_limits<float>::quiet_NaN();
     eye.y = numeric_limits<float>::quiet_NaN();
     eye.z = numeric_limits<float>::quiet_NaN();
@@ -73,7 +74,8 @@ Camera::Camera() :
  _y(0),
  _i(0),
  _j(0),
- _initialized(false) {
+ _initialized(false),
+ _progress(0.0f) {
     eye.x = numeric_limits<float>::quiet_NaN();
     eye.y = numeric_limits<float>::quiet_NaN();
     eye.z = numeric_limits<float>::quiet_NaN();
@@ -203,9 +205,10 @@ bool Camera::GeneratePrimary(FatRay* ray) {
         }
     }
 
+    float _progress = 100.0f * (_x - _offset) / _chunk_size;
+
     if (_y == 0) {
-        float progress = 100.0f * (_x - _offset) / _chunk_size;
-        TOUTLN(fixed << setprecision(3) << progress << "% of primary rays cast.");
+        TOUTLN(fixed << setprecision(3) << _progress << "% of primary rays cast.");
     }
 
     return true;
