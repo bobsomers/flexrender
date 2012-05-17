@@ -5,7 +5,7 @@
 #include "msgpack.hpp"
 
 /// Interval between sending render stats back to the renderer.
-#define FR_STATS_TIMEOUT_MS 250
+#define FR_STATS_TIMEOUT_MS 100
 
 namespace fr {
 

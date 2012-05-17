@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
     string config_file = ArgumentValue(argc, argv, 1);
     string scene_file = ArgumentValue(argc, argv, 2);
 
-    uint32_t intervals = 8;
+    uint32_t intervals = 10;
     {
         string intervals_str = FlagValue(argc, argv, "-i", "--intervals");
         if (intervals_str != "") {
