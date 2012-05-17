@@ -165,6 +165,9 @@ public:
     /// stats logs) in the last intervals intervals.
     uint64_t RaysQueued(uint32_t intervals);
 
+    /// Dumps the stats log to a CSV file with the given filename.
+    void StatsToCSVFile(const std::string& filename) const;
+
     inline float Progress() const { return _last_progress; }
 
 private:

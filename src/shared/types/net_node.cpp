@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <sstream>
+#include <fstream>
 
 #include "types.hpp"
 #include "utils/library.hpp"
@@ -12,6 +13,8 @@
 using std::stringstream;
 using std::string;
 using std::unordered_map;
+using std::ofstream;
+using std::endl;
 
 namespace fr {
 
@@ -666,6 +669,58 @@ uint64_t NetNode::RaysQueued(uint32_t intervals) {
     }
 
     return rays;
+}
+
+void NetNode::StatsToCSVFile(const string& filename) const {
+    ofstream file;
+    file.open(filename);
+
+    // Write header.
+    file << "Tick," <<
+     "Primary Ray Casting Progress," <<
+     "Intersection Rays Produced," <<
+     "Illumination Rays Produced," <<
+     "Light Rays Produced," <<
+     "Intersection Rays Killed," <<
+     "Illumination Rays Killed," <<
+     "Light Rays Killed," <<
+     "Intersection Queue Size," <<
+     "Illumination Queue Size," <<
+     "Light Queue Size," <<
+     "Total Rays Received," <<
+     "Total Rays Sent," <<
+     "Total Rays Produced," <<
+     "Total Rays Killed," <<
+     "Total Rays Queued," <<
+     "Total Bytes Received" << endl;
+
+    // Write stats log.
+    uint64_t tick = 1;
+    for (const auto& record : _stats_log) {
+        file << tick << "," <<
+         record->primary_progress << "," <<
+         record->intersects_produced << "," <<
+         record->illuminates_produced << "," <<
+         record->lights_produced << "," <<
+         record->intersects_killed << "," <<
+         record->illuminates_killed << "," <<
+         record->lights_killed << "," <<
+         record->intersect_queue << "," <<
+         record->illuminate_queue << "," <<
+         record->light_queue << "," <<
+         record->rays_rx << "," <<
+         record->rays_tx << "," <<
+         (record->intersects_produced + record->illuminates_produced +
+          record->lights_produced) << "," <<
+         (record->intersects_killed + record->illuminates_killed +
+          record->lights_killed) << "," <<
+         (record->intersect_queue + record->illuminate_queue +
+          record->light_queue) << "," <<
+         record->bytes_rx << endl;
+        tick++;
+    }
+
+    file.close();
 }
 
 } // namespace fr

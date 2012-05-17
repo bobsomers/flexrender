@@ -313,7 +313,7 @@ void client::OnInterestingTimeout(uv_timer_t* timer, int status) {
                 node->state = NetNode::State::PAUSED;
                 node->Send(request);
             }
-        } else {
+        } else if (progress <= slowest) {
             if (node->state == NetNode::State::PAUSED) {
                 TOUTLN("[" << node->ip << "] Runaway eliminated. Resuming work generation.");
                 Message request(Message::Kind::RENDER_RESUME);
@@ -404,12 +404,13 @@ void client::OnSyncImage(NetNode* node) {
     Image* component = node->ReceiveImage();
     assert(component != nullptr);
 
-    // Write the component image out as name-worker.exr.
+    // Create the component filename.
     stringstream component_file;
-    component_file << config->name << "-" << node->ip << "_" << node->port <<
-     ".exr";
-    TOUTLN("Writing " << component_file.str() << "...");
-    component->ToEXRFile(component_file.str());
+    component_file << config->name << "-" << node->ip << "_" << node->port;
+
+    // Write the component image out as name-worker.exr.
+    TOUTLN("Writing image to " << component_file.str() << ".exr...");
+    component->ToEXRFile(component_file.str() + ".exr");
 
     // Merge the component image with the final image.
     final->Merge(component);
@@ -417,6 +418,10 @@ void client::OnSyncImage(NetNode* node) {
 
     // Done with the component image.
     delete component;
+
+    // Write the render stats out as name-worker.csv.
+    TOUTLN("Writing stats to " << component_file.str() << ".csv...");
+    node->StatsToCSVFile(component_file.str() + ".csv");
 
     // Done for now if this wasn't the last worker.
     num_workers_complete++;

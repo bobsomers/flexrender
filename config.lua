@@ -8,10 +8,12 @@ local vec3 = fr.vec3
 
 network {
     workers = {
-        "127.0.0.1",
-        "127.0.0.1:19401"
+        "10.11.12.1",
+        "10.11.12.25",
+        "10.11.12.21",
+        "10.11.12.27"
     },
-    runaway = 10 -- percent
+    runaway = 2.5 -- percent
 }
 
 output {
