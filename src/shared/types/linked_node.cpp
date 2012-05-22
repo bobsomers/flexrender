@@ -11,7 +11,9 @@ LinkedNode::LinkedNode(size_t first, size_t second, const BoundingBox& bounds) :
     primitives[1] = second;
 }
 
-LinkedNode::LinkedNode(LinkedNode* left, LinkedNode* right) {
+LinkedNode::LinkedNode(LinkedNode* left, LinkedNode* right,
+ BoundingBox::Axis split) :
+ split(split) {
     assert(left != nullptr);
     assert(right != nullptr);
 

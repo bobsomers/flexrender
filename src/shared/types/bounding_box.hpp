@@ -8,6 +8,12 @@
 namespace fr {
 
 struct BoundingBox {
+    enum class Axis {
+        X,
+        Y,
+        Z
+    };
+
     explicit BoundingBox(glm::vec3 min, glm::vec3 max);
 
     // FOR MSGPACK ONLY!
@@ -28,6 +34,9 @@ struct BoundingBox {
 
     /// Computes the surface area of this bounding box.
     float SurfaceArea() const;
+
+    /// Returns the longest axis of the bounding box.
+    Axis LongestAxis() const;
 
     MSGPACK_DEFINE(min, max);
 

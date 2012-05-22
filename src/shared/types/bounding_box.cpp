@@ -58,6 +58,16 @@ float BoundingBox::SurfaceArea() const {
     return 2.0f * (d.x * d.y + d.x * d.z + d.y * d.z);
 }
 
+BoundingBox::Axis BoundingBox::LongestAxis() const {
+    vec3 d = max - min;
+    if (d.x > d.y && d.x > d.z) {
+        return Axis::X;
+    } else if (d.y > d.z) {
+        return Axis::Y;
+    }
+    return Axis::Z;
+}
+
 string ToString(const BoundingBox& box, const string& indent) {
     stringstream stream;
     stream << "BoundingBox {" << endl <<
