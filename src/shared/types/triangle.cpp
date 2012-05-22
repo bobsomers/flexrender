@@ -13,6 +13,8 @@ using std::stringstream;
 using std::endl;
 using glm::vec2;
 using glm::vec3;
+using glm::vec4;
+using glm::mat4;
 using glm::cross;
 using glm::dot;
 using glm::normalize;
@@ -51,6 +53,14 @@ void Triangle::Sample(vec3* position, vec3* normal, vec2* texcoord) const {
     if (texcoord != nullptr) {
         *texcoord = InterpolateTexCoord(u, v);
     }
+}
+
+BoundingBox Triangle::WorldBounds(const mat4& xform) const {
+    BoundingBox bounds;
+    bounds.Absorb(vec3(xform * vec4(verts[0].v, 1.0f)));
+    bounds.Absorb(vec3(xform * vec4(verts[1].v, 1.0f)));
+    bounds.Absorb(vec3(xform * vec4(verts[2].v, 1.0f)));
+    return bounds;
 }
 
 bool Triangle::Intersect(const SlimRay& ray, float* t, LocalGeometry* local) const {

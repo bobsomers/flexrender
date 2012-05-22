@@ -3,6 +3,7 @@
 #include "glm/glm.hpp"
 #include "msgpack.hpp"
 
+#include "types/bounding_box.hpp"
 #include "types/vertex.hpp"
 #include "utils/tostring.hpp"
 
@@ -20,11 +21,19 @@ struct Triangle {
     /// Vertices of the triangle.
     Vertex verts[3];
 
-    /// Generates a sample point on the triangle in object space. If normal or
-    /// texcoord is non-null, they will be filled in with the interpolated
-    /// normal and texture coordinates, respectively.
+    /**
+     * Generates a sample point on the triangle in object space. If normal or
+     * texcoord is non-null, they will be filled in with the interpolated
+     * normal and texture coordinates, respectively.
+     */
     void Sample(glm::vec3* position, glm::vec3* normal = nullptr,
      glm::vec2* texcoord = nullptr) const;
+
+    /**
+     * Returns the world space bounding box of the triangle given the object
+     * to world transformation matrix.
+     */
+    BoundingBox WorldBounds(const glm::mat4& xform) const;
 
     /**
      * Intersects the given ray with this triangle and returns true if they
