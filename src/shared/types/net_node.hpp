@@ -28,6 +28,8 @@ public:
         SYNCING_ASSETS,
         SYNCING_CAMERA,
         SYNCING_EMISSIVE,
+        BUILDING_BVH,
+        SYNCING_WBVH,
         READY,
         RENDERING,
         PAUSED,

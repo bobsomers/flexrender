@@ -64,6 +64,14 @@ string ToString(const Message& msg, const string& indent) {
             stream << indent << "| kind = SYNC_CAMERA" << endl;
             break;
 
+        case Message::Kind::BUILD_BVH:
+            stream << indent << "| kind = BUILD_BVH" << endl;
+            break;
+
+        case Message::Kind::SYNC_WBVH:
+            stream << indent << "| kind = SYNC_WBVH" << endl;
+            break;
+
         case Message::Kind::SYNC_EMISSIVE:
             stream << indent << "| kind = SYNC_EMISSIVE" << endl;
             break;

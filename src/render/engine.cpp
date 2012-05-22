@@ -31,6 +31,9 @@ static size_t num_workers_connected = 0;
 /// The number of workers that are syncing.
 static size_t num_workers_syncing = 0;
 
+/// The number of workers that have finished building their local BVHs.
+static size_t num_workers_built = 0;
+
 /// The number of workers that are ready to render.
 static size_t num_workers_ready = 0;
 
@@ -65,6 +68,7 @@ void Init();
 void DispatchMessage(NetNode* node);
 void StartSync();
 uint64_t SyncMesh(Mesh* mesh);
+void BuildWBVH();
 void StartRender();
 void StopRender();
 
@@ -371,6 +375,24 @@ void client::OnOK(NetNode* node) {
             break;
 
         case NetNode::State::SYNCING_EMISSIVE:
+            {
+                Message request(Message::Kind::BUILD_BVH);
+                node->state = NetNode::State::BUILDING_BVH;
+                node->Send(request);
+                TOUTLN("[" << node->ip << "] Building local BVH.");
+            }
+            break;
+
+        case NetNode::State::BUILDING_BVH:
+            // TODO: unpack worker bounding box from message body
+            TOUTLN("[" << node->ip << "] Local BVH ready.");
+            num_workers_built++;
+            if (num_workers_built == config->workers.size()) {
+                BuildWBVH();
+            }
+            break;
+
+        case NetNode::State::SYNCING_WBVH:
             node->state = NetNode::State::READY;
             TOUTLN("[" << node->ip << "] Ready to render.");
             num_workers_ready++;
@@ -481,6 +503,21 @@ void client::StartSync() {
     CheckUVResult(result, "idle_init");
     result = uv_idle_start(idler, OnSyncIdle);
     CheckUVResult(result, "idle_start");
+}
+
+void client::BuildWBVH() {
+    TOUTLN("Building WBVH.");
+    // TODO: build the worker BVH
+
+    lib->ForEachNetNode([](uint64_t id, NetNode* node) {
+        node->state = NetNode::State::SYNCING_WBVH;
+
+        Message request(Message::Kind::SYNC_WBVH);
+        // TODO: pack the wbvh in the message body
+        node->Send(request);
+
+        TOUTLN("[" << node->ip << "] Syncing WBVH.");
+    });
 }
 
 void client::StartRender() {

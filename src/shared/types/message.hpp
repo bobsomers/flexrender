@@ -19,6 +19,8 @@ struct Message {
         SYNC_MESH     = 204,
         SYNC_CAMERA   = 205,
         SYNC_EMISSIVE = 206,
+        BUILD_BVH     = 250,
+        SYNC_WBVH     = 260,
         SYNC_IMAGE    = 290,
         RENDER_START  = 300,
         RENDER_STOP   = 301,

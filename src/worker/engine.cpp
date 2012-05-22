@@ -88,6 +88,8 @@ void OnSyncTexture(NetNode* node);
 void OnSyncShader(NetNode* node);
 void OnSyncCamera(NetNode* node);
 void OnSyncEmissive(NetNode* node);
+void OnBuildBVH(NetNode* node);
+void OnSyncWBVH(NetNode* node);
 void OnRenderStart(NetNode* node);
 void OnRenderStop(NetNode* node);
 void OnRenderPause(NetNode* node);
@@ -294,6 +296,14 @@ void server::DispatchMessage(NetNode* node) {
 
         case Message::Kind::SYNC_EMISSIVE:
             OnSyncEmissive(node);
+            break;
+
+        case Message::Kind::BUILD_BVH:
+            OnBuildBVH(node);
+            break;
+
+        case Message::Kind::SYNC_WBVH:
+            OnSyncWBVH(node);
             break;
 
         case Message::Kind::RENDER_START:
@@ -791,6 +801,32 @@ void server::OnSyncEmissive(NetNode* node) {
     node->Send(reply);
 
     TOUTLN("[" << node->ip << "] Received list of emissive workers.");
+}
+
+void server::OnBuildBVH(NetNode* node) {
+    assert(node != nullptr);
+
+    TOUTLN("Building local BVH.");
+    // TODO: build local BVH and generate worker bounding box
+
+    // Reply with OK and worker bounds.
+    Message reply(Message::Kind::OK);
+    // TODO: pack worker bounding box into message body
+    node->Send(reply);
+
+    TOUTLN("Local BVH ready.");
+}
+
+void server::OnSyncWBVH(NetNode* node) {
+    assert(node != nullptr);
+
+    // TODO: unpack the wbvh
+
+    // Reply with OK.
+    Message reply(Message::Kind::OK);
+    node->Send(reply);
+
+    TOUTLN("[" << node->ip << "] Received WBVH.");
 }
 
 void server::OnRenderStart(NetNode* node) {
