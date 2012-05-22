@@ -1,10 +1,13 @@
 #include "types/bvh.hpp"
 
 #include <cstring>
+#include <algorithm>
 
 #include "types.hpp"
 
 using std::vector;
+using std::nth_element;
+using std::partition;
 
 namespace fr {
 
@@ -75,7 +78,16 @@ LinkedNode* BVH::RecursiveBuild(vector<PrimitiveInfo>& build_data, size_t start,
         if (num_primitives <= 4) {
             // Partition using equal size subsets, since SAH has diminishing
             // returns at this point.
-            // TODO
+            nth_element(&build_data[start], &build_data[mid], &build_data[end - 1] + 1,
+             [split_axis](const PrimitiveInfo& a, const PrimitiveInfo& b) {
+                 float a_val = (split_axis == BoundingBox::Axis::X) ? a.centroid.x :
+                               (split_axis == BoundingBox::Axis::Y) ? a.centroid.y :
+                                                                      a.centroid.z;
+                 float b_val = (split_axis == BoundingBox::Axis::X) ? b.centroid.x :
+                               (split_axis == BoundingBox::Axis::Y) ? b.centroid.y :
+                                                                      b.centroid.z;
+                 return a_val < b_val;
+             });
         } else {
             // Partition using the surface area heuristic (SAH).
             // TODO
