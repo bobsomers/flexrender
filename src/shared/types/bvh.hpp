@@ -63,6 +63,12 @@ private:
      */
     uint32_t ComputeSAH(std::vector<PrimitiveInfo>& build_data, size_t start,
      size_t end, float min, float max, float surface_area, BoundingBox::Axis axis);
+
+    /**
+     * Flattens the linked tree structure into a linear structure with offsets
+     * for faster/portable traversal at runtime.
+     */
+    size_t FlattenTree(LinkedNode* current, size_t parent, size_t* offset);
 };
 
 } // namespace fr

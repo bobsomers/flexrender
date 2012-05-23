@@ -24,17 +24,17 @@ struct LinearNode {
     /// Index of the primitive, if this is a leaf node.
     size_t index;
 
-    /// Offset of the sibling of this node if this is an interior node.
-    ssize_t sibling;
-
     /// Offset of the parent of this node if this is an interior node.
     ssize_t parent;
+
+    /// Offset of the right-hand child of this node if this is an interior node.
+    ssize_t right;
 
     /// Axis that we split on. Yes, it is intentionally this big to pad the
     /// entire structure to fit in a cache line (64 bytes).
     uint64_t axis;
 
-    MSGPACK_DEFINE(bounds, leaf, index, sibling, parent, axis);
+    MSGPACK_DEFINE(bounds, leaf, index, parent, right, axis);
 };
 
 std::string ToString(const LinearNode& node, const std::string& indent = "");

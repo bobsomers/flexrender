@@ -10,10 +10,10 @@
 namespace fr {
 
 struct BoundingBox {
-    enum class Axis {
-        X,
-        Y,
-        Z
+    enum Axis {
+        X = 1,
+        Y = 2,
+        Z = 3
     };
 
     explicit BoundingBox(glm::vec3 min, glm::vec3 max);

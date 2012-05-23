@@ -44,6 +44,17 @@ void BVH::Build(vector<PrimitiveInfo>& build_data) {
     for (size_t i = 0; i < total_nodes; i++) {
         _nodes.emplace_back();
     }
+    size_t offset = 0;
+    FlattenTree(root, -1, &offset);
+    assert(offset == total_nodes);
+
+    // Release memory consumed by the linked tree.
+    // TODO
+
+    // TODO: remove
+    for (const auto& node : _nodes) {
+        TOUTLN(ToString(node));
+    }
 }
 
 LinkedNode* BVH::RecursiveBuild(vector<PrimitiveInfo>& build_data, size_t start,
@@ -164,6 +175,28 @@ uint32_t BVH::ComputeSAH(vector<PrimitiveInfo>& build_data, size_t start,
     }
 
     return min_cost_split;
+}
+
+size_t BVH::FlattenTree(LinkedNode* current, size_t parent, size_t* offset) {
+    LinearNode* node = &_nodes[*offset];
+    size_t my_offset = (*offset)++;
+
+    node->bounds = current->bounds;
+    node->parent = parent;
+
+    if (current->children[0] == nullptr) {
+        // Create leaf node.
+        node->leaf = 1;
+        node->index = current->index;
+    } else {
+        // Create interior node.
+        node->leaf = 0;
+        node->axis = current->split;
+        FlattenTree(current->children[0], my_offset, offset);
+        node->right = FlattenTree(current->children[1], my_offset, offset);
+    }
+
+    return my_offset;
 }
 
 } // namespace fr
