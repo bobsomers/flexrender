@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <vector>
 
+#include "msgpack.hpp"
+
 #include "types/linear_node.hpp"
 
 namespace fr {
@@ -13,8 +15,10 @@ struct LinkedNode;
 struct PrimitiveInfo;
 
 /**
- * This implementation is heavily based on the one presented in Physically
- * Based Rendering, Section 4.4, pages 208-227, with some modifications.
+ * The construction implementation is based on the one presented in Physically
+ * Based Rendering, Section 4.4, pages 208-227, with some modifications to
+ * support stackless traversal. The stackless traversal algorithm is as
+ * described in Hapala et al [2011].
  */
 
 class BVH {
@@ -22,8 +26,13 @@ public:
     /// Constructs a BVH for traversing the given mesh.
     explicit BVH(const Mesh* mesh);
 
+    /// MSGPACK ONLY!
+    explicit BVH();
+
     /// Intersects the given ray with the this BVH.
     void Intersect(FatRay* ray, uint64_t me);
+
+    MSGPACK_DEFINE(_nodes);
 
 private:
     struct BucketInfo {
@@ -33,7 +42,6 @@ private:
 
     static const uint32_t NUM_BUCKETS;
 
-    LinkedNode* _root; // TODO: remove me
     std::vector<LinearNode> _nodes;
 
     /**

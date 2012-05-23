@@ -35,12 +35,15 @@ void BVH::Intersect(FatRay* ray, uint64_t me) {
 void BVH::Build(vector<PrimitiveInfo>& build_data) {
     // Recursively build the BVH tree.
     size_t total_nodes = 0;
-    _root = RecursiveBuild(build_data, 0, build_data.size(), &total_nodes);
+    LinkedNode* root = RecursiveBuild(build_data, 0, build_data.size(), &total_nodes);
 
-    TOUTLN(ToString(_root)); // TODO: remove
+    TOUTLN(ToString(root)); // TODO: remove
 
     // Flatten the tree into a linear representation.
-    // TODO
+    _nodes.reserve(total_nodes);
+    for (size_t i = 0; i < total_nodes; i++) {
+        _nodes.emplace_back();
+    }
 }
 
 LinkedNode* BVH::RecursiveBuild(vector<PrimitiveInfo>& build_data, size_t start,
