@@ -28,6 +28,6 @@ struct LinkedNode {
     BoundingBox::Axis split;
 };
 
-std::string ToString(const LinkedNode& node, const std::string& indent = "");
+std::string ToString(const LinkedNode* node, const std::string& indent = "");
 
 } // namespace fr

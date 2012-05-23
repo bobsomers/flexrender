@@ -29,21 +29,21 @@ LinkedNode::LinkedNode(LinkedNode* left, LinkedNode* right,
     bounds = left->bounds.Union(right->bounds);
 }
 
-string ToString(const LinkedNode& node, const string& indent) {
+string ToString(const LinkedNode* node, const string& indent) {
     stringstream stream;
     string pad = indent + "| ";
     stream << "LinkedNode {" << endl <<
-     indent << "| bounds = " << ToString(node.bounds, pad) << endl;
-    if (node.index == 0) {
+     indent << "| bounds = " << ToString(node->bounds, pad) << endl;
+    if (node->children[0] != nullptr) {
         // Interior node.
         stream << indent << "| split = " <<
-         ((node.split == BoundingBox::Axis::X) ? "X" :
-          (node.split == BoundingBox::Axis::Y) ? "Y" : "Z") << endl <<
-         indent << "| children[0] = " << ToString(*(node.children[0]), pad) << endl <<
-         indent << "| children[1] = " << ToString(*(node.children[1]), pad) << endl;
+         ((node->split == BoundingBox::Axis::X) ? "X" :
+         ((node->split == BoundingBox::Axis::Y) ? "Y" : "Z")) << endl <<
+         indent << "| children[0] = " << ToString(node->children[0], pad) << endl <<
+         indent << "| children[1] = " << ToString(node->children[1], pad) << endl;
     } else {
         // Leaf node.
-        stream << indent << "| index = " << node.index << endl;
+        stream << indent << "| index = " << node->index << endl;
     }
     stream << indent << "}";
     return stream.str();

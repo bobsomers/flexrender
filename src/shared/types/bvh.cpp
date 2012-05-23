@@ -37,7 +37,7 @@ void BVH::Build(vector<PrimitiveInfo>& build_data) {
     size_t total_nodes = 0;
     _root = RecursiveBuild(build_data, 0, build_data.size(), &total_nodes);
 
-    TOUTLN(ToString(*_root)); // TODO: remove
+    TOUTLN(ToString(_root)); // TODO: remove
 
     // Flatten the tree into a linear representation.
     // TODO
