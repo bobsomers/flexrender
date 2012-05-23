@@ -1,5 +1,7 @@
 #pragma once
 
+#include <limits>
+
 #include "glm/glm.hpp"
 #include "msgpack.hpp"
 
@@ -42,6 +44,26 @@ struct BoundingBox {
 
     TOSTRINGABLE(BoundingBox);
 };
+
+inline float AxisComponent(glm::vec3 vec, BoundingBox::Axis axis) {
+    float value = std::numeric_limits<float>::quiet_NaN();
+
+    switch (axis) {
+        case BoundingBox::Axis::X:
+            value = vec.x;
+            break;
+
+        case BoundingBox::Axis::Y:
+            value = vec.y;
+            break;
+
+        case BoundingBox::Axis::Z:
+            value = vec.z;
+            break;
+    }
+
+    return value;
+}
 
 std::string ToString(const BoundingBox& box, const std::string& indent = "");
 

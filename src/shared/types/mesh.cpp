@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "types/bvh.hpp"
 #include "utils/printers.hpp"
 
 using std::numeric_limits;
@@ -19,7 +20,8 @@ namespace fr {
 
 Mesh::Mesh(uint64_t id) :
  id(id),
- tris() {
+ tris(),
+ bvh(nullptr) {
     material = numeric_limits<uint64_t>::max();
 
     centroid.x = numeric_limits<float>::quiet_NaN();
@@ -39,7 +41,8 @@ Mesh::Mesh(uint64_t id) :
 Mesh::Mesh(uint64_t id, uint64_t material) :
  id(id),
  material(material),
- tris() {
+ tris(),
+ bvh(nullptr) {
     centroid.x = numeric_limits<float>::quiet_NaN();
     centroid.y = numeric_limits<float>::quiet_NaN();
     centroid.z = numeric_limits<float>::quiet_NaN();
@@ -55,7 +58,8 @@ Mesh::Mesh(uint64_t id, uint64_t material) :
 }
 
 Mesh::Mesh() :
- tris() {
+ tris(),
+ bvh(nullptr) {
     id = numeric_limits<uint64_t>::max();
     material = numeric_limits<uint64_t>::max();
 

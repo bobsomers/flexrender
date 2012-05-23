@@ -103,6 +103,8 @@ public:
         return _meshes[id];
     }
 
+    void ForEachMesh(std::function<void (uint64_t id, Mesh* mesh)> func);
+
     void ForEachEmissiveMesh(std::function<void (uint64_t id, Mesh* mesh)> func);
 
     void NaiveIntersect(FatRay* ray, uint64_t me);

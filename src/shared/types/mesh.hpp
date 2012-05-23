@@ -11,6 +11,8 @@
 
 namespace fr {
 
+class BVH;
+
 struct Mesh {
     explicit Mesh(uint64_t id);
 
@@ -46,6 +48,9 @@ struct Mesh {
     /// The inverse transpose of the transformation matrix. Not synced, but
     /// recomputed on worker.
     glm::mat4 xform_inv_tr;
+
+    /// The BVH for traversing this mesh efficiently.
+    BVH* bvh;
 
     /// Uses the data in xform_cols to build the transformation matrix and
     /// compute the inverse and inverse transpose.

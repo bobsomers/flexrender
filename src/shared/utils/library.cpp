@@ -126,6 +126,14 @@ void Library::StoreMesh(uint64_t id, Mesh* mesh) {
     }
 }
 
+void Library::ForEachMesh(function<void (uint64_t, Mesh* mesh)> func) {
+    for (uint64_t id = 1; id < _meshes.size(); id++) {
+        Mesh* mesh = _meshes[id];
+        if (mesh == nullptr) continue;
+        func(id, mesh);
+    }
+}
+
 void Library::ForEachEmissiveMesh(function<void (uint64_t, Mesh* mesh)> func) {
     for (uint64_t id : _emissive_index) {
         Mesh* mesh = _meshes[id];

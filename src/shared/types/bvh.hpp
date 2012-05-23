@@ -26,7 +26,20 @@ public:
     void Intersect(FatRay* ray, uint64_t me);
 
 private:
+    struct BucketInfo {
+        uint32_t count;
+        BoundingBox bounds; 
+    };
+
+    static const uint32_t NUM_BUCKETS;
+
+    LinkedNode* _root; // TODO: remove me
     std::vector<LinearNode> _nodes;
+
+    /**
+     * Constructs the BVH from the given initialized build data.
+     */
+    void Build(std::vector<PrimitiveInfo>& build_data);
 
     /**
      * Recursively partitions and builds the BVH for the given build data
@@ -35,6 +48,13 @@ private:
      */
     LinkedNode* RecursiveBuild(std::vector<PrimitiveInfo>& build_data,
      size_t start, size_t end, size_t* total_nodes);
+
+    /**
+     * Computes the minimum cost split for the build_data given num_buckets
+     * possible candidate splits and the centroid bounding box.
+     */
+    uint32_t ComputeSAH(std::vector<PrimitiveInfo>& build_data, size_t start,
+     size_t end, float min, float max, float surface_area, BoundingBox::Axis axis);
 };
 
 } // namespace fr

@@ -1,5 +1,6 @@
 #include "engine.hpp"
 
+#include <iostream>
 #include <cassert>
 #include <cstdlib>
 #include <ctime>
@@ -15,6 +16,9 @@
 #define FR_FLUSH_TIMEOUT_MS 10
 
 using std::string;
+using std::flush;
+using std::cout;
+using std::endl;
 using glm::vec2;
 using glm::vec3;
 using glm::vec4;
@@ -806,8 +810,14 @@ void server::OnSyncEmissive(NetNode* node) {
 void server::OnBuildBVH(NetNode* node) {
     assert(node != nullptr);
 
-    TOUTLN("Building local BVH.");
-    // TODO: build local BVH and generate worker bounding box
+    TOUT("Building local BVH" << flush);
+    lib->ForEachMesh([](uint64_t id, Mesh* mesh) {
+        mesh->bvh = new BVH(mesh);
+        cout << "." << flush;
+    });
+    cout << endl;
+
+    // TODO: grab worker bounding box
 
     // Reply with OK and worker bounds.
     Message reply(Message::Kind::OK);
