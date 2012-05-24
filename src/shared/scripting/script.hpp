@@ -101,13 +101,13 @@ protected:
      * Pushes a string representation of the given resource ID onto the stack
      * and returns the number of arguments pushed (1).
      */
-    int ReturnResourceID(uint64_t id);
+    int ReturnResourceID(uint32_t id);
 
     /**
      * Takes a string representation of a resource ID and decodes it back to
-     * a 64-bit unsigned integer.
+     * a 32-bit unsigned integer.
      */
-    uint64_t DecodeResourceID(std::string value);
+    uint32_t DecodeResourceID(std::string value);
 
     /**
      * Verifies that the top of the stack has the passed type. You may pass an

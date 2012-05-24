@@ -13,12 +13,12 @@ using std::endl;
 
 namespace fr {
 
-Shader::Shader(uint64_t id) :
+Shader::Shader(uint32_t id) :
  id(id),
  code(""),
  script(nullptr) {}
 
-Shader::Shader(uint64_t id, const string& code) :
+Shader::Shader(uint32_t id, const string& code) :
  id(id),
  code(code),
  script(nullptr) {}
@@ -26,7 +26,7 @@ Shader::Shader(uint64_t id, const string& code) :
 Shader::Shader() :
  code(""),
  script(nullptr) {
-    id = numeric_limits<uint64_t>::max(); 
+    id = numeric_limits<uint32_t>::max(); 
 }
 
 Shader::~Shader() {

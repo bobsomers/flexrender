@@ -11,7 +11,7 @@ struct Mesh;
 
 class SceneScript : public Script {
 public:
-    typedef uint64_t (*SyncCallback)(Mesh* mesh);
+    typedef uint32_t (*SyncCallback)(Mesh* mesh);
 
     explicit SceneScript(SyncCallback syncer);
 

@@ -12,14 +12,14 @@ class LightList {
 public:
     explicit LightList();
 
-    void AddEmissiveWorker(uint64_t id);
+    void AddEmissiveWorker(uint32_t id);
 
-    void ForEachEmissiveWorker(std::function<void (uint64_t)> func);
+    void ForEachEmissiveWorker(std::function<void (uint32_t)> func);
 
     MSGPACK_DEFINE(_workers);
 
 private:
-    std::vector<uint64_t> _workers;
+    std::vector<uint32_t> _workers;
 };
 
 } // namespace fr

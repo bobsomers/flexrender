@@ -48,7 +48,7 @@ public:
     explicit NetNode(DispatchCallback dispatcher, RenderStats* stats = nullptr);
 
     /// The resource ID of this net node.
-    uint64_t me;
+    uint32_t me;
 
     /// The TCP socket this net node is connected on.
     uv_tcp_t socket;
@@ -113,28 +113,28 @@ public:
     void SendImage(const Library* lib);
 
     /// Receives the message in the net node's buffer as a mesh.
-    uint64_t ReceiveMesh(Library* lib);
+    uint32_t ReceiveMesh(Library* lib);
 
     /// Sends the given mesh (and its dependent assets) to this node.
-    void SendMesh(const Library* lib, uint64_t id);
+    void SendMesh(const Library* lib, uint32_t id);
 
     /// Receives the message in the net node's buffer as a material.
-    uint64_t ReceiveMaterial(Library* lib);
+    uint32_t ReceiveMaterial(Library* lib);
 
     /// Sends the given material (and its dependent assets) to this node.
-    void SendMaterial(const Library* lib, uint64_t id);
+    void SendMaterial(const Library* lib, uint32_t id);
 
     /// Receives the message in the net node's buffer as a texture.
-    uint64_t ReceiveTexture(Library* lib);
+    uint32_t ReceiveTexture(Library* lib);
 
     /// Sends the given texture to this node.
-    void SendTexture(const Library* lib, uint64_t id);
+    void SendTexture(const Library* lib, uint32_t id);
 
     /// Receives the message in the net node's buffer as a shader.
-    uint64_t ReceiveShader(Library* lib);
+    uint32_t ReceiveShader(Library* lib);
 
     /// Sends the given shader to this node.
-    void SendShader(const Library* lib, uint64_t id);
+    void SendShader(const Library* lib, uint32_t id);
 
     /// Receives the message in the net node's buffer as a freshly allocated ray.
     FatRay* ReceiveRay();
@@ -174,9 +174,9 @@ public:
 
 private:
     DispatchCallback _dispatcher;
-    std::unordered_map<uint64_t, bool> _materials;
-    std::unordered_map<uint64_t, bool> _textures;
-    std::unordered_map<uint64_t, bool> _shaders;
+    std::unordered_map<uint32_t, bool> _materials;
+    std::unordered_map<uint32_t, bool> _textures;
+    std::unordered_map<uint32_t, bool> _shaders;
     std::deque<RenderStats*> _stats_log;
     RenderStats* _current_stats;
     uint32_t _num_uninteresting;

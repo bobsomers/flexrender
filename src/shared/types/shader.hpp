@@ -11,9 +11,9 @@ namespace fr {
 class ShaderScript;
 
 struct Shader {
-    explicit Shader(uint64_t id);
+    explicit Shader(uint32_t id);
 
-    explicit Shader(uint64_t id, const std::string& code);
+    explicit Shader(uint32_t id, const std::string& code);
 
     // FOR MSGPACK ONLY!
     explicit Shader();
@@ -21,7 +21,7 @@ struct Shader {
     ~Shader();
 
     /// Resource ID of the shader.
-    uint64_t id;
+    uint32_t id;
 
     /// The code we run for the shader.
     std::string code;

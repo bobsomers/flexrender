@@ -91,16 +91,16 @@ void Script::EndTableCall() {
     lua_pop(_state, 1);
 }
 
-int Script::ReturnResourceID(uint64_t id) {
+int Script::ReturnResourceID(uint32_t id) {
     stringstream stream;
     stream << id;
     lua_pushstring(_state, stream.str().c_str());
     return 1;
 }
 
-uint64_t Script::DecodeResourceID(string value) {
+uint32_t Script::DecodeResourceID(string value) {
     istringstream stream(value);
-    uint64_t id;
+    uint32_t id;
     stream >> id;
     return id;
 }

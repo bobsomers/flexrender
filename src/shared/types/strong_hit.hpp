@@ -8,17 +8,17 @@
 namespace fr {
 
 struct StrongHit {
-    explicit StrongHit(uint64_t worker, uint64_t mesh);
+    explicit StrongHit(uint32_t worker, uint32_t mesh);
 
-    explicit StrongHit(uint64_t worker, uint64_t mesh, float t);
+    explicit StrongHit(uint32_t worker, uint32_t mesh, float t);
 
     explicit StrongHit();
 
     /// Resource ID of worker this hit occurred on.
-    uint64_t worker;
+    uint32_t worker;
 
     /// Resource ID of the mesh this hit occurred on.
-    uint64_t mesh;
+    uint32_t mesh;
 
     /// The t value of the intersection.
     float t;

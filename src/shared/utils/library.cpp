@@ -81,7 +81,7 @@ void Library::StoreLightList(LightList* lights) {
     _lights = lights;
 }
 
-void Library::StoreShader(uint64_t id, Shader* shader) {
+void Library::StoreShader(uint32_t id, Shader* shader) {
     if (id < _shaders.size()) {
         if (_shaders[id] != nullptr) delete _shaders[id];
     } else {
@@ -90,7 +90,7 @@ void Library::StoreShader(uint64_t id, Shader* shader) {
     _shaders[id] = shader;
 }
 
-void Library::StoreTexture(uint64_t id, Texture* texture) {
+void Library::StoreTexture(uint32_t id, Texture* texture) {
     if (id < _textures.size()) {
         if (_textures[id] != nullptr) delete _textures[id];
     } else {
@@ -99,7 +99,7 @@ void Library::StoreTexture(uint64_t id, Texture* texture) {
     _textures[id] = texture;
 }
 
-void Library::StoreMaterial(uint64_t id, Material* material, const string& name) {
+void Library::StoreMaterial(uint32_t id, Material* material, const string& name) {
     if (id < _materials.size()) {
         if (_materials[id] != nullptr) delete _materials[id];
     } else {
@@ -109,7 +109,7 @@ void Library::StoreMaterial(uint64_t id, Material* material, const string& name)
     _material_name_index[name] = id;
 }
 
-void Library::StoreMesh(uint64_t id, Mesh* mesh) {
+void Library::StoreMesh(uint32_t id, Mesh* mesh) {
     if (id < _meshes.size()) {
         if (_meshes[id] != nullptr) delete _meshes[id];
     } else {
@@ -126,22 +126,22 @@ void Library::StoreMesh(uint64_t id, Mesh* mesh) {
     }
 }
 
-void Library::ForEachMesh(function<void (uint64_t, Mesh* mesh)> func) {
-    for (uint64_t id = 1; id < _meshes.size(); id++) {
+void Library::ForEachMesh(function<void (uint32_t, Mesh*)> func) {
+    for (uint32_t id = 1; id < _meshes.size(); id++) {
         Mesh* mesh = _meshes[id];
         if (mesh == nullptr) continue;
         func(id, mesh);
     }
 }
 
-void Library::ForEachEmissiveMesh(function<void (uint64_t, Mesh* mesh)> func) {
-    for (uint64_t id : _emissive_index) {
+void Library::ForEachEmissiveMesh(function<void (uint32_t, Mesh*)> func) {
+    for (uint32_t id : _emissive_index) {
         Mesh* mesh = _meshes[id];
         func(id, mesh);
     }
 }
 
-void Library::StoreNetNode(uint64_t id, NetNode* node) {
+void Library::StoreNetNode(uint32_t id, NetNode* node) {
     if (id < _nodes.size()) {
         if (_nodes[id] != nullptr) delete _nodes[id];
     } else {
@@ -150,8 +150,8 @@ void Library::StoreNetNode(uint64_t id, NetNode* node) {
     _nodes[id] = node;
 }
 
-void Library::ForEachNetNode(function<void (uint64_t, NetNode* node)> func) {
-    for (uint64_t id = 1; id < _nodes.size(); id++) {
+void Library::ForEachNetNode(function<void (uint32_t, NetNode*)> func) {
+    for (uint32_t id = 1; id < _nodes.size(); id++) {
         NetNode* node = _nodes[id];
         if (node == nullptr) continue;
         func(id, node);
@@ -161,17 +161,17 @@ void Library::ForEachNetNode(function<void (uint64_t, NetNode* node)> func) {
 void Library::BuildSpatialIndex() {
     _spatial_index.clear();
 
-    for (uint64_t id = 1; id < _nodes.size(); id++) {
+    for (uint32_t id = 1; id < _nodes.size(); id++) {
         _spatial_index.push_back(id);
     }
 
     _chunk_size = ((SPACECODE_MAX + 1) / (_nodes.size() - 1)) + 1;
 }
 
-void Library::NaiveIntersect(FatRay* ray, uint64_t me) {
+void Library::NaiveIntersect(FatRay* ray, uint32_t me) {
     StrongHit nearest(0, 0, numeric_limits<float>::infinity());
 
-    for (uint64_t id = 1; id < _meshes.size(); id++) {
+    for (uint32_t id = 1; id < _meshes.size(); id++) {
         Mesh* mesh = _meshes[id];
         if (mesh == nullptr) continue;
 

@@ -11,20 +11,20 @@ using std::endl;
 
 namespace fr {
 
-Material::Material(uint64_t id) :
+Material::Material(uint32_t id) :
  id(id),
  textures(),
  emissive(false) {
-    shader = numeric_limits<uint64_t>::max();
+    shader = numeric_limits<uint32_t>::max();
 }
 
-Material::Material(uint64_t id, uint64_t shader) :
+Material::Material(uint32_t id, uint32_t shader) :
  id(id),
  shader(shader),
  textures(),
  emissive(false) {}
 
-Material::Material(uint64_t id, uint64_t shader, bool emissive) :
+Material::Material(uint32_t id, uint32_t shader, bool emissive) :
  id(id),
  shader(shader),
  textures(),
@@ -33,8 +33,8 @@ Material::Material(uint64_t id, uint64_t shader, bool emissive) :
 Material::Material() :
  textures(),
  emissive(false) {
-    id = numeric_limits<uint64_t>::max();
-    shader = numeric_limits<uint64_t>::max();
+    id = numeric_limits<uint32_t>::max();
+    shader = numeric_limits<uint32_t>::max();
 }
 
 string ToString(const Material& mat, const string& indent) {

@@ -38,7 +38,7 @@ static RayQueue* rayq = nullptr;
 static uv_tcp_t host;
 
 /// The server ID of us from everyone else's perspective.
-static uint64_t me = 0;
+static uint32_t me = 0;
 
 /// The connected renderer who's running the show.
 static NetNode* renderer = nullptr;
@@ -50,7 +50,7 @@ static uv_timer_t flush_timer;
 static uv_timer_t stats_timer;
 
 /// The number of other workers we're connected to.
-static uint64_t num_workers_connected = 0;
+static uint32_t num_workers_connected = 0;
 
 /// The maximum number of jobs "in flight" at any given time.
 static uint32_t max_jobs = 0;
@@ -71,7 +71,7 @@ void ProcessRay(FatRay* ray, WorkResults* results);
 void ProcessIntersect(FatRay* ray, WorkResults* results);
 void ProcessIlluminate(FatRay* ray, WorkResults* results);
 void ProcessLight(FatRay* ray, WorkResults* results);
-void ForwardRay(FatRay* ray, WorkResults* results, uint64_t id);
+void ForwardRay(FatRay* ray, WorkResults* results, uint32_t id);
 void IlluminateIntersection(FatRay* ray, WorkResults* results);
 void ShadeIntersection(FatRay* ray, WorkResults* results);
 
@@ -258,7 +258,7 @@ void server::OnClose(uv_handle_t* handle) {
         renderer = nullptr;
 
         // Disconnect all clients.
-        lib->ForEachNetNode([](uint64_t id, NetNode* node) {
+        lib->ForEachNetNode([](uint32_t id, NetNode* node) {
             uv_close(reinterpret_cast<uv_handle_t*>(&node->socket), client::OnClose);
         });
     }
@@ -419,7 +419,7 @@ void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
     // function will NOT run in the main thread, it runs on the thread pool.
     Config* config = lib->LookupConfig();
 
-    lib->ForEachEmissiveMesh([ray, results, config](uint64_t id, Mesh* mesh) {
+    lib->ForEachEmissiveMesh([ray, results, config](uint32_t id, Mesh* mesh) {
         // The target we're trying to hit is the original intersection.
         vec3 target = ray->EvaluateAt(ray->strong.t);
 
@@ -517,7 +517,7 @@ void server::ProcessLight(FatRay* ray, WorkResults* results) {
     }
 }
 
-void server::ForwardRay(FatRay* ray, WorkResults* results, uint64_t id) {
+void server::ForwardRay(FatRay* ray, WorkResults* results, uint32_t id) {
     // !!! WARNING !!!
     // Everything this function does and calls must be thread-safe. This
     // function will NOT run in the main thread, it runs on the thread pool.
@@ -555,7 +555,7 @@ void server::IlluminateIntersection(FatRay* ray, WorkResults* results) {
 
     // Create ILLUMINATE rays and send them to each emissive node.
     LightList* lights = lib->LookupLightList();
-    lights->ForEachEmissiveWorker([ray, results](uint64_t id) {
+    lights->ForEachEmissiveWorker([ray, results](uint32_t id) {
         FatRay* illum = new FatRay(*ray);
         illum->kind = FatRay::Kind::ILLUMINATE;
         results->illuminates_produced++;
@@ -674,10 +674,10 @@ void server::OnRay(NetNode* node) {
 }
 
 void server::OnInit(NetNode* node) {
-    assert(node->message.size == sizeof(uint64_t));
+    assert(node->message.size == sizeof(uint32_t));
 
     // Who am I?
-    me = *(reinterpret_cast<uint64_t*>(node->message.body));
+    me = *(reinterpret_cast<uint32_t*>(node->message.body));
     TOUTLN("[" << node->ip << "] Joining the render as worker " << me << ".");
 
     // Create a fresh library.
@@ -726,7 +726,7 @@ void server::OnSyncMesh(NetNode* node) {
     assert(lib != nullptr);
 
     // Unpack the mesh.
-    uint64_t id = node->ReceiveMesh(lib);
+    uint32_t id = node->ReceiveMesh(lib);
 
     // Reply with OK.
     Message reply(Message::Kind::OK);
@@ -740,7 +740,7 @@ void server::OnSyncMaterial(NetNode* node) {
     assert(lib != nullptr);
 
     // Unpack the material.
-    uint64_t id = node->ReceiveMaterial(lib);
+    uint32_t id = node->ReceiveMaterial(lib);
 
     TOUTLN("[" << node->ip << "] Received material " << id << ".");
 }
@@ -750,7 +750,7 @@ void server::OnSyncTexture(NetNode* node) {
     assert(lib != nullptr);
 
     // Unpack the texture.
-    uint64_t id = node->ReceiveTexture(lib);
+    uint32_t id = node->ReceiveTexture(lib);
 
     // Prepare the texture for execution (if it's procedural).
     Texture* tex = lib->LookupTexture(id);
@@ -766,7 +766,7 @@ void server::OnSyncShader(NetNode* node) {
     assert(lib != nullptr);
 
     // Unpack the shader.
-    uint64_t id = node->ReceiveShader(lib);
+    uint32_t id = node->ReceiveShader(lib);
 
     // Prepare the shader for execution.
     Shader* shader = lib->LookupShader(id);
@@ -811,7 +811,7 @@ void server::OnBuildBVH(NetNode* node) {
     assert(node != nullptr);
 
     TOUT("Building local BVH" << flush);
-    lib->ForEachMesh([](uint64_t id, Mesh* mesh) {
+    lib->ForEachMesh([](uint32_t id, Mesh* mesh) {
         mesh->bvh = new BVH(mesh);
         cout << "." << flush;
     });
@@ -912,7 +912,7 @@ void OnFlushTimeout(uv_timer_t* timer, int status) {
 
     // Flush all the client connections.
     if (lib != nullptr) {
-        lib->ForEachNetNode([](uint64_t id, NetNode* node) {
+        lib->ForEachNetNode([](uint32_t id, NetNode* node) {
             if (!node->flushed && node->nwritten > 0) {
                 node->Flush();
             }

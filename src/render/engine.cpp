@@ -56,7 +56,7 @@ static sem_t mesh_read;
 static sem_t mesh_synced;
 
 /// The ID of the mesh we're currently syncing over the network.
-static uint64_t current_mesh_id = 0;
+static uint32_t current_mesh_id = 0;
 
 /// The scene file we're rendering.
 static string scene;
@@ -67,7 +67,7 @@ namespace client {
 void Init();
 void DispatchMessage(NetNode* node);
 void StartSync();
-uint64_t SyncMesh(Mesh* mesh);
+uint32_t SyncMesh(Mesh* mesh);
 void BuildWBVH();
 void StartRender();
 void StopRender();
@@ -205,9 +205,9 @@ void client::OnConnect(uv_connect_t* req, int status) {
     }
 
     // Send init messages to each server.
-    lib->ForEachNetNode([](uint64_t id, NetNode* node) {
+    lib->ForEachNetNode([](uint32_t id, NetNode* node) {
         Message request(Message::Kind::INIT);
-        request.size = sizeof(uint64_t);
+        request.size = sizeof(uint32_t);
         request.body = &id;
         node->state = NetNode::State::INITIALIZING;
         node->Send(request);
@@ -270,7 +270,7 @@ void client::OnFlushTimeout(uv_timer_t* timer, int status) {
     assert(timer == &flush_timer);
     assert(status == 0);
 
-    lib->ForEachNetNode([](uint64_t id, NetNode* node) {
+    lib->ForEachNetNode([](uint32_t id, NetNode* node) {
         if (!node->flushed && node->nwritten > 0) {
             node->Flush();
         }
@@ -284,7 +284,7 @@ void client::OnInterestingTimeout(uv_timer_t* timer, int status) {
 
     // If all net nodes are no longer interesting, stop the render.
     bool done = true;
-    lib->ForEachNetNode([&done](uint64_t id, NetNode* node) {
+    lib->ForEachNetNode([&done](uint32_t id, NetNode* node) {
         done = done && !node->IsInteresting(max_intervals);
     });
 
@@ -297,7 +297,7 @@ void client::OnInterestingTimeout(uv_timer_t* timer, int status) {
 
     // How far along is the slowest worker?
     float slowest = numeric_limits<float>::infinity();
-    lib->ForEachNetNode([&slowest](uint64_t id, NetNode* node) {
+    lib->ForEachNetNode([&slowest](uint32_t id, NetNode* node) {
         float progress = node->Progress();
         if (progress < slowest) {
             slowest = progress;
@@ -308,7 +308,7 @@ void client::OnInterestingTimeout(uv_timer_t* timer, int status) {
     float runaway = config->runaway;
 
     // Pause each worker that is more than runaway ahead of the slowest.
-    lib->ForEachNetNode([slowest, runaway](uint64_t id, NetNode* node) {
+    lib->ForEachNetNode([slowest, runaway](uint32_t id, NetNode* node) {
         float progress = node->Progress();
         if (progress > slowest + runaway) {
             if (node->state != NetNode::State::PAUSED) {
@@ -329,9 +329,9 @@ void client::OnInterestingTimeout(uv_timer_t* timer, int status) {
 
     // Display some information about the total number of rays being processed.
     uint64_t total_produced = 0;
-    uint16_t total_killed = 0;
+    uint64_t total_killed = 0;
     uint64_t total_queued = 0;
-    lib->ForEachNetNode([&total_produced, &total_killed, &total_queued](uint64_t id, NetNode* node) {
+    lib->ForEachNetNode([&total_produced, &total_killed, &total_queued](uint32_t id, NetNode* node) {
         total_produced += node->RaysProduced(max_intervals / 2);
         total_killed += node->RaysKilled(max_intervals / 2);
         total_queued += node->RaysQueued(max_intervals / 2);
@@ -456,7 +456,7 @@ void client::OnSyncImage(NetNode* node) {
     TOUTLN("Wrote " << config->name << ".exr.");
 
     // Disconnect from each worker.
-    lib->ForEachNetNode([config](uint64_t id, NetNode* node) {
+    lib->ForEachNetNode([config](uint32_t id, NetNode* node) {
         uv_close(reinterpret_cast<uv_handle_t*>(&node->socket), OnClose);
     });
 
@@ -509,7 +509,7 @@ void client::BuildWBVH() {
     TOUTLN("Building WBVH.");
     // TODO: build the worker BVH
 
-    lib->ForEachNetNode([](uint64_t id, NetNode* node) {
+    lib->ForEachNetNode([](uint32_t id, NetNode* node) {
         node->state = NetNode::State::SYNCING_WBVH;
 
         Message request(Message::Kind::SYNC_WBVH);
@@ -526,7 +526,7 @@ void client::StartRender() {
     Config* config = lib->LookupConfig();
 
     // Send render start messages to each server.
-    lib->ForEachNetNode([config](uint64_t id, NetNode* node) {
+    lib->ForEachNetNode([config](uint32_t id, NetNode* node) {
         uint16_t chunk_size = config->width / config->workers.size();
         int16_t offset = (id - 1) * chunk_size;
         if (id == config->workers.size()) {
@@ -560,7 +560,7 @@ void client::StopRender() {
     uv_close(reinterpret_cast<uv_handle_t*>(&interesting_timer), nullptr);
 
     // Send render stop messages to each server.
-    lib->ForEachNetNode([](uint64_t id, NetNode* node) {
+    lib->ForEachNetNode([](uint32_t id, NetNode* node) {
         Message request(Message::Kind::RENDER_STOP);
         node->Send(request);
         node->state = NetNode::State::SYNCING_IMAGES;
@@ -595,7 +595,7 @@ void client::AfterSync(uv_work_t* req) {
     free(req);
 }
 
-uint64_t client::SyncMesh(Mesh* mesh) {
+uint32_t client::SyncMesh(Mesh* mesh) {
     // !!! WARNING !!!
     // Everything this function does and calls must be thread-safe. This
     // function will NOT run in the main thread, it runs on the thread pool.
@@ -606,7 +606,7 @@ uint64_t client::SyncMesh(Mesh* mesh) {
         exit(EXIT_FAILURE);
     }
 
-    uint64_t id = 0;
+    uint32_t id = 0;
     if (mesh != nullptr) {
         // Store the mesh in the library and get back its ID.
         id = lib->NextMeshID();
@@ -650,7 +650,7 @@ void client::OnSyncIdle(uv_idle_t* handle, int status) {
         uv_close(reinterpret_cast<uv_handle_t*>(handle), nullptr);
 
         // Sync the camera with everyone.
-        lib->ForEachNetNode([](uint64_t id, NetNode* node) {
+        lib->ForEachNetNode([](uint32_t id, NetNode* node) {
             node->state = NetNode::State::SYNCING_CAMERA;
             TOUTLN("[" << node->ip << "] Syncing camera.");
             node->SendCamera(lib);
@@ -664,7 +664,7 @@ void client::OnSyncIdle(uv_idle_t* handle, int status) {
     assert(config != nullptr);
 
     uint64_t spacecode = SpaceEncode(mesh->centroid, config->min, config->max);
-    uint64_t id = lib->LookupNetNodeBySpaceCode(spacecode);
+    uint32_t id = lib->LookupNetNodeBySpaceCode(spacecode);
     NetNode* node = lib->LookupNetNode(id);
 
     TOUTLN("[" << node->ip << "] Sending mesh " << current_mesh_id << " to worker " << id << ".");

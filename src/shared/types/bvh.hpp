@@ -30,7 +30,7 @@ public:
     explicit BVH();
 
     /// Intersects the given ray with the this BVH.
-    void Intersect(FatRay* ray, uint64_t me);
+    void Intersect(FatRay* ray, uint32_t me);
 
     MSGPACK_DEFINE(_nodes);
 

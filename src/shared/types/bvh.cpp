@@ -28,7 +28,7 @@ BVH::BVH(const Mesh* mesh) :
     Build(build_data);
 }
 
-void BVH::Intersect(FatRay* ray, uint64_t me) {
+void BVH::Intersect(FatRay* ray, uint32_t me) {
     // TODO
 }
 

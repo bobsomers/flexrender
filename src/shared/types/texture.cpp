@@ -15,7 +15,7 @@ using glm::vec2;
 
 namespace fr {
 
-Texture::Texture(uint64_t id) :
+Texture::Texture(uint32_t id) :
  id(id),
  kind(Kind::NONE),
  width(0),
@@ -24,7 +24,7 @@ Texture::Texture(uint64_t id) :
  image(),
  script(nullptr) {}
 
-Texture::Texture(uint64_t id, const string& code) :
+Texture::Texture(uint32_t id, const string& code) :
  id(id),
  kind(Kind::PROCEDURAL),
  width(0),
@@ -33,7 +33,7 @@ Texture::Texture(uint64_t id, const string& code) :
  image(),
  script(nullptr) {}
 
-Texture::Texture(uint64_t id, int16_t width, int16_t height, const float* data) :
+Texture::Texture(uint32_t id, int16_t width, int16_t height, const float* data) :
  id(id),
  kind(Kind::IMAGE),
  width(width),
@@ -51,7 +51,7 @@ Texture::Texture() :
  code(""),
  image(),
  script(nullptr) {
-    id = numeric_limits<uint64_t>::max();
+    id = numeric_limits<uint32_t>::max();
 }
 
 float Texture::Sample(vec2 texcoord) {

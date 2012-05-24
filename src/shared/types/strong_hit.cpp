@@ -11,14 +11,14 @@ using std::endl;
 
 namespace fr {
 
-StrongHit::StrongHit(uint64_t worker, uint64_t mesh) :
+StrongHit::StrongHit(uint32_t worker, uint32_t mesh) :
  worker(worker),
  mesh(mesh),
  geom(geom) {
     t = numeric_limits<float>::infinity();
 }
 
-StrongHit::StrongHit(uint64_t worker, uint64_t mesh, float t) :
+StrongHit::StrongHit(uint32_t worker, uint32_t mesh, float t) :
  worker(worker),
  mesh(mesh),
  t(t),
@@ -26,8 +26,8 @@ StrongHit::StrongHit(uint64_t worker, uint64_t mesh, float t) :
 
 StrongHit::StrongHit() :
  geom() {
-    worker = numeric_limits<uint64_t>::max();
-    mesh = numeric_limits<uint64_t>::max();
+    worker = numeric_limits<uint32_t>::max();
+    mesh = numeric_limits<uint32_t>::max();
     t = numeric_limits<float>::infinity();
 }
 

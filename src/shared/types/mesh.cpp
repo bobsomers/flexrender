@@ -18,11 +18,11 @@ using glm::transpose;
 
 namespace fr {
 
-Mesh::Mesh(uint64_t id) :
+Mesh::Mesh(uint32_t id) :
  id(id),
  tris(),
  bvh(nullptr) {
-    material = numeric_limits<uint64_t>::max();
+    material = numeric_limits<uint32_t>::max();
 
     centroid.x = numeric_limits<float>::quiet_NaN();
     centroid.y = numeric_limits<float>::quiet_NaN();
@@ -38,7 +38,7 @@ Mesh::Mesh(uint64_t id) :
     xform_inv_tr = mat4(xform_cols[0], xform_cols[1], xform_cols[2], xform_cols[3]);
 }
 
-Mesh::Mesh(uint64_t id, uint64_t material) :
+Mesh::Mesh(uint32_t id, uint32_t material) :
  id(id),
  material(material),
  tris(),
@@ -60,8 +60,8 @@ Mesh::Mesh(uint64_t id, uint64_t material) :
 Mesh::Mesh() :
  tris(),
  bvh(nullptr) {
-    id = numeric_limits<uint64_t>::max();
-    material = numeric_limits<uint64_t>::max();
+    id = numeric_limits<uint32_t>::max();
+    material = numeric_limits<uint32_t>::max();
 
     centroid.x = numeric_limits<float>::quiet_NaN();
     centroid.y = numeric_limits<float>::quiet_NaN();

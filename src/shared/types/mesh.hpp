@@ -14,18 +14,18 @@ namespace fr {
 class BVH;
 
 struct Mesh {
-    explicit Mesh(uint64_t id);
+    explicit Mesh(uint32_t id);
 
-    explicit Mesh(uint64_t id, uint64_t material);
+    explicit Mesh(uint32_t id, uint32_t material);
 
     // FOR MSGPACK ONLY!
     explicit Mesh();
 
     /// Resource ID of the mesh.
-    uint64_t id;
+    uint32_t id;
 
     /// Resource ID of the material to use for rendering.
-    uint64_t material;
+    uint32_t material;
 
     /// Columns of the 4x4 transform matrix. Only used for syncing.
     glm::vec4 xform_cols[4];

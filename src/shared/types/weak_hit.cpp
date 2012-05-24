@@ -11,17 +11,17 @@ using std::endl;
 
 namespace fr {
 
-WeakHit::WeakHit(uint64_t worker) :
+WeakHit::WeakHit(uint32_t worker) :
  worker(worker) {
     t = numeric_limits<float>::infinity();
 }
 
-WeakHit::WeakHit(uint64_t worker, float t) :
+WeakHit::WeakHit(uint32_t worker, float t) :
  worker(worker),
  t(t) {}
 
 WeakHit::WeakHit() {
-    worker = numeric_limits<uint64_t>::max();
+    worker = numeric_limits<uint32_t>::max();
     t = numeric_limits<float>::infinity();
 }
 

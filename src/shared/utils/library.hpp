@@ -50,40 +50,40 @@ public:
     inline LightList* LookupLightList() const { return _lights; }
 
     // Shaders...
-    inline uint64_t NextShaderID() const { return _shaders.size(); }
+    inline uint32_t NextShaderID() const { return _shaders.size(); }
 
-    void StoreShader(uint64_t id, Shader* shader);
+    void StoreShader(uint32_t id, Shader* shader);
 
-    inline Shader* LookupShader(uint64_t id) const {
+    inline Shader* LookupShader(uint32_t id) const {
         assert(id > 0);
         assert(id < _shaders.size());
         return _shaders[id];    
     };
 
     // Textures...
-    inline uint64_t NextTextureID() const { return _textures.size(); }
+    inline uint32_t NextTextureID() const { return _textures.size(); }
 
-    void StoreTexture(uint64_t id, Texture* texture);
+    void StoreTexture(uint32_t id, Texture* texture);
 
-    inline Texture* LookupTexture(uint64_t id) const {
+    inline Texture* LookupTexture(uint32_t id) const {
         assert(id > 0);
         assert(id < _textures.size());
         return _textures[id];
     }
 
     // Materials...
-    inline uint64_t NextMaterialID() const { return _materials.size(); }
+    inline uint32_t NextMaterialID() const { return _materials.size(); }
 
-    void StoreMaterial(uint64_t id, Material* material, const std::string& name);
+    void StoreMaterial(uint32_t id, Material* material, const std::string& name);
 
-    inline Material* LookupMaterial(uint64_t id) const {
+    inline Material* LookupMaterial(uint32_t id) const {
         assert(id > 0);
         assert(id < _materials.size());
         return _materials[id];
     }
 
-    inline uint64_t LookupMaterial(const std::string& name) const {
-        uint64_t id = 0;
+    inline uint32_t LookupMaterial(const std::string& name) const {
+        uint32_t id = 0;
         try {
             id = _material_name_index.at(name);
         } catch (std::out_of_range& e) {
@@ -93,37 +93,37 @@ public:
     }
 
     // Meshes...
-    inline uint64_t NextMeshID() const { return _meshes.size(); }
+    inline uint32_t NextMeshID() const { return _meshes.size(); }
 
-    void StoreMesh(uint64_t id, Mesh* mesh);
+    void StoreMesh(uint32_t id, Mesh* mesh);
 
-    inline Mesh* LookupMesh(uint64_t id) const {
+    inline Mesh* LookupMesh(uint32_t id) const {
         assert(id > 0);
         assert(id < _meshes.size());
         return _meshes[id];
     }
 
-    void ForEachMesh(std::function<void (uint64_t id, Mesh* mesh)> func);
+    void ForEachMesh(std::function<void (uint32_t id, Mesh* mesh)> func);
 
-    void ForEachEmissiveMesh(std::function<void (uint64_t id, Mesh* mesh)> func);
+    void ForEachEmissiveMesh(std::function<void (uint32_t id, Mesh* mesh)> func);
 
-    void NaiveIntersect(FatRay* ray, uint64_t me);
+    void NaiveIntersect(FatRay* ray, uint32_t me);
 
     // Net nodes...
-    void StoreNetNode(uint64_t id, NetNode* node);
+    void StoreNetNode(uint32_t id, NetNode* node);
 
-    inline NetNode* LookupNetNode(uint64_t id) const {
+    inline NetNode* LookupNetNode(uint32_t id) const {
         assert(id > 0);
         assert(id < _nodes.size());
         return _nodes[id];
     }
 
-    void ForEachNetNode(std::function<void (uint64_t id, NetNode* node)> func);
+    void ForEachNetNode(std::function<void (uint32_t id, NetNode* node)> func);
 
     template <typename RetType>
-    std::vector<RetType> ForEachNetNode(std::function<RetType (uint64_t id, NetNode* node)> func) {
+    std::vector<RetType> ForEachNetNode(std::function<RetType (uint32_t id, NetNode* node)> func) {
         std::vector<RetType> results(_nodes.size());
-        for (uint64_t id = 1; id < _nodes.size(); id++) {
+        for (uint32_t id = 1; id < _nodes.size(); id++) {
             NetNode* node = _nodes[id];
             if (node == nullptr) continue;
             RetType result = func(id, node);
@@ -135,7 +135,7 @@ public:
     // Spatial index access for net nodes...
     void BuildSpatialIndex();
 
-    inline uint64_t LookupNetNodeBySpaceCode(uint64_t spacecode) const {
+    inline uint32_t LookupNetNodeBySpaceCode(uint64_t spacecode) const {
 #ifndef NDEBUG
         if (_chunk_size == 0) {
             TERRLN("Attempted to lookup net node by space code without first building the spatial index!");
@@ -155,9 +155,9 @@ private:
     std::vector<Material*> _materials;
     std::vector<Mesh*> _meshes;
     std::vector<NetNode*> _nodes;
-    std::unordered_map<std::string, uint64_t> _material_name_index;
-    std::vector<uint64_t> _spatial_index;
-    std::vector<uint64_t> _emissive_index;
+    std::unordered_map<std::string, uint32_t> _material_name_index;
+    std::vector<uint32_t> _spatial_index;
+    std::vector<uint32_t> _emissive_index;
     uint64_t _chunk_size;
 };
 

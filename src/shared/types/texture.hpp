@@ -19,17 +19,17 @@ struct Texture {
         IMAGE      = 2
     };
 
-    explicit Texture(uint64_t id);
+    explicit Texture(uint32_t id);
 
-    explicit Texture(uint64_t id, const std::string& code);
+    explicit Texture(uint32_t id, const std::string& code);
 
-    explicit Texture(uint64_t id, int16_t width, int16_t height, const float* data);
+    explicit Texture(uint32_t id, int16_t width, int16_t height, const float* data);
 
     // FOR MSGPACK ONLY!
     explicit Texture();
 
     /// Resource ID of the texture.
-    uint64_t id;
+    uint32_t id;
 
     /// The kind of texture (from the above possible).
     uint32_t kind;

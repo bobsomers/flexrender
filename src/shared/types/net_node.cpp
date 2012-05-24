@@ -358,7 +358,7 @@ void NetNode::SendImage(const Library* lib) {
     Send(request);
 }
 
-uint64_t NetNode::ReceiveMesh(Library *lib) {
+uint32_t NetNode::ReceiveMesh(Library *lib) {
     assert(message.size > 0);
 
     // Deserialize the payload.
@@ -379,7 +379,7 @@ uint64_t NetNode::ReceiveMesh(Library *lib) {
     return mesh->id;
 }
 
-void NetNode::SendMesh(const Library* lib, uint64_t id) {
+void NetNode::SendMesh(const Library* lib, uint32_t id) {
     assert(lib != nullptr);
     assert(id > 0);
 
@@ -402,7 +402,7 @@ void NetNode::SendMesh(const Library* lib, uint64_t id) {
     Send(request);
 }
 
-uint64_t NetNode::ReceiveMaterial(Library* lib) {
+uint32_t NetNode::ReceiveMaterial(Library* lib) {
     assert(message.size > 0);
 
     // Deserialize the payload.
@@ -421,7 +421,7 @@ uint64_t NetNode::ReceiveMaterial(Library* lib) {
     return material->id;
 }
 
-void NetNode::SendMaterial(const Library* lib, uint64_t id) {
+void NetNode::SendMaterial(const Library* lib, uint32_t id) {
     assert(lib != nullptr);
     assert(id > 0);
 
@@ -462,7 +462,7 @@ void NetNode::SendMaterial(const Library* lib, uint64_t id) {
     _materials[id] = true;
 }
 
-uint64_t NetNode::ReceiveTexture(Library *lib) {
+uint32_t NetNode::ReceiveTexture(Library *lib) {
     assert(message.size > 0);
 
     // Deserialize the payload.
@@ -480,7 +480,7 @@ uint64_t NetNode::ReceiveTexture(Library *lib) {
     return texture->id;
 }
 
-void NetNode::SendTexture(const Library* lib, uint64_t id) {
+void NetNode::SendTexture(const Library* lib, uint32_t id) {
     assert(lib != nullptr);
     assert(id > 0);
 
@@ -507,7 +507,7 @@ void NetNode::SendTexture(const Library* lib, uint64_t id) {
 
 }
 
-uint64_t NetNode::ReceiveShader(Library *lib) {
+uint32_t NetNode::ReceiveShader(Library *lib) {
     assert(message.size > 0);
 
     // Deserialize the payload.
@@ -525,7 +525,7 @@ uint64_t NetNode::ReceiveShader(Library *lib) {
     return shader->id;
 }
 
-void NetNode::SendShader(const Library* lib, uint64_t id) {
+void NetNode::SendShader(const Library* lib, uint32_t id) {
     assert(lib != nullptr);
     assert(id > 0);
 

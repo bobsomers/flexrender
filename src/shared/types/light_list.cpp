@@ -10,14 +10,14 @@ namespace fr {
 LightList::LightList() :
  _workers() {}
 
-void LightList::AddEmissiveWorker(uint64_t id) {
+void LightList::AddEmissiveWorker(uint32_t id) {
     auto existing = find(_workers.begin(), _workers.end(), id);
     if (existing == _workers.end()) {
         _workers.push_back(id);
     }
 }
 
-void LightList::ForEachEmissiveWorker(function<void (uint64_t)> func) {
+void LightList::ForEachEmissiveWorker(function<void (uint32_t)> func) {
     for (auto id : _workers) {
         func(id);
     }
