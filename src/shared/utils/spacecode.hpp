@@ -26,6 +26,6 @@ extern const uint64_t SPACECODE_MAX;
  * @param   max     The maximum corner of an axis-aligned bounding box that
  *                  encloses the space.
  */
-uint64_t SpaceEncode(const glm::vec3& point, const glm::vec3& min, const glm::vec3& max);
+uint64_t SpaceEncode(glm::vec3 point, glm::vec3 min, glm::vec3 max);
 
 } // namespace fr
