@@ -49,7 +49,7 @@ material {
 -- Light.
 mesh {
     material = "light",
-    transform = translate(vec3(0, 2.7, 0)) * rotate(radians(90), vec3(1, 0, 0)),
+    transform = translate(vec3(0, 2.74, 0)) * rotate(radians(90), vec3(1, 0, 0)),
     data = fre.plane(1.2)
 }
 
