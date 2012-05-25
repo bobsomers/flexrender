@@ -383,33 +383,33 @@ void server::ProcessIntersect(FatRay* ray, WorkResults* results) {
     // function will NOT run in the main thread, it runs on the thread pool.
     Config* config = lib->LookupConfig();
 
-    // Our turn to check for a strong hit?
-    if (ray->weak.worker == me) {
+    // Our turn to check for a hit?
+    if (ray->traversal.current == me) {
         lib->NaiveIntersect(ray, me);
     }
 
     // Move the ray to the next worker.
-    ray->weak.worker++;
+    ray->traversal.current++;
 
     // Have we checked every worker?
-    if (ray->weak.worker > config->workers.size()) {
-        // Yes, are we the strong hit?
-        if (ray->strong.worker == me) {
+    if (ray->traversal.current > config->workers.size()) {
+        // Yes, are we the nearest hit?
+        if (ray->hit.worker == me) {
             // Yes, let's illuminate the intersection and kill the ray.
             IlluminateIntersection(ray, results);
             delete ray;
             results->intersects_killed++;
-        } else if (ray->strong.worker != 0) {
-            // No, forward the ray to the strong hit worker.
-            ForwardRay(ray, results, ray->strong.worker);
+        } else if (ray->hit.worker != 0) {
+            // No, forward the ray to the hit worker.
+            ForwardRay(ray, results, ray->hit.worker);
         } else {
-            // There was no strong hit. Kill the ray.
+            // There was no hit. Kill the ray.
             delete ray;
             results->intersects_killed++;
         }
     } else {
         // Forward it on.
-        ForwardRay(ray, results, ray->weak.worker);
+        ForwardRay(ray, results, ray->traversal.current);
     }
 }
 
@@ -421,7 +421,7 @@ void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
 
     lib->ForEachEmissiveMesh([ray, results, config](uint32_t id, Mesh* mesh) {
         // The target we're trying to hit is the original intersection.
-        vec3 target = ray->EvaluateAt(ray->strong.t);
+        vec3 target = ray->EvaluateAt(ray->hit.t);
 
         // Find the shader.
         Material* mat = lib->LookupMaterial(mesh->material);
@@ -467,8 +467,7 @@ void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
                 light->transmittance = ray->transmittance / config->samples;
 
                 // It hasn't hit anything yet.
-                light->weak.worker = 0;
-                light->strong.worker = 0;
+                light->hit.worker = 0;
 
                 // Send it on it's way!
                 ProcessLight(light, results);
@@ -487,33 +486,33 @@ void server::ProcessLight(FatRay* ray, WorkResults* results) {
     // function will NOT run in the main thread, it runs on the thread pool.
     Config* config = lib->LookupConfig();
 
-    // Our turn to check for a strong hit?
-    if (ray->weak.worker == me) {
+    // Our turn to check for a hit?
+    if (ray->traversal.current == me) {
         lib->NaiveIntersect(ray, me);
     }
 
     // Move the ray to the next worker.
-    ray->weak.worker++;
+    ray->traversal.current++;
 
     // Have we checked every worker?
-    if (ray->weak.worker > config->workers.size()) {
-        // Yes, are we the strong hit?
-        if (ray->strong.worker == me) {
+    if (ray->traversal.current > config->workers.size()) {
+        // Yes, are we the nearest hit?
+        if (ray->hit.worker == me) {
             // Yes, shade the intersection and kill the ray.
             ShadeIntersection(ray, results);
             delete ray;
             results->lights_killed++;
-        } else if (ray->strong.worker != 0) {
-            // No, forward the ray to the strong hit worker.
-            ForwardRay(ray, results, ray->strong.worker);
+        } else if (ray->hit.worker != 0) {
+            // No, forward the ray to the hit worker.
+            ForwardRay(ray, results, ray->hit.worker);
         } else {
-            // There was no strong hit. Kill the ray.
+            // There was no hit. Kill the ray.
             delete ray;
             results->lights_killed++;
         }
     } else {
         // Forward it on.
-        ForwardRay(ray, results, ray->weak.worker);
+        ForwardRay(ray, results, ray->traversal.current);
     }
 }
 
@@ -538,10 +537,10 @@ void server::IlluminateIntersection(FatRay* ray, WorkResults* results) {
     // function will NOT run in the main thread, it runs on the thread pool.
 
     // Where did we hit?
-    vec3 hit = ray->EvaluateAt(ray->strong.t);
+    vec3 hit = ray->EvaluateAt(ray->hit.t);
 
     // Find the shader and run the indirect() function.
-    Mesh* mesh = lib->LookupMesh(ray->strong.mesh);
+    Mesh* mesh = lib->LookupMesh(ray->hit.mesh);
     assert(mesh != nullptr);
 
     Material* mat = lib->LookupMaterial(mesh->material);
@@ -572,14 +571,14 @@ void server::ShadeIntersection(FatRay* ray, WorkResults* results) {
     // in practice we might not need to check.
 
     // Did it hit close enough to the target?
-    vec3 hit = ray->EvaluateAt(ray->strong.t);
+    vec3 hit = ray->EvaluateAt(ray->hit.t);
     if (distance(hit, ray->target) > TARGET_INTERSECT_EPSILON) {
         // Nope, ignore.
         return;
     }
 
     // Find the shader and run the direct() function.
-    Mesh* mesh = lib->LookupMesh(ray->strong.mesh);
+    Mesh* mesh = lib->LookupMesh(ray->hit.mesh);
     assert(mesh != nullptr);
 
     Material* mat = lib->LookupMaterial(mesh->material);

@@ -100,8 +100,8 @@ void ShaderScript::Direct(const FatRay* ray, vec3 hit, WorkResults *results) {
 
     // Compute the vectors we're passing to the shader.
     vec3 view = normalize(cam->eye - hit);
-    vec3 normal = ray->strong.geom.n;
-    vec2 texcoord = ray->strong.geom.t;
+    vec3 normal = ray->hit.geom.n;
+    vec2 texcoord = ray->hit.geom.t;
     vec3 light = -ray->slim.direction;
     vec3 illumination = ray->emission;
 
@@ -160,8 +160,8 @@ void ShaderScript::Indirect(const FatRay* ray, vec3 hit, WorkResults* results) {
 
     // Compute the vectors we're passing to the shader.
     vec3 view = normalize(cam->eye - hit);
-    vec3 normal = ray->strong.geom.n;
-    vec2 texcoord = ray->strong.geom.t;
+    vec3 normal = ray->hit.geom.n;
+    vec2 texcoord = ray->hit.geom.t;
 
     // Acquire the interpreter lock.
     if (sem_wait(&_lock) < 0) {
@@ -390,7 +390,7 @@ FR_SCRIPT_FUNCTION(ShaderScript, Texture) {
     lua_pop(_state, 1);
 
     // Look up the material to get texture bindings.
-    Mesh* mesh = _lib->LookupMesh(_ray->strong.mesh);
+    Mesh* mesh = _lib->LookupMesh(_ray->hit.mesh);
     assert(mesh != nullptr);
     Material* mat = _lib->LookupMaterial(mesh->material);
     assert(mat != nullptr);
@@ -421,7 +421,7 @@ FR_SCRIPT_FUNCTION(ShaderScript, Texture2) {
     lua_pop(_state, 1);
 
     // Look up the material to get texture bindings.
-    Mesh* mesh = _lib->LookupMesh(_ray->strong.mesh);
+    Mesh* mesh = _lib->LookupMesh(_ray->hit.mesh);
     assert(mesh != nullptr);
     Material* mat = _lib->LookupMaterial(mesh->material);
     assert(mat != nullptr);
@@ -467,7 +467,7 @@ FR_SCRIPT_FUNCTION(ShaderScript, Texture3) {
     lua_pop(_state, 1);
 
     // Look up the material to get texture bindings.
-    Mesh* mesh = _lib->LookupMesh(_ray->strong.mesh);
+    Mesh* mesh = _lib->LookupMesh(_ray->hit.mesh);
     assert(mesh != nullptr);
     Material* mat = _lib->LookupMaterial(mesh->material);
     assert(mat != nullptr);
@@ -523,7 +523,7 @@ FR_SCRIPT_FUNCTION(ShaderScript, Texture4) {
     lua_pop(_state, 1);
 
     // Look up the material to get texture bindings.
-    Mesh* mesh = _lib->LookupMesh(_ray->strong.mesh);
+    Mesh* mesh = _lib->LookupMesh(_ray->hit.mesh);
     assert(mesh != nullptr);
     Material* mat = _lib->LookupMaterial(mesh->material);
     assert(mat != nullptr);
@@ -609,8 +609,7 @@ FR_SCRIPT_FUNCTION(ShaderScript, Trace) {
     tracer->transmittance = transmittance;
 
     // It hasn't hit anything yet.
-    tracer->weak.worker = 0;
-    tracer->strong.worker = 0;
+    tracer->hit.worker = 0;
 
     _results->forwards.emplace_back(tracer, nullptr);
     _results->intersects_produced++;

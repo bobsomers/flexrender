@@ -187,8 +187,7 @@ bool Camera::GeneratePrimary(FatRay* ray) {
     ray->slim.origin = eye;
     ray->slim.direction = normalize(screen_pt - eye);
     ray->transmittance = transmittance;
-    ray->weak.worker = 0;
-    ray->strong.worker = 0;
+    ray->hit.worker = 0;
 
     // Advance our internal counters.
     _j++;
