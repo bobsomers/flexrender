@@ -50,6 +50,9 @@ static uv_timer_t flush_timer;
 /// Timer for watching whether or not the render is still interesting.
 static uv_timer_t interesting_timer;
 
+/// Timer for checking runaway conditions.
+static uv_timer_t runaway_timer;
+
 /// Synchronization primitives for synchronizing the synchronization.
 /// "We need to go deeper..."
 static sem_t mesh_read;
@@ -78,6 +81,7 @@ void OnRead(uv_stream_t* stream, ssize_t nread, uv_buf_t buf);
 void OnClose(uv_handle_t* handle);
 void OnFlushTimeout(uv_timer_t* timer, int status);
 void OnInterestingTimeout(uv_timer_t* timer, int status);
+void OnRunawayTimeout(uv_timer_t* timer, int status);
 void OnSyncStart(uv_work_t* req);
 void AfterSync(uv_work_t* req);
 void OnSyncIdle(uv_idle_t* handle, int status);
@@ -151,7 +155,11 @@ void client::Init() {
     
     // Initialize the interesting timer.
     result = uv_timer_init(uv_default_loop(), &interesting_timer);
-    CheckUVResult(result, "interesting_timer");
+    CheckUVResult(result, "timer_init");
+
+    // Initialize the runaway timer.
+    result = uv_timer_init(uv_default_loop(), &runaway_timer);
+    CheckUVResult(result, "timer_init");
 }
 
 void client::DispatchMessage(NetNode* node) {
@@ -295,6 +303,22 @@ void client::OnInterestingTimeout(uv_timer_t* timer, int status) {
         return;
     }
 
+    // Display some information about the total number of rays being processed.
+    uint64_t total_produced = 0;
+    uint64_t total_killed = 0;
+    uint64_t total_queued = 0;
+    lib->ForEachNetNode([&total_produced, &total_killed, &total_queued](uint32_t id, NetNode* node) {
+        total_produced += node->RaysProduced(max_intervals / 2);
+        total_killed += node->RaysKilled(max_intervals / 2);
+        total_queued += node->RaysQueued(max_intervals / 2);
+    });
+    TOUTLN("RAYS:  +" << total_produced << "  -" << total_killed << "  ~" << total_queued);
+}
+
+void client::OnRunawayTimeout(uv_timer_t* timer, int status) {
+    assert(timer == &runaway_timer);
+    assert(status == 0);
+
     // How far along is the slowest worker?
     float slowest = numeric_limits<float>::infinity();
     lib->ForEachNetNode([&slowest](uint32_t id, NetNode* node) {
@@ -326,17 +350,6 @@ void client::OnInterestingTimeout(uv_timer_t* timer, int status) {
             }
         }
     });
-
-    // Display some information about the total number of rays being processed.
-    uint64_t total_produced = 0;
-    uint64_t total_killed = 0;
-    uint64_t total_queued = 0;
-    lib->ForEachNetNode([&total_produced, &total_killed, &total_queued](uint32_t id, NetNode* node) {
-        total_produced += node->RaysProduced(max_intervals / 2);
-        total_killed += node->RaysKilled(max_intervals / 2);
-        total_queued += node->RaysQueued(max_intervals / 2);
-    });
-    TOUTLN("RAYS:  +" << total_produced << "  -" << total_killed << "  ~" << total_queued);
 }
 
 void client::OnOK(NetNode* node) {
@@ -548,6 +561,11 @@ void client::StartRender() {
      FR_STATS_TIMEOUT_MS * max_intervals, FR_STATS_TIMEOUT_MS * max_intervals);
     CheckUVResult(result, "timer_start");
 
+    // Start the runaway timer.
+    result = uv_timer_start(&runaway_timer, OnRunawayTimeout,
+     FR_STATS_TIMEOUT_MS, FR_STATS_TIMEOUT_MS);
+    CheckUVResult(result, "timer_start");
+
     TOUTLN("Rendering has started.");
 }
 
@@ -558,6 +576,11 @@ void client::StopRender() {
     result = uv_timer_stop(&interesting_timer);
     CheckUVResult(result, "timer_stop");
     uv_close(reinterpret_cast<uv_handle_t*>(&interesting_timer), nullptr);
+
+    // Stop the runaway_timer.
+    result = uv_timer_stop(&runaway_timer);
+    CheckUVResult(result, "timer_stop");
+    uv_close(reinterpret_cast<uv_handle_t*>(&runaway_timer), nullptr);
 
     // Send render stop messages to each server.
     lib->ForEachNetNode([](uint32_t id, NetNode* node) {
