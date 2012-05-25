@@ -109,6 +109,8 @@ public:
 
     void NaiveIntersect(FatRay* ray, uint32_t me);
 
+    void Intersect(FatRay* ray, uint32_t me);
+
     // Net nodes...
     void StoreNetNode(uint32_t id, NetNode* node);
 

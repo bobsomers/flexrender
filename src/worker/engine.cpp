@@ -816,7 +816,9 @@ void server::OnBuildBVH(NetNode* node) {
     });
     cout << endl;
 
-    // TODO: grab worker bounding box
+    // TODO: build MBVH from mesh roots
+
+    // TODO: worker bounding box is MBVH root
 
     // Reply with OK and worker bounds.
     Message reply(Message::Kind::OK);

@@ -12,6 +12,7 @@ using std::vector;
 using std::nth_element;
 using std::partition;
 using std::numeric_limits;
+using std::function;
 using glm::vec3;
 
 namespace fr {
@@ -32,9 +33,10 @@ BVH::BVH(const Mesh* mesh) :
     Build(build_data);
 }
 
-void BVH::Traverse(const SlimRay& ray, PrimitiveIntersect intersector) {
+bool BVH::Traverse(const SlimRay& ray, HitRecord* nearest,
+ function<bool (uint32_t index, const SlimRay& ray, HitRecord* hit)> intersector) {
     TraversalState traversal;
-    HitRecord nearest(0, 0, numeric_limits<float>::infinity());
+    bool hit = false;
 
     // Precompute the inverse direction of the ray.
     vec3 inv_dir(1.0f / ray.direction.x,
@@ -49,13 +51,13 @@ void BVH::Traverse(const SlimRay& ray, PrimitiveIntersect intersector) {
         const LinearNode& node = _nodes[traversal.current];
         switch (traversal.state) {
             case TraversalState::State::FROM_PARENT:
-                if (!BoundingHit(node.bounds, ray, inv_dir, nearest.t)) {
+                if (!BoundingHit(node.bounds, ray, inv_dir, nearest->t)) {
                     // Ray missed the near child, try the far child.
                     traversal.current = Sibling(traversal.current);
                     traversal.state = TraversalState::State::FROM_SIBLING;
                 } else if (node.leaf) {
                     // Ray hit the near child and it's a leaf node.
-                    intersector(node.index, &nearest);
+                    hit = intersector(node.index, ray, nearest) || hit;
                     traversal.current = Sibling(traversal.current);
                     traversal.state = TraversalState::State::FROM_SIBLING;
                 } else {
@@ -66,13 +68,13 @@ void BVH::Traverse(const SlimRay& ray, PrimitiveIntersect intersector) {
                 break;
 
             case TraversalState::State::FROM_SIBLING:
-                if (!BoundingHit(node.bounds, ray, inv_dir, nearest.t)) {
+                if (!BoundingHit(node.bounds, ray, inv_dir, nearest->t)) {
                     // Ray missed the far child, backtrack to the parent.
                     traversal.current = node.parent;
                     traversal.state = TraversalState::State::FROM_CHILD;
                 } else if (node.leaf) {
                     // Ray hit the far child and it's a leaf node.
-                    intersector(node.index, &nearest);
+                    hit = intersector(node.index, ray, nearest) || hit;
                     traversal.current = node.parent;
                     traversal.state = TraversalState::State::FROM_CHILD;
                 } else {
@@ -85,8 +87,7 @@ void BVH::Traverse(const SlimRay& ray, PrimitiveIntersect intersector) {
             case TraversalState::State::FROM_CHILD:
                 if (traversal.current == 0) {
                     // Traversal has finished.
-                    // TODO: something with the hit record? return true?
-                    return;
+                    return hit;
                 }
                 if (traversal.current == NearChild(node.parent)) {
                     // Coming back up through the near child, so traverse
@@ -107,14 +108,16 @@ void BVH::Traverse(const SlimRay& ray, PrimitiveIntersect intersector) {
                 break;
         }
     }
+
+    /// Shouldn't ever get here...
+    TERRLN("Unexpected exit path in BVH traversal.");
+    return false;
 }
 
 void BVH::Build(vector<PrimitiveInfo>& build_data) {
     // Recursively build the BVH tree.
     size_t total_nodes = 0;
     LinkedNode* root = RecursiveBuild(build_data, 0, build_data.size(), &total_nodes);
-
-    TOUTLN(ToString(root)); // TODO: remove
 
     // Flatten the tree into a linear representation.
     _nodes.reserve(total_nodes);
@@ -127,11 +130,6 @@ void BVH::Build(vector<PrimitiveInfo>& build_data) {
 
     // Release memory consumed by the linked tree.
     DeleteLinked(root);
-
-    // TODO: remove
-    for (const auto& node : _nodes) {
-        TOUTLN(ToString(node));
-    }
 }
 
 LinkedNode* BVH::RecursiveBuild(vector<PrimitiveInfo>& build_data, size_t start,

@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <functional>
 
 #include "glm/glm.hpp"
 #include "msgpack.hpp"
@@ -25,8 +26,6 @@ struct HitRecord;
 
 class BVH {
 public:
-    typedef bool (*PrimitiveIntersect)(uint32_t index, HitRecord* info);
-
     /// Constructs a BVH for traversing the given mesh.
     explicit BVH(const Mesh* mesh);
 
@@ -38,7 +37,8 @@ public:
      * volumes. If a leaf node is hit, the passed primitive intersector
      * function will be called.
      */
-    void Traverse(const SlimRay& ray, PrimitiveIntersect intersector);
+    bool Traverse(const SlimRay& ray, HitRecord* nearest,
+     std::function<bool (uint32_t index, const SlimRay& ray, HitRecord* hit)> intersector);
 
     MSGPACK_DEFINE(_nodes);
 

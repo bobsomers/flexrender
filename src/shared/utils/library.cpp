@@ -201,4 +201,42 @@ void Library::NaiveIntersect(FatRay* ray, uint32_t me) {
     }
 }
 
+void Library::Intersect(FatRay* ray, uint32_t me) {
+    HitRecord nearest(0, 0, numeric_limits<float>::infinity());
+
+    for (uint32_t id = 1; id < _meshes.size(); id++) {
+        Mesh* mesh = _meshes[id];
+        if (mesh == nullptr) continue;
+
+        // Get a skinny ray in the mesh's object space.
+        SlimRay xformed_ray = ray->TransformTo(mesh);
+
+        mesh->bvh->Traverse(xformed_ray, &nearest,
+         [me, id, mesh](uint32_t index, const SlimRay& r, HitRecord* hit) {
+            float t = numeric_limits<float>::quiet_NaN();
+            LocalGeometry local;
+
+            const Triangle& tri = mesh->tris[index];
+            if (tri.Intersect(r, &t, &local) && t < hit->t) {
+                hit->worker = me;
+                hit->mesh = id;
+                hit->t = t;
+                hit->geom = local;
+                return true;
+            }
+
+            return false;
+        });
+    }
+
+    if (nearest.worker > 0 && nearest.t < ray->hit.t) {
+        ray->hit = nearest;
+
+        // Correct the interpolated normal.
+        vec4 n(ray->hit.geom.n, 0.0f);
+        ray->hit.geom.n = normalize(
+         vec3(_meshes[ray->hit.mesh]->xform_inv_tr * n));
+    }
+}
+
 }
