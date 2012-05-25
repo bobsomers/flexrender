@@ -5,6 +5,7 @@
 #include <sstream>
 #include <algorithm>
 
+#include "types/slim_ray.hpp"
 #include "utils/printers.hpp"
 
 using std::numeric_limits;
@@ -66,6 +67,11 @@ BoundingBox::Axis BoundingBox::LongestAxis() const {
         return Axis::Y;
     }
     return Axis::Z;
+}
+
+bool BoundingBox::Intersect(const SlimRay& ray) const {
+    // TODO
+    return false;
 }
 
 string ToString(const BoundingBox& box, const string& indent) {

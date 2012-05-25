@@ -13,7 +13,7 @@ struct PrimitiveInfo {
     explicit PrimitiveInfo(size_t index, const BoundingBox& bounds);
 
     /// Index of the primitive we're talking about in the list of primitives.
-    size_t index;
+    uint32_t index;
 
     /// Centroid of the primitive in question.
     glm::vec3 centroid;

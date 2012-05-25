@@ -1,5 +1,6 @@
 #include "types/bvh.hpp"
 
+#include <cstdlib>
 #include <cstring>
 #include <algorithm>
 
@@ -28,8 +29,76 @@ BVH::BVH(const Mesh* mesh) :
     Build(build_data);
 }
 
-void BVH::Intersect(FatRay* ray, uint32_t me) {
-    // TODO
+void BVH::Traverse(const SlimRay& ray, PrimitiveIntersect intersector) {
+    TraversalState traversal;
+    HitRecord nearest;
+
+    // Start by going down the root's near child.
+    traversal.current = NearChild(0);
+    traversal.state = TraversalState::State::FROM_PARENT;
+
+    while (true) {
+        const LinearNode& node = _nodes[traversal.current];
+        switch (traversal.state) {
+            case TraversalState::State::FROM_PARENT:
+                if (!node.bounds.Intersect(ray)) {
+                    // Ray missed the near child, try the far child.
+                    traversal.current = Sibling(traversal.current);
+                    traversal.state = TraversalState::State::FROM_SIBLING;
+                } else if (node.leaf) {
+                    // Ray hit the near child and it's a leaf node.
+                    intersector(node.index, &nearest);
+                    traversal.current = Sibling(traversal.current);
+                    traversal.state = TraversalState::State::FROM_SIBLING;
+                } else {
+                    // Ray hit the near child and it's an interior node.
+                    traversal.current = NearChild(traversal.current);
+                    traversal.state = TraversalState::State::FROM_PARENT;
+                }
+                break;
+
+            case TraversalState::State::FROM_SIBLING:
+                if (!node.bounds.Intersect(ray)) {
+                    // Ray missed the far child, backtrack to the parent.
+                    traversal.current = node.parent;
+                    traversal.state = TraversalState::State::FROM_CHILD;
+                } else if (node.leaf) {
+                    // Ray hit the far child and it's a leaf node.
+                    intersector(node.index, &nearest);
+                    traversal.current = node.parent;
+                    traversal.state = TraversalState::State::FROM_CHILD;
+                } else {
+                    // Ray hit the far child and it's an interior node.
+                    traversal.current = NearChild(traversal.current);
+                    traversal.state = TraversalState::State::FROM_PARENT;
+                }
+                break;
+
+            case TraversalState::State::FROM_CHILD:
+                if (traversal.current == 0) {
+                    // Traversal has finished.
+                    // TODO: something with the hit record? return true?
+                    return;
+                }
+                if (traversal.current == NearChild(node.parent)) {
+                    // Coming back up through the near child, so traverse
+                    // to the far child.
+                    traversal.current = Sibling(traversal.current);
+                    traversal.state = TraversalState::State::FROM_SIBLING;
+                } else {
+                    // Coming back up through the far child, so continue
+                    // backtracking through the parent.
+                    traversal.current = node.parent;
+                    traversal.state = TraversalState::State::FROM_CHILD;
+                }
+                break;
+
+            default:
+                TERRLN("BVH traversal in unknown state!");
+                exit(EXIT_FAILURE);
+                break;
+        }
+    }
 }
 
 void BVH::Build(vector<PrimitiveInfo>& build_data) {
@@ -49,7 +118,7 @@ void BVH::Build(vector<PrimitiveInfo>& build_data) {
     assert(offset == total_nodes);
 
     // Release memory consumed by the linked tree.
-    // TODO
+    DeleteLinked(root);
 
     // TODO: remove
     for (const auto& node : _nodes) {
@@ -197,6 +266,18 @@ size_t BVH::FlattenTree(LinkedNode* current, size_t parent, size_t* offset) {
     }
 
     return my_offset;
+}
+
+void BVH::DeleteLinked(LinkedNode* node) {
+    if (node->children[0] != nullptr) {
+        DeleteLinked(node->children[0]);
+        node->children[0] = nullptr;
+    }
+    if (node->children[1] != nullptr) {
+        DeleteLinked(node->children[1]);
+        node->children[1] = nullptr;
+    }
+    delete node;
 }
 
 } // namespace fr

@@ -10,9 +10,10 @@
 namespace fr {
 
 struct Mesh;
-struct FatRay;
+struct SlimRay;
 struct LinkedNode;
 struct PrimitiveInfo;
+struct HitRecord;
 
 /**
  * The construction implementation is based on the one presented in Physically
@@ -23,14 +24,20 @@ struct PrimitiveInfo;
 
 class BVH {
 public:
+    typedef bool (*PrimitiveIntersect)(uint32_t index, HitRecord* info);
+
     /// Constructs a BVH for traversing the given mesh.
     explicit BVH(const Mesh* mesh);
 
     /// MSGPACK ONLY!
     explicit BVH();
 
-    /// Intersects the given ray with the this BVH.
-    void Intersect(FatRay* ray, uint32_t me);
+    /**
+     * Traverses the BVH by testing the given SlimRay against the bounding
+     * volumes. If a leaf node is hit, the passed primitive intersector
+     * function will be called.
+     */
+    void Traverse(const SlimRay& ray, PrimitiveIntersect intersector);
 
     MSGPACK_DEFINE(_nodes);
 
@@ -69,6 +76,28 @@ private:
      * for faster/portable traversal at runtime.
      */
     size_t FlattenTree(LinkedNode* current, size_t parent, size_t* offset);
+
+    /**
+     * Recursively deletes a LinkedNode tree structure rooted at node.
+     */
+    void DeleteLinked(LinkedNode* node);
+
+    /// Returns the index of the sibling of the current node.
+    inline size_t Sibling(size_t current) {
+        size_t parent = _nodes[current].parent;
+        size_t right = _nodes[parent].right;
+        return (right == current) ? parent + 1 : right;
+    }
+
+    /// The near child is defined to be the left-hand child.
+    inline size_t NearChild(size_t current) {
+        return current + 1;
+    }
+
+    /// The far child is defined to be the right-hand child.
+    inline size_t FarChild(size_t current) {
+        return _nodes[current].right;
+    }
 };
 
 } // namespace fr
