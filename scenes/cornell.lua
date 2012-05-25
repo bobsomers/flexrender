@@ -43,7 +43,7 @@ material {
 material {
     name = "light",
     emissive = true,
-    shader = fre.light(vec3(0.924, 0.489, 0.326))
+    shader = fre.light(vec3(17.0, 10.0, 6.0))
 }
 
 -- Light.
