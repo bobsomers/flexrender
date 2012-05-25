@@ -385,7 +385,7 @@ void server::ProcessIntersect(FatRay* ray, WorkResults* results) {
 
     // Our turn to check for a hit?
     if (ray->traversal.current == me) {
-        lib->NaiveIntersect(ray, me);
+        lib->Intersect(ray, me);
     }
 
     // Move the ray to the next worker.
@@ -488,7 +488,7 @@ void server::ProcessLight(FatRay* ray, WorkResults* results) {
 
     // Our turn to check for a hit?
     if (ray->traversal.current == me) {
-        lib->NaiveIntersect(ray, me);
+        lib->Intersect(ray, me);
     }
 
     // Move the ray to the next worker.
