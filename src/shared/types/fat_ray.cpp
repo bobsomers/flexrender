@@ -23,8 +23,8 @@ FatRay::FatRay(Kind kind, int16_t x, int16_t y) :
  x(x),
  y(y),
  slim(),
- weak(),
- strong(),
+ traversal(),
+ hit(),
  next(nullptr) {
     bounces = numeric_limits<int16_t>::min();
 
@@ -42,8 +42,8 @@ FatRay::FatRay(Kind kind, int16_t x, int16_t y) :
 FatRay::FatRay(Kind kind) :
  kind(kind),
  slim(),
- weak(),
- strong(),
+ traversal(),
+ hit(),
  next(nullptr) {
     x = numeric_limits<int16_t>::min();
     y = numeric_limits<int16_t>::min();
@@ -64,8 +64,8 @@ FatRay::FatRay(Kind kind) :
 FatRay::FatRay() :
  kind(Kind::NONE),
  slim(),
- weak(),
- strong(),
+ traversal(),
+ hit(),
  next(nullptr) {
     x = numeric_limits<int16_t>::min();
     y = numeric_limits<int16_t>::min();
@@ -106,8 +106,8 @@ string ToString(const FatRay& ray, const string& indent) {
              indent << "| bounces = " << ray.bounces << endl <<
              indent << "| slim = " << ToString(ray.slim, pad) << endl <<
              indent << "| transmittance = " << ray.transmittance << endl <<
-             indent << "| weak = " << ToString(ray.weak, pad) << endl <<
-             indent << "| strong = " << ToString(ray.strong, pad) << endl <<
+             indent << "| traversal = " << ToString(ray.traversal, pad) << endl <<
+             indent << "| hit = " << ToString(ray.hit, pad) << endl <<
              indent << "| next = " << hex << showbase << ray.next << endl;
             break;
 
@@ -118,8 +118,8 @@ string ToString(const FatRay& ray, const string& indent) {
              indent << "| bounces = " << ray.bounces << endl <<
              indent << "| slim = " << ToString(ray.slim, pad) << endl <<
              indent << "| transmittance = " << ray.transmittance << endl <<
-             indent << "| weak = " << ToString(ray.weak, pad) << endl <<
-             indent << "| strong = " << ToString(ray.strong, pad) << endl <<
+             indent << "| traversal = " << ToString(ray.traversal, pad) << endl <<
+             indent << "| hit = " << ToString(ray.hit, pad) << endl <<
              indent << "| next = " << hex << showbase << ray.next << endl;
             break;
 
@@ -131,8 +131,8 @@ string ToString(const FatRay& ray, const string& indent) {
              indent << "| transmittance = " << ray.transmittance << endl <<
              indent << "| emission = " << ToString(ray.emission) << endl <<
              indent << "| target = " << ToString(ray.target) << endl <<
-             indent << "| weak = " << ToString(ray.weak, pad) << endl <<
-             indent << "| strong = " << ToString(ray.strong, pad) << endl <<
+             indent << "| traversal = " << ToString(ray.traversal, pad) << endl <<
+             indent << "| hit = " << ToString(ray.hit, pad) << endl <<
              indent << "| next = " << hex << showbase << ray.next << endl;
             break;
     }

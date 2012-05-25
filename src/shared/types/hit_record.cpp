@@ -1,4 +1,4 @@
-#include "types/strong_hit.hpp"
+#include "types/hit_record.hpp"
 
 #include <limits>
 #include <iostream>
@@ -11,30 +11,30 @@ using std::endl;
 
 namespace fr {
 
-StrongHit::StrongHit(uint32_t worker, uint32_t mesh) :
+HitRecord::HitRecord(uint32_t worker, uint32_t mesh) :
  worker(worker),
  mesh(mesh),
  geom(geom) {
     t = numeric_limits<float>::infinity();
 }
 
-StrongHit::StrongHit(uint32_t worker, uint32_t mesh, float t) :
+HitRecord::HitRecord(uint32_t worker, uint32_t mesh, float t) :
  worker(worker),
  mesh(mesh),
  t(t),
  geom(geom) {}
 
-StrongHit::StrongHit() :
+HitRecord::HitRecord() :
  geom() {
     worker = numeric_limits<uint32_t>::max();
     mesh = numeric_limits<uint32_t>::max();
     t = numeric_limits<float>::infinity();
 }
 
-string ToString(const StrongHit& strong, const string& indent) {
+string ToString(const HitRecord& strong, const string& indent) {
     stringstream stream;
     string pad = indent + "| ";
-    stream << "StrongHit {" << endl <<
+    stream << "HitRecord {" << endl <<
      indent << "| worker = " << strong.worker << endl <<
      indent << "| mesh = " << strong.mesh << endl <<
      indent << "| t = " << strong.t << endl <<

@@ -7,12 +7,12 @@
 
 namespace fr {
 
-struct StrongHit {
-    explicit StrongHit(uint32_t worker, uint32_t mesh);
+struct HitRecord {
+    explicit HitRecord(uint32_t worker, uint32_t mesh);
 
-    explicit StrongHit(uint32_t worker, uint32_t mesh, float t);
+    explicit HitRecord(uint32_t worker, uint32_t mesh, float t);
 
-    explicit StrongHit();
+    explicit HitRecord();
 
     /// Resource ID of worker this hit occurred on.
     uint32_t worker;
@@ -26,9 +26,9 @@ struct StrongHit {
     /// The local geometry at the point of intersection.
     LocalGeometry geom;
 
-    TOSTRINGABLE(StrongHit);
+    TOSTRINGABLE(HitRecord);
 };
 
-std::string ToString(const StrongHit& strong, const std::string& indent = "");
+std::string ToString(const HitRecord& strong, const std::string& indent = "");
 
 } // namespace fr

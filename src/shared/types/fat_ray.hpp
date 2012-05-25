@@ -4,9 +4,9 @@
 
 #include "glm/glm.hpp"
 
+#include "types/hit_record.hpp"
 #include "types/slim_ray.hpp"
-#include "types/weak_hit.hpp"
-#include "types/strong_hit.hpp"
+#include "types/traversal_state.hpp"
 #include "utils/tostring.hpp"
 
 namespace fr {
@@ -51,11 +51,11 @@ struct FatRay {
     /// The target intersection point in world space.
     glm::vec3 target;
 
-    /// The next weak hit to check during scene traversal.
-    WeakHit weak;
+    /// State of the acceleration structure traversal.
+    TraversalState traversal;
 
-    /// The terminating strong hit, if one has been found.
-    StrongHit strong;
+    /// The hit record of the closest intersection so far.
+    HitRecord hit;
 
     /// Next pointer for chaining rays together. Obviously not valid once the
     /// ray has been sent over the network.
