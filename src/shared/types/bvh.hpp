@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "glm/glm.hpp"
 #include "msgpack.hpp"
 
 #include "types/linear_node.hpp"
@@ -97,6 +98,13 @@ private:
     /// The far child is defined to be the right-hand child.
     inline size_t FarChild(size_t current) {
         return _nodes[current].right;
+    }
+
+    /// Performs a quick bounding box check against the given bounds and ray.
+    inline bool BoundingHit(const BoundingBox& bounds, const SlimRay& ray,
+     glm::vec3 inv_dir, float max) {
+        float t = -1.0f;
+        return bounds.Intersect(ray, inv_dir, &t) && t < max;
     }
 };
 

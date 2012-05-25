@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <utility>
 
 #include "types/slim_ray.hpp"
 #include "utils/printers.hpp"
@@ -12,6 +13,7 @@ using std::numeric_limits;
 using std::string;
 using std::stringstream;
 using std::endl;
+using std::swap;
 using glm::vec3;
 
 namespace fr {
@@ -69,9 +71,44 @@ BoundingBox::Axis BoundingBox::LongestAxis() const {
     return Axis::Z;
 }
 
-bool BoundingBox::Intersect(const SlimRay& ray) const {
-    // TODO
-    return false;
+bool BoundingBox::Intersect(const SlimRay& ray, vec3 inv_dir, float* t) const {
+    float tmin = 0.0f;
+    float tmax = 0.0f;
+    float tgmin = 0.0f;
+    float tgmax = 0.0f;
+
+    // Check the x-axis.
+    tmin = (min.x - ray.origin.x) * inv_dir.x;
+    tmax = (max.x - ray.origin.x) * inv_dir.x;
+    if (tmax < tmin) swap(tmin, tmax);
+
+    tgmin = tmin;
+    tgmax = tmax;
+
+    // Check the y-axis.
+    tmin = (min.y - ray.origin.y) * inv_dir.y;
+    tmax = (max.y - ray.origin.y) * inv_dir.y;
+    if (tmax < tmin) swap(tmin, tmax);
+
+    tgmin = std::max(tgmin, tmin);
+    tgmax = std::min(tgmax, tmax);
+
+    // Check the z-axis.
+    tmin = (min.z - ray.origin.z) * inv_dir.z;
+    tmax = (max.z - ray.origin.z) * inv_dir.z;
+
+    tgmin = std::max(tgmin, tmin);
+    tgmax = std::min(tgmax, tmax);
+
+    // Test global min and max for intersection.
+    if (tgmin > tgmax || tgmax < 0.0f) {
+        // Ray misses the box (or is in front of the box).
+        return false;
+    }
+
+    // Ray hits the box at tgmin.
+    *t = tgmin;
+    return true;
 }
 
 string ToString(const BoundingBox& box, const string& indent) {

@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <algorithm>
+#include <limits>
 
 #include "types.hpp"
 #include "utils.hpp"
@@ -10,6 +11,8 @@
 using std::vector;
 using std::nth_element;
 using std::partition;
+using std::numeric_limits;
+using glm::vec3;
 
 namespace fr {
 
@@ -31,7 +34,12 @@ BVH::BVH(const Mesh* mesh) :
 
 void BVH::Traverse(const SlimRay& ray, PrimitiveIntersect intersector) {
     TraversalState traversal;
-    HitRecord nearest;
+    HitRecord nearest(0, 0, numeric_limits<float>::infinity());
+
+    // Precompute the inverse direction of the ray.
+    vec3 inv_dir(1.0f / ray.direction.x,
+                 1.0f / ray.direction.y,
+                 1.0f / ray.direction.z);
 
     // Start by going down the root's near child.
     traversal.current = NearChild(0);
@@ -41,7 +49,7 @@ void BVH::Traverse(const SlimRay& ray, PrimitiveIntersect intersector) {
         const LinearNode& node = _nodes[traversal.current];
         switch (traversal.state) {
             case TraversalState::State::FROM_PARENT:
-                if (!node.bounds.Intersect(ray)) {
+                if (!BoundingHit(node.bounds, ray, inv_dir, nearest.t)) {
                     // Ray missed the near child, try the far child.
                     traversal.current = Sibling(traversal.current);
                     traversal.state = TraversalState::State::FROM_SIBLING;
@@ -58,7 +66,7 @@ void BVH::Traverse(const SlimRay& ray, PrimitiveIntersect intersector) {
                 break;
 
             case TraversalState::State::FROM_SIBLING:
-                if (!node.bounds.Intersect(ray)) {
+                if (!BoundingHit(node.bounds, ray, inv_dir, nearest.t)) {
                     // Ray missed the far child, backtrack to the parent.
                     traversal.current = node.parent;
                     traversal.state = TraversalState::State::FROM_CHILD;

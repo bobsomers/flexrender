@@ -42,9 +42,9 @@ struct BoundingBox {
     /// Returns the longest axis of the bounding box.
     Axis LongestAxis() const;
 
-    /// Performs a fast intersection check to see if the slim ray intersects
+    /// Performs an intersection check to see if the slim ray intersects
     /// the bounding box.
-    bool Intersect(const SlimRay& ray) const;
+    bool Intersect(const SlimRay& ray, glm::vec3 inv_dir, float* t) const;
 
     MSGPACK_DEFINE(min, max);
 
