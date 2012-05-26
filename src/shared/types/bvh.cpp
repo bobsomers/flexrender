@@ -47,7 +47,11 @@ bool BVH::Traverse(const SlimRay& ray, HitRecord* nearest,
     traversal.current = NearChild(0);
     traversal.state = TraversalState::State::FROM_PARENT;
 
+//    TOUTLN("==> Traversal started."); // TODO: remove
+//    TOUTLN(ToString(ray)); // TODO: remove
     while (true) {
+//        TOUTLN(ToString(traversal)); // TODO: remove
+
         const LinearNode& node = _nodes[traversal.current];
         switch (traversal.state) {
             case TraversalState::State::FROM_PARENT:
@@ -87,6 +91,8 @@ bool BVH::Traverse(const SlimRay& ray, HitRecord* nearest,
             case TraversalState::State::FROM_CHILD:
                 if (traversal.current == 0) {
                     // Traversal has finished.
+//                    TOUTLN(ToString(*nearest)); // TODO: remove
+//                    TOUTLN("==> Traversal complete."); // TODO: remove
                     return hit;
                 }
                 if (traversal.current == NearChild(node.parent)) {
@@ -130,6 +136,11 @@ void BVH::Build(vector<PrimitiveInfo>& build_data) {
 
     // Release memory consumed by the linked tree.
     DeleteLinked(root);
+
+    // TODO: remove
+//    for (const auto& node : _nodes) {
+//        TOUTLN(ToString(node));
+//    }
 }
 
 LinkedNode* BVH::RecursiveBuild(vector<PrimitiveInfo>& build_data, size_t start,

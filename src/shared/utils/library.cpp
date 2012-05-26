@@ -211,10 +211,16 @@ void Library::Intersect(FatRay* ray, uint32_t me) {
         // Get a skinny ray in the mesh's object space.
         SlimRay xformed_ray = ray->TransformTo(mesh);
 
+//        if (id == 7) {
+//            TOUTLN("Testing mesh 7!"); // TODO
+//        }
+
         mesh->bvh->Traverse(xformed_ray, &nearest,
          [me, id, mesh](uint32_t index, const SlimRay& r, HitRecord* hit) {
             float t = numeric_limits<float>::quiet_NaN();
             LocalGeometry local;
+
+//            TOUTLN("Testing triangle intersection (index = " << index << "!"); // TODO
 
             const Triangle& tri = mesh->tris[index];
             if (tri.Intersect(r, &t, &local) && t < hit->t) {
@@ -229,8 +235,19 @@ void Library::Intersect(FatRay* ray, uint32_t me) {
         });
     }
 
+//    if (nearest.worker > 0) {
+//        TOUTLN("Worker > 0");
+//    }
+//
+//    if (nearest.t < ray->hit.t) {
+//        TOUTLN("Nearest t < ray t");
+//    }
+
     if (nearest.worker > 0 && nearest.t < ray->hit.t) {
         ray->hit = nearest;
+
+//        TOUTLN("==> HIT DETECTED"); // TODO: remove
+//        TOUTLN(ToString(nearest)); // TODO: remove
 
         // Correct the interpolated normal.
         vec4 n(ray->hit.geom.n, 0.0f);

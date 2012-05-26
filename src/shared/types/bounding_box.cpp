@@ -96,6 +96,7 @@ bool BoundingBox::Intersect(const SlimRay& ray, vec3 inv_dir, float* t) const {
     // Check the z-axis.
     tmin = (min.z - ray.origin.z) * inv_dir.z;
     tmax = (max.z - ray.origin.z) * inv_dir.z;
+    if (tmax < tmin) swap(tmin, tmax);
 
     tgmin = std::max(tgmin, tmin);
     tgmax = std::min(tgmax, tmax);
