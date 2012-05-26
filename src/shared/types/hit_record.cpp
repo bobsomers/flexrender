@@ -14,7 +14,7 @@ namespace fr {
 HitRecord::HitRecord(uint32_t worker, uint32_t mesh) :
  worker(worker),
  mesh(mesh),
- geom(geom) {
+ geom() {
     t = numeric_limits<float>::infinity();
 }
 
@@ -22,7 +22,7 @@ HitRecord::HitRecord(uint32_t worker, uint32_t mesh, float t) :
  worker(worker),
  mesh(mesh),
  t(t),
- geom(geom) {}
+ geom() {}
 
 HitRecord::HitRecord() :
  geom() {
