@@ -4,7 +4,6 @@
 #include <iostream>
 #include <sstream>
 
-#include "types/mesh.hpp"
 #include "utils/printers.hpp"
 
 using std::numeric_limits;
@@ -81,13 +80,6 @@ FatRay::FatRay() :
     target.x = numeric_limits<float>::quiet_NaN();
     target.y = numeric_limits<float>::quiet_NaN();
     target.z = numeric_limits<float>::quiet_NaN();
-}
-
-SlimRay FatRay::TransformTo(const Mesh* mesh) const {
-    vec4 o(slim.origin, 1.0f);
-    vec4 d(slim.direction, 0.0f);
-    return SlimRay(vec3(mesh->xform_inv * o),
-                   vec3(mesh->xform_inv * d));
 }
 
 string ToString(const FatRay& ray, const string& indent) {

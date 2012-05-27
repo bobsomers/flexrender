@@ -5,13 +5,12 @@
 #include "glm/glm.hpp"
 
 #include "types/hit_record.hpp"
+#include "types/mesh.hpp"
 #include "types/slim_ray.hpp"
 #include "types/traversal_state.hpp"
 #include "utils/tostring.hpp"
 
 namespace fr {
-
-struct Mesh;
 
 struct FatRay {
     enum Kind {
@@ -63,10 +62,14 @@ struct FatRay {
 
     /// Returns a skinny ray that represents this fat ray transformed into
     /// object space of the given mesh.
-    SlimRay TransformTo(const Mesh* mesh) const;
+    inline SlimRay TransformTo(const Mesh* mesh) const {
+        return slim.TransformTo(mesh->xform_inv);
+    }
 
     /// Evaluate a point along the ray at a specific t value.
-    inline glm::vec3 EvaluateAt(float t) const { return slim.EvaluateAt(t); }
+    inline glm::vec3 EvaluateAt(float t) const {
+        return slim.EvaluateAt(t);
+    }
 
     TOSTRINGABLE(FatRay);
 };

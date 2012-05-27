@@ -25,8 +25,14 @@ struct SlimRay {
     /// The normalized direction of the ray. Unit length is not enforced.
     glm::vec3 direction;
 
+    /// Returns a new ray that is this ray transformed by the given
+    /// transformation matrix.
+    SlimRay TransformTo(const glm::mat4& transform) const;
+
     /// Evaluate a point along the ray at a specific t value.
-    inline glm::vec3 EvaluateAt(float t) const { return direction * t + origin; }
+    inline glm::vec3 EvaluateAt(float t) const {
+        return direction * t + origin;
+    }
 
     TOSTRINGABLE(SlimRay);
 };
