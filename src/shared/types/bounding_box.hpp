@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <limits>
 
 #include "glm/glm.hpp"
@@ -13,6 +14,7 @@ struct SlimRay;
 
 struct BoundingBox {
     enum Axis {
+        NONE = 0,
         X = 1,
         Y = 2,
         Z = 3
@@ -66,9 +68,16 @@ inline float AxisComponent(glm::vec3 vec, BoundingBox::Axis axis) {
         case BoundingBox::Axis::Z:
             value = vec.z;
             break;
+
+        default:
+            break;
     }
 
     return value;
+}
+
+inline float AxisComponent(glm::vec3 vec, uint64_t axis) {
+    return AxisComponent(vec, static_cast<BoundingBox::Axis>(axis));
 }
 
 std::string ToString(const BoundingBox& box, const std::string& indent = "");

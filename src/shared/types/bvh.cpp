@@ -60,7 +60,7 @@ bool BVH::Traverse(const SlimRay& ray, HitRecord* nearest,
                  1.0f / ray.direction.z);
 
     // Start by going down the root's near child.
-    traversal.current = NearChild(0);
+    traversal.current = NearChild(0, ray.direction);
     traversal.state = TraversalState::State::FROM_PARENT;
 
     while (true) {
@@ -70,16 +70,16 @@ bool BVH::Traverse(const SlimRay& ray, HitRecord* nearest,
             case TraversalState::State::FROM_PARENT:
                 if (!BoundingHit(node.bounds, ray, inv_dir, nearest->t)) {
                     // Ray missed the near child, try the far child.
-                    traversal.current = Sibling(traversal.current);
+                    traversal.current = Sibling(traversal.current, node);
                     traversal.state = TraversalState::State::FROM_SIBLING;
                 } else if (node.leaf) {
                     // Ray hit the near child and it's a leaf node.
                     hit = intersector(node.index, ray, nearest) || hit;
-                    traversal.current = Sibling(traversal.current);
+                    traversal.current = Sibling(traversal.current, node);
                     traversal.state = TraversalState::State::FROM_SIBLING;
                 } else {
                     // Ray hit the near child and it's an interior node.
-                    traversal.current = NearChild(traversal.current);
+                    traversal.current = NearChild(traversal.current, ray.direction);
                     traversal.state = TraversalState::State::FROM_PARENT;
                 }
                 break;
@@ -96,7 +96,7 @@ bool BVH::Traverse(const SlimRay& ray, HitRecord* nearest,
                     traversal.state = TraversalState::State::FROM_CHILD;
                 } else {
                     // Ray hit the far child and it's an interior node.
-                    traversal.current = NearChild(traversal.current);
+                    traversal.current = NearChild(traversal.current, ray.direction);
                     traversal.state = TraversalState::State::FROM_PARENT;
                 }
                 break;
@@ -106,10 +106,10 @@ bool BVH::Traverse(const SlimRay& ray, HitRecord* nearest,
                     // Traversal has finished.
                     return hit;
                 }
-                if (traversal.current == NearChild(node.parent)) {
+                if (traversal.current == NearChild(node.parent, ray.direction)) {
                     // Coming back up through the near child, so traverse
                     // to the far child.
-                    traversal.current = Sibling(traversal.current);
+                    traversal.current = Sibling(traversal.current, node);
                     traversal.state = TraversalState::State::FROM_SIBLING;
                 } else {
                     // Coming back up through the far child, so continue

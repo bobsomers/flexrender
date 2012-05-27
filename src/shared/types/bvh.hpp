@@ -100,20 +100,21 @@ private:
     void DeleteLinked(LinkedNode* node);
 
     /// Returns the index of the sibling of the current node.
-    inline size_t Sibling(size_t current) {
-        size_t parent = _nodes[current].parent;
-        size_t right = _nodes[parent].right;
-        return (right == current) ? parent + 1 : right;
+    inline size_t Sibling(size_t current, const LinearNode& node) {
+        size_t right = _nodes[node.parent].right;
+        return (right == current) ? node.parent + 1 : right;
     }
 
     /// The near child is defined to be the left-hand child.
-    inline size_t NearChild(size_t current) {
-        return current + 1;
+    inline size_t NearChild(size_t current, glm::vec3 direction) {
+        float axis_component = AxisComponent(direction, _nodes[current].axis);
+        return axis_component < 0.0f ? _nodes[current].right : current + 1;
     }
 
     /// The far child is defined to be the right-hand child.
-    inline size_t FarChild(size_t current) {
-        return _nodes[current].right;
+    inline size_t FarChild(size_t current, glm::vec3 direction) {
+        float axis_component = AxisComponent(direction, _nodes[current].axis);
+        return axis_component < 0.0f ? current + 1 : _nodes[current].right;
     }
 
     /// Performs a quick bounding box check against the given bounds and ray.
