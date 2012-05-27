@@ -28,8 +28,8 @@ render {
     samples = 10,
     bounces = 2,
     threshold = 0.0001,
-    --min = vec3(-5, -5, -5),
-    --max = vec3(15, 15, 15),
-    min = vec3(-10, -10, -10),
-    max = vec3(10, 10, 10),
+    min = vec3(-5, -5, -5),
+    max = vec3(15, 15, 15),
+    --min = vec3(-10, -10, -10),
+    --max = vec3(10, 10, 10),
 }

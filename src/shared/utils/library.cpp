@@ -21,6 +21,8 @@ Library::Library() :
  _camera(nullptr),
  _image(nullptr),
  _lights(nullptr),
+ _mbvh(nullptr),
+ _wbvh(nullptr),
  _shaders(),
  _textures(),
  _materials(),
@@ -43,6 +45,8 @@ Library::~Library() {
     if (_camera != nullptr) delete _camera;
     if (_image != nullptr) delete _image;
     if (_lights != nullptr) delete _lights;
+    if (_mbvh != nullptr) delete _mbvh;
+    if (_wbvh != nullptr) delete _wbvh;
 
     for (size_t i = 0; i < _shaders.size(); i++) {
         if (_shaders[i] != nullptr) delete _shaders[i];
@@ -79,6 +83,16 @@ void Library::StoreImage(Image* image) {
 void Library::StoreLightList(LightList* lights) {
     if (_lights != nullptr) delete _lights;
     _lights = lights;
+}
+
+void Library::StoreMBVH(BVH* mbvh) {
+    if (_mbvh != nullptr) delete _mbvh;
+    _mbvh = mbvh;
+}
+
+void Library::StoreWBVH(BVH* wbvh) {
+    if (_wbvh != nullptr) delete _wbvh;
+    _wbvh = wbvh;
 }
 
 void Library::StoreShader(uint32_t id, Shader* shader) {
@@ -169,32 +183,33 @@ void Library::BuildSpatialIndex() {
 }
 
 void Library::Intersect(FatRay* ray, uint32_t me) {
+    assert(_mbvh != nullptr);
+
     HitRecord nearest(0, 0, numeric_limits<float>::infinity());
 
-    for (uint32_t id = 1; id < _meshes.size(); id++) {
-        Mesh* mesh = _meshes[id];
-        if (mesh == nullptr) continue;
-
-        mesh->bvh->Traverse(ray->slim, &nearest,
-         [me, id, mesh](uint32_t index, const SlimRay& r, HitRecord* hit) {
+    _mbvh->Traverse(ray->slim, &nearest,
+     [this, me](uint32_t mesh_index, const SlimRay& mesh_ray, HitRecord* mesh_hit) {
+        Mesh *mesh = _meshes[mesh_index];
+        return mesh->bvh->Traverse(mesh_ray, mesh_hit,
+         [me, mesh_index, mesh](uint32_t tri_index, const SlimRay& tri_ray, HitRecord* tri_hit) {
             float t = numeric_limits<float>::quiet_NaN();
             LocalGeometry local;
 
             // Transform the ray to object space.
-            SlimRay xformed = r.TransformTo(mesh->xform_inv);
+            SlimRay xformed_ray = tri_ray.TransformTo(mesh->xform_inv);
 
-            const Triangle& tri = mesh->tris[index];
-            if (tri.Intersect(xformed, &t, &local) && t < hit->t) {
-                hit->worker = me;
-                hit->mesh = id;
-                hit->t = t;
-                hit->geom = local;
+            const Triangle& tri = mesh->tris[tri_index];
+            if (tri.Intersect(xformed_ray, &t, &local) && t < tri_hit->t) {
+                tri_hit->worker = me;
+                tri_hit->mesh = mesh_index;
+                tri_hit->t = t;
+                tri_hit->geom = local;
                 return true;
             }
 
             return false;
         });
-    }
+    });
 
     if (nearest.worker > 0 && nearest.t < ray->hit.t) {
         ray->hit = nearest;

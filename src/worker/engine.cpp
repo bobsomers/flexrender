@@ -4,6 +4,8 @@
 #include <cassert>
 #include <cstdlib>
 #include <ctime>
+#include <vector>
+#include <utility>
 
 #include "uv.h"
 
@@ -19,6 +21,9 @@ using std::string;
 using std::flush;
 using std::cout;
 using std::endl;
+using std::vector;
+using std::pair;
+using std::make_pair;
 using glm::vec2;
 using glm::vec3;
 using glm::vec4;
@@ -806,14 +811,19 @@ void server::OnSyncEmissive(NetNode* node) {
 void server::OnBuildBVH(NetNode* node) {
     assert(node != nullptr);
 
+    vector<pair<uint32_t, BoundingBox>> mesh_bounds;
+
     TOUT("Building local BVH" << flush);
-    lib->ForEachMesh([](uint32_t id, Mesh* mesh) {
+    lib->ForEachMesh([&mesh_bounds](uint32_t id, Mesh* mesh) {
         mesh->bvh = new BVH(mesh);
+        mesh_bounds.emplace_back(make_pair(id, mesh->bvh->Extents()));
         cout << "." << flush;
     });
     cout << endl;
 
-    // TODO: build MBVH from mesh roots
+    // Build the mesh BVH from the mesh extents.
+    lib->StoreMBVH(new BVH(mesh_bounds));
+    cout << "." << flush;
 
     // TODO: worker bounding box is MBVH root
 

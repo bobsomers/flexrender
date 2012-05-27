@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <functional>
+#include <utility>
 
 #include "glm/glm.hpp"
 #include "msgpack.hpp"
@@ -26,8 +27,16 @@ struct HitRecord;
 
 class BVH {
 public:
-    /// Constructs a BVH for traversing the given mesh.
+    /**
+     * Constructs a BVH for traversing the given mesh.
+     */
     explicit BVH(const Mesh* mesh);
+
+    /**
+     * Constructs a BVH for traversing a set of things, where those things
+     * are pairs of resource IDs and their bounding boxes.
+     */
+    explicit BVH(const std::vector<std::pair<uint32_t, BoundingBox>>& things);
 
     /// MSGPACK ONLY!
     explicit BVH();
@@ -39,6 +48,13 @@ public:
      */
     bool Traverse(const SlimRay& ray, HitRecord* nearest,
      std::function<bool (uint32_t index, const SlimRay& ray, HitRecord* hit)> intersector);
+
+    /**
+     * Returns the extents of the area contained by the BVH.
+     */
+    inline BoundingBox Extents() const {
+        return _nodes[0].bounds;
+    }
 
     MSGPACK_DEFINE(_nodes);
 

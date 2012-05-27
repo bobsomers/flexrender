@@ -9,6 +9,7 @@
 #include "utils.hpp"
 
 using std::vector;
+using std::pair;
 using std::nth_element;
 using std::partition;
 using std::numeric_limits;
@@ -27,6 +28,21 @@ BVH::BVH(const Mesh* mesh) :
     for (size_t i = 0; i < mesh->tris.size(); i++) {
         BoundingBox bounds = mesh->tris[i].WorldBounds(mesh->xform);
         build_data.emplace_back(i, bounds);
+    }
+
+    // Actually build the tree.
+    Build(build_data);
+}
+
+BVH::BVH(const vector<pair<uint32_t, BoundingBox>>& things) :
+ _nodes() {
+    // Initialize the build data.
+    vector<PrimitiveInfo> build_data;
+    build_data.reserve(things.size());
+    for (size_t i = 0; i < things.size(); i++) {
+        uint32_t id = things[i].first;
+        const BoundingBox& bounds = things[i].second;
+        build_data.emplace_back(id, bounds);
     }
 
     // Actually build the tree.

@@ -17,6 +17,7 @@ struct Config;
 struct Camera;
 class Image;
 class LightList;
+class BVH;
 struct Shader;
 struct Texture;
 struct Material;
@@ -48,6 +49,16 @@ public:
     void StoreLightList(LightList* lights);
 
     inline LightList* LookupLightList() const { return _lights; }
+
+    // MBVHs...
+    void StoreMBVH(BVH* mbvh);
+
+    inline BVH* LookupMBVH() const { return _mbvh; }
+
+    // WBVHs...
+    void StoreWBVH(BVH* wbvh);
+
+    inline BVH* LookupWBVH() const { return _wbvh; }
 
     // Shaders...
     inline uint32_t NextShaderID() const { return _shaders.size(); }
@@ -150,6 +161,8 @@ private:
     Camera* _camera;
     Image* _image;
     LightList* _lights;
+    BVH* _mbvh;
+    BVH* _wbvh;
     std::vector<Shader*> _shaders;
     std::vector<Texture*> _textures;
     std::vector<Material*> _materials;
