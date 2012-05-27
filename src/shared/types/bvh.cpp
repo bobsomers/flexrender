@@ -4,6 +4,8 @@
 #include <cstring>
 #include <algorithm>
 #include <limits>
+#include <iostream>
+#include <sstream>
 
 #include "types.hpp"
 #include "utils.hpp"
@@ -14,6 +16,9 @@ using std::nth_element;
 using std::partition;
 using std::numeric_limits;
 using std::function;
+using std::string;
+using std::stringstream;
+using std::endl;
 using glm::vec3;
 
 namespace fr {
@@ -48,6 +53,9 @@ BVH::BVH(const vector<pair<uint32_t, BoundingBox>>& things) :
     // Actually build the tree.
     Build(build_data);
 }
+
+BVH::BVH() :
+ _nodes() {}
 
 bool BVH::Traverse(const SlimRay& ray, HitRecord* nearest,
  function<bool (uint32_t index, const SlimRay& ray, HitRecord* hit)> intersector) {
@@ -301,6 +309,17 @@ void BVH::DeleteLinked(LinkedNode* node) {
         node->children[1] = nullptr;
     }
     delete node;
+}
+
+string ToString(const BVH* bvh, const string& indent) {
+    stringstream stream;
+    string pad = indent + "| ";
+    stream << "BVH {" << endl;
+    for (size_t i = 0; i < bvh->_nodes.size(); i++) {
+        stream << indent << "| [" << i << "] = " << ToString(bvh->_nodes[i], pad) << endl;
+    }
+    stream << indent << "}";
+    return stream.str();
 }
 
 } // namespace fr

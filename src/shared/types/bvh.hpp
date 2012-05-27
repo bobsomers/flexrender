@@ -9,6 +9,7 @@
 #include "msgpack.hpp"
 
 #include "types/linear_node.hpp"
+#include "utils/tostring.hpp"
 
 namespace fr {
 
@@ -57,6 +58,8 @@ public:
     }
 
     MSGPACK_DEFINE(_nodes);
+
+    TOSTRINGABLEBYPTR(BVH);
 
 private:
     struct BucketInfo {
@@ -124,5 +127,7 @@ private:
         return bounds.Intersect(ray, inv_dir, &t) && t < max;
     }
 };
+
+std::string ToString(const BVH* bvh, const std::string& indent = "");
 
 } // namespace fr

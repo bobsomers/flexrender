@@ -3,6 +3,8 @@
 #include <cassert>
 #include <sstream>
 #include <limits>
+#include <vector>
+#include <utility>
 #include <semaphore.h>
 #include <stdio.h>
 #include <errno.h>
@@ -19,6 +21,9 @@
 using std::string;
 using std::stringstream;
 using std::numeric_limits;
+using std::vector;
+using std::pair;
+using std::make_pair;
 
 namespace fr {
 
@@ -63,6 +68,9 @@ static uint32_t current_mesh_id = 0;
 
 /// The scene file we're rendering.
 static string scene;
+
+/// The bounding boxes of all participating workers.
+static vector<pair<uint32_t, BoundingBox>> worker_bounds;
 
 // Callbacks, handlers, and helpers for client functionality.
 namespace client {
@@ -396,11 +404,16 @@ void client::OnOK(NetNode* node) {
             break;
 
         case NetNode::State::BUILDING_BVH:
-            // TODO: unpack worker bounding box from message body
-            TOUTLN("[" << node->ip << "] Local BVH ready.");
-            num_workers_built++;
-            if (num_workers_built == config->workers.size()) {
-                BuildWBVH();
+            {
+                assert(node->message.size == sizeof(BoundingBox));
+                BoundingBox bounds = *(reinterpret_cast<BoundingBox*>(node->message.body));
+                worker_bounds.emplace_back(make_pair(node->me, bounds));
+
+                TOUTLN("[" << node->ip << "] Local BVH ready.");
+                num_workers_built++;
+                if (num_workers_built == config->workers.size()) {
+                    BuildWBVH();
+                }
             }
             break;
 
@@ -519,17 +532,18 @@ void client::StartSync() {
 
 void client::BuildWBVH() {
     TOUTLN("Building WBVH.");
-    // TODO: build the worker BVH
 
-    lib->ForEachNetNode([](uint32_t id, NetNode* node) {
+    // Build the worker BVH from the worker extents.
+    BVH* wbvh = new BVH(worker_bounds);
+
+    lib->ForEachNetNode([wbvh](uint32_t id, NetNode* node) {
         node->state = NetNode::State::SYNCING_WBVH;
-
-        Message request(Message::Kind::SYNC_WBVH);
-        // TODO: pack the wbvh in the message body
-        node->Send(request);
-
         TOUTLN("[" << node->ip << "] Syncing WBVH.");
+        node->SendWBVH(wbvh);
     });
+
+    // We don't need it anymore.
+    delete wbvh;
 }
 
 void client::StartRender() {

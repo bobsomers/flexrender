@@ -822,14 +822,17 @@ void server::OnBuildBVH(NetNode* node) {
     cout << endl;
 
     // Build the mesh BVH from the mesh extents.
-    lib->StoreMBVH(new BVH(mesh_bounds));
+    BVH* mbvh = new BVH(mesh_bounds);
+    lib->StoreMBVH(mbvh);
     cout << "." << flush;
 
-    // TODO: worker bounding box is MBVH root
+    // This worker's bounding box is the mesh BVH extents.
+    BoundingBox worker_bounds = mbvh->Extents();
 
     // Reply with OK and worker bounds.
     Message reply(Message::Kind::OK);
-    // TODO: pack worker bounding box into message body
+    reply.size = sizeof(BoundingBox);
+    reply.body = &worker_bounds;
     node->Send(reply);
 
     TOUTLN("Local BVH ready.");
@@ -837,8 +840,10 @@ void server::OnBuildBVH(NetNode* node) {
 
 void server::OnSyncWBVH(NetNode* node) {
     assert(node != nullptr);
+    assert(lib != nullptr);
 
-    // TODO: unpack the wbvh
+    // Unpack the worker BVH.
+    node->ReceiveWBVH(lib);
 
     // Reply with OK.
     Message reply(Message::Kind::OK);

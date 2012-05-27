@@ -297,7 +297,7 @@ void NetNode::ReceiveLightList(Library* lib) {
     msgpack::unpack(&mp_msg, reinterpret_cast<const char*>(message.body), message.size);
 
     // Unpack the light list.
-    LightList *lights = new LightList;
+    LightList* lights = new LightList;
     msgpack::object mp_obj = mp_msg.get();
     mp_obj.convert(lights);
 
@@ -316,6 +316,38 @@ void NetNode::SendLightList(const Library* lib) {
     // Serialize the payload.
     msgpack::sbuffer buffer;
     msgpack::pack(buffer, *lights);
+
+    // Pack the message body.
+    request.size = buffer.size();
+    request.body = buffer.data();
+
+    Send(request);
+}
+
+void NetNode::ReceiveWBVH(Library *lib) {
+    assert(message.size > 0);
+
+    // Deserialize the payload.
+    msgpack::unpacked mp_msg;
+    msgpack::unpack(&mp_msg, reinterpret_cast<const char*>(message.body), message.size);
+
+    // Unpack the light list.
+    BVH* wbvh = new BVH;
+    msgpack::object mp_obj = mp_msg.get();
+    mp_obj.convert(wbvh);
+
+    // Save it in the library.
+    lib->StoreWBVH(wbvh);
+}
+
+void NetNode::SendWBVH(BVH* wbvh) {
+    assert(wbvh != nullptr);
+
+    Message request(Message::Kind::SYNC_WBVH);
+
+    // Serialize the payload.
+    msgpack::sbuffer buffer;
+    msgpack::pack(buffer, *wbvh);
 
     // Pack the message body.
     request.size = buffer.size();

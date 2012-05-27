@@ -35,6 +35,8 @@ struct LinearNode {
     uint64_t axis;
 
     MSGPACK_DEFINE(bounds, leaf, index, parent, right, axis);
+
+    TOSTRINGABLE(LinearNode);
 };
 
 std::string ToString(const LinearNode& node, const std::string& indent = "");

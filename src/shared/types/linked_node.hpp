@@ -26,6 +26,8 @@ struct LinkedNode {
 
     /// The axis the node was split on.
     BoundingBox::Axis split;
+
+    TOSTRINGABLEBYPTR(LinkedNode);
 };
 
 std::string ToString(const LinkedNode* node, const std::string& indent = "");

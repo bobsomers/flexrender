@@ -16,6 +16,7 @@ namespace fr {
 
 class Library;
 class Image;
+class BVH;
 struct FatRay;
 struct RenderStats;
 
@@ -104,6 +105,12 @@ public:
 
     /// Sends the light list to this node.
     void SendLightList(const Library* lib);
+
+    /// Receives the message in the net node's buffer as a WBVH.
+    void ReceiveWBVH(Library* lib);
+
+    /// Sends the WBVH to this node.
+    void SendWBVH(BVH* wbvh);
 
     /// Receives the message in the net node's buffer as a freshly allocated
     /// image.
