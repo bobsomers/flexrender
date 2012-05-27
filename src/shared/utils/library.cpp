@@ -209,21 +209,24 @@ void Library::Intersect(FatRay* ray, uint32_t me) {
         if (mesh == nullptr) continue;
 
         // Get a skinny ray in the mesh's object space.
-        SlimRay xformed_ray = ray->TransformTo(mesh);
+        //SlimRay xformed_ray = ray->TransformTo(mesh);
 
-//        if (id == 7) {
-//            TOUTLN("Testing mesh 7!"); // TODO
+//        if (id == 8) {
+//            TOUTLN("========== TESTING MESH 8! =========="); // TODO
 //        }
 
-        mesh->bvh->Traverse(xformed_ray, &nearest,
+        mesh->bvh->Traverse(ray->slim, &nearest,
          [me, id, mesh](uint32_t index, const SlimRay& r, HitRecord* hit) {
             float t = numeric_limits<float>::quiet_NaN();
             LocalGeometry local;
 
-//            TOUTLN("Testing triangle intersection (index = " << index << "!"); // TODO
+            // Transform the ray to object space.
+            SlimRay xformed = r.TransformTo(mesh->xform_inv);
+
+//            TOUTLN("Testing triangle intersection (index = " << index << ")!"); // TODO
 
             const Triangle& tri = mesh->tris[index];
-            if (tri.Intersect(r, &t, &local) && t < hit->t) {
+            if (tri.Intersect(xformed, &t, &local) && t < hit->t) {
                 hit->worker = me;
                 hit->mesh = id;
                 hit->t = t;

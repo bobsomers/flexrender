@@ -9,6 +9,8 @@
 #include "types/slim_ray.hpp"
 #include "utils/printers.hpp"
 
+#include "utils/tout.hpp" // TODO remove
+
 using std::numeric_limits;
 using std::string;
 using std::stringstream;
@@ -72,6 +74,70 @@ BoundingBox::Axis BoundingBox::LongestAxis() const {
 }
 
 bool BoundingBox::Intersect(const SlimRay& ray, vec3 inv_dir, float* t) const {
+//    TOUTLN("inv_dir = " << ToString(inv_dir));
+//    TOUTLN("min = " << ToString(min));
+//    TOUTLN("max = " << ToString(max));
+//    TOUTLN("origin = " << ToString(ray.origin));
+
+    // Check the x-axis.
+    float x_near = (min.x - ray.origin.x) * inv_dir.x;
+//    TOUTLN("x_near = " << x_near);
+    float x_far = (max.x - ray.origin.x) * inv_dir.x;
+//    TOUTLN("x_far = " << x_far);
+    if (x_near > x_far) {
+//        TOUTLN("swapped near/far"); 
+        swap(x_near, x_far);
+    }
+
+    float t_min = x_near;
+//    TOUTLN("t_min = " << t_min);
+    float t_max = x_far;
+//    TOUTLN("t_max = " << t_max);
+    if (t_min > t_max) {
+//        TOUTLN("X-axis test FAILED! t_min = " << t_min << ", t_max = " << t_max);
+        return false;
+    }
+
+    // Check the y-axis.
+    float y_near = (min.y - ray.origin.y) * inv_dir.y;
+//    TOUTLN("y_near = " << y_near);
+    float y_far = (max.y - ray.origin.y) * inv_dir.y;
+//    TOUTLN("y_far = " << y_far);
+    if (y_near > y_far) {
+//        TOUTLN("swapped near/far");
+        swap(y_near, y_far);
+    }
+
+    t_min = y_near > t_min ? y_near : t_min;
+//    TOUTLN("t_min = " << t_min);
+    t_max = y_far < t_max ? y_far : t_max;
+//    TOUTLN("t_max = " << t_max);
+    if (t_min > t_max) {
+//        TOUTLN("Y-axis test FAILED! t_min = " << t_min << ", t_max = " << t_max);
+        return false;
+    }
+
+    // Check the z-axis.
+    float z_near = (min.z - ray.origin.z) * inv_dir.z;
+    float z_far = (max.z - ray.origin.z) * inv_dir.z;
+    if (z_near > z_far) swap(z_near, z_far);
+
+    t_min = z_near > t_min ? z_near : t_min;
+    t_max = z_far < t_max ? z_far : t_max;
+    if (t_min > t_max) {
+//        TOUTLN("Z-axis test FAILED! t_min = " << t_min << ", t_max = " << t_max);
+        return false;
+    }
+
+    if (t_max < 0.0f) {
+//        TOUTLN("Bounding test FAILED! box behind ray!");
+        return false; // Box behind the ray.
+    }
+
+    *t = t_min;
+    return true;
+
+    /*
     float tmin = 0.0f;
     float tmax = 0.0f;
     float tgmin = 0.0f;
@@ -101,6 +167,8 @@ bool BoundingBox::Intersect(const SlimRay& ray, vec3 inv_dir, float* t) const {
     tgmin = std::max(tgmin, tmin);
     tgmax = std::min(tgmax, tmax);
 
+    TOUTLN("tgmin = " << tgmin << ", tgmax = " << tgmax);
+
     // Test global min and max for intersection.
     if (tgmin > tgmax || tgmax < 0.0f) {
         // Ray misses the box (or is in front of the box).
@@ -110,6 +178,7 @@ bool BoundingBox::Intersect(const SlimRay& ray, vec3 inv_dir, float* t) const {
     // Ray hits the box at tgmin.
     *t = tgmin;
     return true;
+    */
 }
 
 string ToString(const BoundingBox& box, const string& indent) {

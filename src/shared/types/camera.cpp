@@ -107,8 +107,8 @@ bool Camera::GeneratePrimary(FatRay* ray) {
 
     // TODO: debugging only
 //    if (!_initialized) {
-//        _x = 225;
-//        _y = 280;
+//        _x = 292;
+//        _y = 436;
 //    } else {
 //        return false;
 //    }

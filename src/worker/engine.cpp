@@ -488,7 +488,7 @@ void server::ProcessLight(FatRay* ray, WorkResults* results) {
 
     // Our turn to check for a hit?
     if (ray->traversal.current == me) {
-        lib->NaiveIntersect(ray, me);
+        lib->Intersect(ray, me);
     }
 
     // Move the ray to the next worker.
@@ -811,6 +811,7 @@ void server::OnBuildBVH(NetNode* node) {
 
     TOUT("Building local BVH" << flush);
     lib->ForEachMesh([](uint32_t id, Mesh* mesh) {
+//        TOUTLN("========== BVH FOR MESH " << id << " =========="); // TODO: remove
         mesh->bvh = new BVH(mesh);
         cout << "." << flush;
     });

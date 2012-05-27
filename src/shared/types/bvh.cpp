@@ -125,6 +125,8 @@ void BVH::Build(vector<PrimitiveInfo>& build_data) {
     size_t total_nodes = 0;
     LinkedNode* root = RecursiveBuild(build_data, 0, build_data.size(), &total_nodes);
 
+//    TOUTLN(ToString(root)); // TODO: remove
+
     // Flatten the tree into a linear representation.
     _nodes.reserve(total_nodes);
     for (size_t i = 0; i < total_nodes; i++) {
