@@ -271,7 +271,6 @@ void client::OnClose(uv_handle_t* handle) {
     TOUTLN("[" << node->ip << "] Disconnected.");
 
     // Net node will be deleted with library.
-    // TODO: halt rendering if it wasn't done
 }
 
 void client::OnFlushTimeout(uv_timer_t* timer, int status) {

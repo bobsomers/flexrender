@@ -567,9 +567,6 @@ void server::ShadeIntersection(FatRay* ray, WorkResults* results) {
     // Everything this function does and calls must be thread-safe. This
     // function will NOT run in the main thread, it runs on the thread pool.
 
-    // TODO: Verify it hit the same mesh? The epsilons are pretty small here...
-    // in practice we might not need to check.
-
     // Did it hit close enough to the target?
     vec3 hit = ray->EvaluateAt(ray->hit.t);
     if (distance(hit, ray->target) > TARGET_INTERSECT_EPSILON) {
@@ -811,7 +808,6 @@ void server::OnBuildBVH(NetNode* node) {
 
     TOUT("Building local BVH" << flush);
     lib->ForEachMesh([](uint32_t id, Mesh* mesh) {
-//        TOUTLN("========== BVH FOR MESH " << id << " =========="); // TODO: remove
         mesh->bvh = new BVH(mesh);
         cout << "." << flush;
     });

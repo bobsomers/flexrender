@@ -76,7 +76,7 @@ float Texture::Sample(vec2 texcoord) {
 }
 
 float Texture::Image(float u, float v) {
-    // TODO: make this a lot better... filtering?
+    // This could be a LOT better.
     int16_t x = static_cast<int16_t>(u * width);
     int16_t y = static_cast<int16_t>(v * height);
     uint32_t index = y * width + x;
