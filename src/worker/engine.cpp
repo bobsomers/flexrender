@@ -390,55 +390,48 @@ void server::IntersectWBVH(FatRay* ray, WorkResults* results, BVH* wbvh) {
     // !!! WARNING !!!
     // Everything this function does and calls must be thread-safe. This
     // function will NOT run in the main thread, it runs on the thread pool.
-
-    // Our turn to check for a hit?
-    if (ray->current_worker == me) {
-//            TOUTLN("current = me! testing intersection locally...");
-        ray->traversal.hit = lib->Intersect(ray, me);
-    }
-
-    // Lambda for saving state and suspending BVH traversal.
-    auto forwarder = [ray](uint32_t worker_index, const SlimRay& r,
+    
+    // Common continuation for suspending traversal upon intersection.
+    auto suspender = [ray](uint32_t worker_index, const SlimRay& r,
      HitRecord* hit, bool* request_suspend) {
         // Save the current worker and request suspension.
         ray->current_worker = worker_index;
         *request_suspend = true;
-        return false;
+        return false; // Didn't hit anything... yet.
     };
 
-//        TOUTLN(ToString(ray->slim));
-
-//        TOUTLN("pre traversal: " << ToString(ray->traversal));
-
-    // Figure out where we're going next.
-    if (ray->traversal.current == 0) {
-        // Kick off initial traversal.
-        ray->traversal = wbvh->Traverse(ray->slim, &ray->hit, forwarder);
-    } else {
-        // Resume traversal from where we left off.
-        ray->traversal = wbvh->Traverse(ray->traversal, ray->slim, &ray->hit, forwarder);
-    }
-
-//        TOUTLN("post traversal: " << ToString(ray->traversal));
-
-    // Have we finished traversing the workers?
-    if (ray->traversal.current == 0) {
-        // Yes, are we the nearest hit?
-        if (ray->hit.worker == me) {
-            // Yes, let's illuminate the intersection and kill the ray.
+    // Is this a suspended ray?
+    if (ray->traversal.state != TraversalState::State::NONE) {
+        // Yes, it is. Is the traversal complete?
+        if (ray->traversal.current == 0) {
+            // Yes it is. Illuminate the nearest intersection and kill the ray.
             IlluminateIntersection(ray, results);
             delete ray;
             results->intersects_killed++;
-        } else if (ray->hit.worker != 0) {
-            // No, forward the ray to the hit worker.
+            return;
+        } else {
+            // No it's not. Test local geometry and resume traversal.
+            ray->traversal.hit = lib->Intersect(ray, me);
+            ray->traversal = wbvh->Traverse(ray->traversal, ray->slim, &ray->hit, suspender);
+        }
+    } else {
+        // No, it's not. Kick off the initial traversal.
+        ray->traversal = wbvh->Traverse(ray->slim, &ray->hit, suspender);
+    }
+
+    // Did the traversal complete?
+    if (ray->traversal.current == 0) {
+        // Yes it did. Did it hit anything?
+        if (ray->hit.worker > 0) {
+            // Yes it did. Forward this ray to the winning worker.
             ForwardRay(ray, results, ray->hit.worker);
         } else {
-            // There was no hit. Kill the ray.
+            // No it did not. Kill the ray.
             delete ray;
             results->intersects_killed++;
         }
     } else {
-        // Forward it on.
+        // No it did not. Forward this ray to the current worker.
         ForwardRay(ray, results, ray->current_worker);
     }
 }
@@ -567,54 +560,47 @@ void server::LightWBVH(FatRay* ray, WorkResults* results, BVH* wbvh) {
     // Everything this function does and calls must be thread-safe. This
     // function will NOT run in the main thread, it runs on the thread pool.
 
-    // Our turn to check for a hit?
-    if (ray->current_worker == me) {
-//            TOUTLN("current = me! testing intersection locally...");
-        ray->traversal.hit = lib->Intersect(ray, me);
-    }
-
-    // Lambda for saving state and suspending BVH traversal.
-    auto forwarder = [ray](uint32_t worker_index, const SlimRay& r,
+    // Common continuation for suspending traversal upon intersection.
+    auto suspender = [ray](uint32_t worker_index, const SlimRay& r,
      HitRecord* hit, bool* request_suspend) {
         // Save the current worker and request suspension.
         ray->current_worker = worker_index;
         *request_suspend = true;
-        return false;
+        return false; // Didn't hit anything... yet.
     };
 
-//        TOUTLN(ToString(ray->slim));
-
-//        TOUTLN("pre traversal: " << ToString(ray->traversal));
-
-    // Figure out where we're going next.
-    if (ray->traversal.current == 0) {
-        // Kick off initial traversal.
-        ray->traversal = wbvh->Traverse(ray->slim, &ray->hit, forwarder);
-    } else {
-        // Resume traversal from where we left off.
-        ray->traversal = wbvh->Traverse(ray->traversal, ray->slim, &ray->hit, forwarder);
-    }
-
-//        TOUTLN("post traversal: " << ToString(ray->traversal));
-
-    // Have we finished traversing the workers?
-    if (ray->traversal.current == 0) {
-        // Yes, are we the nearest hit?
-        if (ray->hit.worker == me) {
-            // Yes, shade the intersection and kill the ray.
+    // Is this a suspended ray?
+    if (ray->traversal.state != TraversalState::State::NONE) {
+        // Yes, it is. Is the traversal complete?
+        if (ray->traversal.current == 0) {
+            // Yes it is. Shade the nearest intersection and kill the ray.
             ShadeIntersection(ray, results);
             delete ray;
             results->lights_killed++;
-        } else if (ray->hit.worker != 0) {
-            // No, forward the ray to the hit worker.
+            return;
+        } else {
+            // No it's not. Test local geometry and resume traversal.
+            ray->traversal.hit = lib->Intersect(ray, me);
+            ray->traversal = wbvh->Traverse(ray->traversal, ray->slim, &ray->hit, suspender);
+        }
+    } else {
+        // No, it's not. Kick off the initial traversal.
+        ray->traversal = wbvh->Traverse(ray->slim, &ray->hit, suspender);
+    }
+
+    // Did the traversal complete?
+    if (ray->traversal.current == 0) {
+        // Yes it did. Did it hit anything?
+        if (ray->hit.worker > 0) {
+            // Yes it did. Forward this ray to the winning worker.
             ForwardRay(ray, results, ray->hit.worker);
         } else {
-            // There was no hit. Kill the ray.
+            // No it did not. Kill the ray.
             delete ray;
             results->lights_killed++;
         }
     } else {
-        // Forward it on.
+        // No it did not. Forward this ray to the current worker.
         ForwardRay(ray, results, ray->current_worker);
     }
 }
@@ -675,14 +661,13 @@ void server::ForwardRay(FatRay* ray, WorkResults* results, uint32_t id) {
     // !!! WARNING !!!
     // Everything this function does and calls must be thread-safe. This
     // function will NOT run in the main thread, it runs on the thread pool.
+
     if (id == me) {
         // Push the ray back through the processing stack to save thread and
         // network overhead.
-//        TOUTLN("FORWARD " << ray->kind << ": id == me, pushing through ProcessRay() again.");
         ProcessRay(ray, results);
     } else {
         // Register the forwarding request.
-//        TOUTLN("FORWARD " << ray->kind << ": forwarding to " << id << ".");
         NetNode* node = lib->LookupNetNode(id);
         results->forwards.emplace_back(ray, node);
     }

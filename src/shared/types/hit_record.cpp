@@ -25,9 +25,9 @@ HitRecord::HitRecord(uint32_t worker, uint32_t mesh, float t) :
  geom() {}
 
 HitRecord::HitRecord() :
+ worker(0),
+ mesh(0),
  geom() {
-    worker = numeric_limits<uint32_t>::max();
-    mesh = numeric_limits<uint32_t>::max();
     t = numeric_limits<float>::infinity();
 }
 
