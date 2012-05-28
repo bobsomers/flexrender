@@ -1,6 +1,7 @@
 -- Import loaders.
 local sloaders = require "loaders.shaders"
 local tloaders = require "loaders.textures"
+local mloaders = require "loaders.meshes"
 
 -- Import primitives.
 local simple = require "primitives.simple"
@@ -14,6 +15,7 @@ return {
     frsl = sloaders.frsl,
     procedural = tloaders.procedural,
     targa = tloaders.targa,
+    obj = mloaders.obj,
     plane = simple.plane,
     cube = simple.cube,
     phong = phong.phong,

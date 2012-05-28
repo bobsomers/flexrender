@@ -12,7 +12,7 @@ network {
         "127.0.0.1:19401"
 
     },
-    runaway = 2.5 -- percent
+    runaway = 5 -- percent
 }
 
 output {
@@ -25,11 +25,11 @@ output {
 
 render {
     antialiasing = 1,
-    samples = 10,
+    samples = 1,
     bounces = 2,
     threshold = 0.0001,
-    min = vec3(-5, -5, -5),
-    max = vec3(15, 15, 15),
+    min = vec3(-3, -3, -3),
+    max = vec3(9, 9, 9),
     --min = vec3(-10, -10, -10),
     --max = vec3(10, 10, 10),
 }
