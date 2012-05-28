@@ -2,21 +2,28 @@
 local types = require "base.types"
 require "base.vec2"
 require "base.vec3"
+require "base.vec4"
+
+-- Import utility functions.
+local transform = require "base.transform"
 
 -- Module aliases.
 local vec2 = types.vec2
 local vec3 = types.vec3
+local vec4 = types.vec4
+local scale = transform.scale
+local translate = transform.translate
 
 -- Cache for OBJ models.
 local obj_cache = {}
 
 -- Loads a mesh in OBJ format, caching it for later reloading.
-local function obj(filename, scale)
+local function obj(filename, adjust)
     if obj_cache[filename] then
         return obj_cache[filename]
     end
 
-    scale = scale or false
+    adjust = adjust or false
 
     local vertices = {}
     local normals = {}
@@ -67,6 +74,28 @@ local function obj(filename, scale)
     end
 
     f:close()
+
+    if adjust then
+        -- Find the centroid and the min Y.
+        local centroid = vec3(0, 0, 0)
+        local minY = vertices[1].y
+        for _, vertex in ipairs(vertices) do
+            if vertex.y < minY then
+                minY = vertex.y
+            end
+            centroid = centroid + vertex
+        end
+        centroid = centroid / #vertices
+
+        local xform = scale(1 / (centroid.y - minY)) * translate(-centroid)
+
+        local adjusted = {}
+        for _, vertex in ipairs(vertices) do
+            table.insert(adjusted, vec3(xform * vec4(vertex, 1)))
+        end
+
+        vertices = adjusted
+    end
 
     local mesh = function()
         for _, face in ipairs(faces) do

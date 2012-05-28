@@ -46,8 +46,8 @@ for i = 1, 4 do
 
         mesh {
             material = matname,
-            transform = translate(vec3(i, 0, j)) * scale(5),
-            data = fre.obj("scenes/assets/bunny-hi.obj")
+            transform = translate(vec3(i, 0, j)) * scale(1),
+            data = fre.obj("scenes/assets/bunny-lo.obj", true)
         }
     end
 end
