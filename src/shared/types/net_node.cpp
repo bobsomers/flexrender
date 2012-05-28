@@ -627,15 +627,18 @@ void NetNode::ReceiveRenderStats() {
     _stats_log.push_back(stats);
 
     // Are they interesting?
-    if (stats->intersect_queue > 0 ||
+    if (stats->primary_progress < 99.9f ||
+        stats->intersect_queue > 0 ||
         stats->illuminate_queue > 0 ||
         stats->light_queue > 0 ||
         stats->intersects_produced > 0 ||
         stats->illuminates_produced > 0 ||
-        stats->lights_killed > 0 ||
+        stats->lights_produced > 0 ||
         stats->intersects_killed > 0 ||
         stats->illuminates_killed > 0 ||
-        stats->lights_killed > 0) {
+        stats->lights_killed > 0 ||
+        stats->rays_rx > 0 ||
+        stats->rays_tx > 0) {
         _num_uninteresting = 0;
     } else {
         _num_uninteresting++;
@@ -671,8 +674,10 @@ uint64_t NetNode::RaysProduced(uint32_t intervals) {
     uint32_t count = 0;
     auto iter = _stats_log.rbegin();
     while (iter != _stats_log.rend() && count < intervals) {
-        rays += (*iter)->intersects_produced + (*iter)->illuminates_produced +
-         (*iter)->lights_produced;
+        RenderStats* entry = *iter;
+        rays += entry->intersects_produced +
+                entry->illuminates_produced +
+                entry->lights_produced;
         iter++;
         count++;
     }
@@ -686,8 +691,10 @@ uint64_t NetNode::RaysKilled(uint32_t intervals) {
     uint32_t count = 0;
     auto iter = _stats_log.rbegin();
     while (iter != _stats_log.rend() && count < intervals) {
-        rays += (*iter)->intersects_killed + (*iter)->illuminates_killed +
-         (*iter)->lights_killed;
+        RenderStats* entry = *iter;
+        rays += entry->intersects_killed +
+                entry->illuminates_killed +
+                entry->lights_killed;
         iter++;
         count++;
     }
@@ -701,8 +708,10 @@ uint64_t NetNode::RaysQueued(uint32_t intervals) {
     uint32_t count = 0;
     auto iter = _stats_log.rbegin();
     while (iter != _stats_log.rend() && count < intervals) {
-        rays += (*iter)->intersect_queue + (*iter)->illuminate_queue +
-         (*iter)->light_queue;
+        RenderStats* entry = *iter;
+        rays += entry->intersect_queue +
+                entry->illuminate_queue +
+                entry->light_queue;
         iter++;
         count++;
     }

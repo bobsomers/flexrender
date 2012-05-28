@@ -320,9 +320,9 @@ void client::OnInterestingTimeout(uv_timer_t* timer, int status) {
     uint64_t total_killed = 0;
     uint64_t total_queued = 0;
     lib->ForEachNetNode([&total_produced, &total_killed, &total_queued](uint32_t id, NetNode* node) {
-        total_produced += node->RaysProduced(max_intervals / 2);
-        total_killed += node->RaysKilled(max_intervals / 2);
-        total_queued += node->RaysQueued(max_intervals / 2);
+        total_produced += node->RaysProduced(max_intervals);
+        total_killed += node->RaysKilled(max_intervals);
+        total_queued += node->RaysQueued(max_intervals);
     });
     TOUTLN("RAYS:  +" << total_produced << "  -" << total_killed << "  ~" << total_queued);
 }

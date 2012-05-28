@@ -542,9 +542,6 @@ void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
                 // Scale the transmittance by the number of samples.
                 light->transmittance = ray->transmittance / config->samples;
 
-                // It hasn't hit anything yet.
-                light->hit.worker = 0;
-
                 // Send it on it's way!
                 ProcessLight(light, results);
             }
@@ -1046,6 +1043,12 @@ void server::OnRenderResume(NetNode* node) {
 
     rayq->Resume();
     TOUTLN("Resuming work generation.");
+
+    // Reschedule new jobs if we're not at our max capacity.
+    uint32_t num_jobs = max_jobs - active_jobs;
+    for (uint32_t i = 0; i < num_jobs; i++) {
+        ScheduleJob();
+    }
 }
 
 void OnFlushTimeout(uv_timer_t* timer, int status) {
