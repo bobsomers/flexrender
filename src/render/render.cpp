@@ -32,9 +32,11 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    bool linear_scan = FlagExists(argc, argv, "-l", "--linear-scan");
+
     TOUTLN("FlexRender starting.");
 
-    EngineInit(config_file, scene_file, intervals);
+    EngineInit(config_file, scene_file, intervals, linear_scan);
     EngineRun();
 
     TOUTLN("FlexRender done.");

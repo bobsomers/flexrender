@@ -627,8 +627,15 @@ void NetNode::ReceiveRenderStats() {
     _stats_log.push_back(stats);
 
     // Are they interesting?
-    if (stats->intersects_killed > 0 || stats->illuminates_killed > 0 ||
-     stats->lights_killed > 0) {
+    if (stats->intersect_queue > 0 ||
+        stats->illuminate_queue > 0 ||
+        stats->light_queue > 0 ||
+        stats->intersects_produced > 0 ||
+        stats->illuminates_produced > 0 ||
+        stats->lights_killed > 0 ||
+        stats->intersects_killed > 0 ||
+        stats->illuminates_killed > 0 ||
+        stats->lights_killed > 0) {
         _num_uninteresting = 0;
     } else {
         _num_uninteresting++;

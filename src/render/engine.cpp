@@ -49,6 +49,10 @@ static size_t num_workers_complete = 0;
 /// rendering complete.
 static uint32_t max_intervals = 0;
 
+/// Whether or not to use a worker BVH or a simple linear scan for network
+/// traversal.
+static bool use_linear_scan = false;
+
 /// The timer for ensuring we flush the send buffer.
 static uv_timer_t flush_timer;
 
@@ -101,10 +105,11 @@ void OnRenderStats(NetNode* node);
 }
 
 void EngineInit(const string& config_file, const string& scene_file,
- uint32_t intervals) {
+ uint32_t intervals, bool linear_scan) {
     lib = new Library;
 
     max_intervals = intervals;
+    use_linear_scan = linear_scan;
 
     // Parse the config file.
     ConfigScript config_script;
@@ -411,8 +416,17 @@ void client::OnOK(NetNode* node) {
 
                 TOUTLN("[" << node->ip << "] Local BVH ready.");
                 num_workers_built++;
-                if (num_workers_built == config->workers.size()) {
-                    BuildWBVH();
+
+                if (use_linear_scan) {
+                    // Jump right into starting the render.
+                    node->state = NetNode::State::SYNCING_WBVH;
+                    OnOK(node);
+                } else {
+                    // Build the worker BVH and distribute it if all workers
+                    // have reported in.
+                    if (num_workers_built == config->workers.size()) {
+                        BuildWBVH();
+                    }
                 }
             }
             break;
