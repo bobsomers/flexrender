@@ -16,7 +16,7 @@ network {
 }
 
 output {
-    size = vec2(512, 512),
+    size = vec2(640, 360),
     name = "test",
     buffers = {
         -- none
@@ -28,8 +28,8 @@ render {
     samples = 1,
     bounces = 2,
     threshold = 0.0001,
-    --min = vec3(-3, -3, -3),
-    --max = vec3(9, 9, 9),
-    min = vec3(-10, -10, -10),
-    max = vec3(10, 10, 10),
+    min = vec3(-25, -25, -25),
+    max = vec3(25, 25, 25),
+    --min = vec3(-10, -10, -10),
+    --max = vec3(10, 10, 10),
 }

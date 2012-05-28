@@ -25,10 +25,16 @@ reflect = fr.reflect
     [[
 
 function direct(V, N, T, L, I)
-    local diffuse = dscale * dcolor * I * dot(N, L)
+    local NdotL = dot(N, L)
+    if NdotL < 0 then NdotL = 0 end
 
     local R = reflect(-V, N)
-    local specular = sscale * I * (dot(R, V) ^ spower)
+    local VdotR = dot(R, V)
+    if VdotR < 0 then VdotR = 0 end
+
+    local diffuse = dscale * dcolor * I * NdotL
+
+    local specular = sscale * I * (VdotR ^ spower)
 
     accumulate3("R", "G", "B", diffuse + specular)
 end
@@ -75,10 +81,17 @@ hemisample = fr.hemisample
     [[
 
 function direct(V, N, T, L, I)
-    local diffuse = dscale * dcolor * I * dot(N, L)
+    local NdotL = dot(N, L)
+    if NdotL < 0 then NdotL = 0 end
 
     local R = reflect(-V, N)
-    local specular = sscale * I * (dot(R, V) ^ spower)
+    local VdotR = dot(R, V)
+    if VdotR < 0 then VdotR = 0 end
+
+    local diffuse = dscale * dcolor * I * NdotL
+
+    local R = reflect(-V, N)
+    local specular = sscale * I * (VdotR ^ spower)
 
     accumulate3("R", "G", "B", diffuse + specular)
 end
