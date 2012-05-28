@@ -492,6 +492,7 @@ void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
     // !!! WARNING !!!
     // Everything this function does and calls must be thread-safe. This
     // function will NOT run in the main thread, it runs on the thread pool.
+
     Config* config = lib->LookupConfig();
 
     lib->ForEachEmissiveMesh([ray, results, config](uint32_t id, Mesh* mesh) {
@@ -980,8 +981,6 @@ void server::OnSyncWBVH(NetNode* node) {
 
     // Unpack the worker BVH.
     node->ReceiveWBVH(lib);
-
-//    TOUTLN(ToString(lib->LookupWBVH()));
 
     // Reply with OK.
     Message reply(Message::Kind::OK);

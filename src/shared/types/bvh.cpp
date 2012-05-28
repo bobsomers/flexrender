@@ -83,13 +83,11 @@ TraversalState BVH::Traverse(TraversalState state, const SlimRay& ray, HitRecord
 
     if (resume) {
         if (traversal.state == TraversalState::State::FROM_PARENT) {
-//            TOUTLN("RESUMING FROM_PARENT");
             goto resume_parent;
         } else if (traversal.state == TraversalState::State::FROM_SIBLING) {
-//            TOUTLN("RESUMING FROM_SIBLING");
             goto resume_sibling;
         } else {
-//            TERRLN("Must be in FROM_PARENT or FROM_SIBLING state to resume traversal!");
+            TERRLN("Must be in FROM_PARENT or FROM_SIBLING state to resume traversal!");
         }
     }
 
@@ -136,7 +134,6 @@ resume_sibling:     traversal.current = _nodes[traversal.current].parent;
             case TraversalState::State::FROM_CHILD:
                 if (traversal.current == 0) {
                     // Traversal has finished.
-//                    TOUTLN("==> Traversal complete.");
                     return traversal;
                 }
                 if (traversal.current == NearChild(_nodes[traversal.current].parent, ray.direction)) {
@@ -164,7 +161,6 @@ resume_sibling:     traversal.current = _nodes[traversal.current].parent;
     return TraversalState();
 
 suspend_traversal:
-//    TOUTLN("SUSPENDING!");
     return traversal;
 }
 

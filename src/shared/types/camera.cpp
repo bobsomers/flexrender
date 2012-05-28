@@ -105,14 +105,6 @@ Camera::Camera() :
 bool Camera::GeneratePrimary(FatRay* ray) {
     assert(_config != nullptr);
 
-    // TODO: debugging only
-    // if (!_initialized) {
-    //    _x = 292;
-    //    _y = 436;
-    // } else {
-    //    return false;
-    // }
-
     if (!_initialized) {
         // Compute the top left screen space extents.
         _l = ratio / -2.0f;
