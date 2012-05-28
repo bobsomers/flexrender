@@ -25,6 +25,10 @@ struct TraversalState {
     /// The current state of the 3-state automaton.
     uint32_t state;
 
+    /// Whether or not a hit has been registered during traversal. This is
+    /// technically a boolean, but padded to 4 bytes for alignment.
+    uint32_t hit;
+
     TOSTRINGABLE(TraversalState);
 };
 

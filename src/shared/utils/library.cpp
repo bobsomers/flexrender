@@ -182,16 +182,16 @@ void Library::BuildSpatialIndex() {
     _chunk_size = ((SPACECODE_MAX + 1) / (_nodes.size() - 1)) + 1;
 }
 
-void Library::Intersect(FatRay* ray, uint32_t me) {
+bool Library::Intersect(FatRay* ray, uint32_t me) {
     assert(_mbvh != nullptr);
 
     HitRecord nearest(0, 0, numeric_limits<float>::infinity());
 
     _mbvh->Traverse(ray->slim, &nearest,
-     [this, me](uint32_t mesh_index, const SlimRay& mesh_ray, HitRecord* mesh_hit) {
+     [this, me](uint32_t mesh_index, const SlimRay& mesh_ray, HitRecord* mesh_hit, bool* mesh_suspend) {
         Mesh *mesh = _meshes[mesh_index];
-        return mesh->bvh->Traverse(mesh_ray, mesh_hit,
-         [me, mesh_index, mesh](uint32_t tri_index, const SlimRay& tri_ray, HitRecord* tri_hit) {
+        TraversalState state = mesh->bvh->Traverse(mesh_ray, mesh_hit,
+         [me, mesh_index, mesh](uint32_t tri_index, const SlimRay& tri_ray, HitRecord* tri_hit, bool* tri_suspend) {
             float t = numeric_limits<float>::quiet_NaN();
             LocalGeometry local;
 
@@ -209,6 +209,7 @@ void Library::Intersect(FatRay* ray, uint32_t me) {
 
             return false;
         });
+        return state.hit;
     });
 
     if (nearest.worker > 0 && nearest.t < ray->hit.t) {
@@ -218,7 +219,11 @@ void Library::Intersect(FatRay* ray, uint32_t me) {
         vec4 n(ray->hit.geom.n, 0.0f);
         ray->hit.geom.n = normalize(
          vec3(_meshes[ray->hit.mesh]->xform_inv_tr * n));
+
+        return true;
     }
+
+    return false;
 }
 
 }

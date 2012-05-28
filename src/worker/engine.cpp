@@ -387,34 +387,92 @@ void server::ProcessIntersect(FatRay* ray, WorkResults* results) {
     // Everything this function does and calls must be thread-safe. This
     // function will NOT run in the main thread, it runs on the thread pool.
     Config* config = lib->LookupConfig();
+    BVH* wbvh = lib->LookupWBVH();
 
-    // Our turn to check for a hit?
-    if (ray->traversal.current == me) {
-        lib->Intersect(ray, me);
-    }
+    if (wbvh != nullptr) {
+        // Using worker BVH for network traversal.
 
-    // Move the ray to the next worker.
-    ray->traversal.current++;
+        // Our turn to check for a hit?
+        if (ray->current_worker == me) {
+//            TOUTLN("current = me! testing intersection locally...");
+            ray->traversal.hit = lib->Intersect(ray, me);
+        }
 
-    // Have we checked every worker?
-    if (ray->traversal.current > config->workers.size()) {
-        // Yes, are we the nearest hit?
-        if (ray->hit.worker == me) {
-            // Yes, let's illuminate the intersection and kill the ray.
-            IlluminateIntersection(ray, results);
-            delete ray;
-            results->intersects_killed++;
-        } else if (ray->hit.worker != 0) {
-            // No, forward the ray to the hit worker.
-            ForwardRay(ray, results, ray->hit.worker);
+        // Lambda for saving state and suspending BVH traversal.
+        auto forwarder = [ray](uint32_t worker_index, const SlimRay& r,
+         HitRecord* hit, bool* request_suspend) {
+            // Save the current worker and request suspension.
+            ray->current_worker = worker_index;
+            *request_suspend = true;
+            return false;
+        };
+
+//        TOUTLN(ToString(ray->slim));
+
+//        TOUTLN("pre traversal: " << ToString(ray->traversal));
+
+        // Figure out where we're going next.
+        if (ray->traversal.current == 0) {
+            // Kick off initial traversal.
+            ray->traversal = wbvh->Traverse(ray->slim, &ray->hit, forwarder);
         } else {
-            // There was no hit. Kill the ray.
-            delete ray;
-            results->intersects_killed++;
+            // Resume traversal from where we left off.
+            ray->traversal = wbvh->Traverse(ray->traversal, ray->slim, &ray->hit, forwarder);
+        }
+
+//        TOUTLN("post traversal: " << ToString(ray->traversal));
+
+        // Have we finished traversing the workers?
+        if (ray->traversal.current == 0) {
+            // Yes, are we the nearest hit?
+            if (ray->hit.worker == me) {
+                // Yes, let's illuminate the intersection and kill the ray.
+                IlluminateIntersection(ray, results);
+                delete ray;
+                results->intersects_killed++;
+            } else if (ray->hit.worker != 0) {
+                // No, forward the ray to the hit worker.
+                ForwardRay(ray, results, ray->hit.worker);
+            } else {
+                // There was no hit. Kill the ray.
+                delete ray;
+                results->intersects_killed++;
+            }
+        } else {
+            // Forward it on.
+            ForwardRay(ray, results, ray->current_worker);
         }
     } else {
-        // Forward it on.
-        ForwardRay(ray, results, ray->traversal.current);
+        // Using linear scan for network traversal.
+
+        // Our turn to check for a hit?
+        if (ray->current_worker == me) {
+            lib->Intersect(ray, me);
+        }
+
+        // Move the ray to the next worker.
+        ray->current_worker++;
+
+        // Have we checked every worker?
+        if (ray->current_worker > config->workers.size()) {
+            // Yes, are we the nearest hit?
+            if (ray->hit.worker == me) {
+                // Yes, let's illuminate the intersection and kill the ray.
+                IlluminateIntersection(ray, results);
+                delete ray;
+                results->intersects_killed++;
+            } else if (ray->hit.worker != 0) {
+                // No, forward the ray to the hit worker.
+                ForwardRay(ray, results, ray->hit.worker);
+            } else {
+                // There was no hit. Kill the ray.
+                delete ray;
+                results->intersects_killed++;
+            }
+        } else {
+            // Forward it on.
+            ForwardRay(ray, results, ray->current_worker);
+        }
     }
 }
 
@@ -490,35 +548,44 @@ void server::ProcessLight(FatRay* ray, WorkResults* results) {
     // Everything this function does and calls must be thread-safe. This
     // function will NOT run in the main thread, it runs on the thread pool.
     Config* config = lib->LookupConfig();
+//    BVH* wbvh = lib->LookupWBVH();
 
-    // Our turn to check for a hit?
-    if (ray->traversal.current == me) {
-        lib->Intersect(ray, me);
-    }
+//    if (wbvh != nullptr) {
+//        // Using worker BVH for network traversal.
+//
+//        // TODO
+//    } else {
+        // Using linear scan for network traversal.
 
-    // Move the ray to the next worker.
-    ray->traversal.current++;
-
-    // Have we checked every worker?
-    if (ray->traversal.current > config->workers.size()) {
-        // Yes, are we the nearest hit?
-        if (ray->hit.worker == me) {
-            // Yes, shade the intersection and kill the ray.
-            ShadeIntersection(ray, results);
-            delete ray;
-            results->lights_killed++;
-        } else if (ray->hit.worker != 0) {
-            // No, forward the ray to the hit worker.
-            ForwardRay(ray, results, ray->hit.worker);
-        } else {
-            // There was no hit. Kill the ray.
-            delete ray;
-            results->lights_killed++;
+        // Our turn to check for a hit?
+        if (ray->current_worker == me) {
+            lib->Intersect(ray, me);
         }
-    } else {
-        // Forward it on.
-        ForwardRay(ray, results, ray->traversal.current);
-    }
+
+        // Move the ray to the next worker.
+        ray->current_worker++;
+
+        // Have we checked every worker?
+        if (ray->current_worker > config->workers.size()) {
+            // Yes, are we the nearest hit?
+            if (ray->hit.worker == me) {
+                // Yes, shade the intersection and kill the ray.
+                ShadeIntersection(ray, results);
+                delete ray;
+                results->lights_killed++;
+            } else if (ray->hit.worker != 0) {
+                // No, forward the ray to the hit worker.
+                ForwardRay(ray, results, ray->hit.worker);
+            } else {
+                // There was no hit. Kill the ray.
+                delete ray;
+                results->lights_killed++;
+            }
+        } else {
+            // Forward it on.
+            ForwardRay(ray, results, ray->current_worker);
+        }
+//    }
 }
 
 void server::ForwardRay(FatRay* ray, WorkResults* results, uint32_t id) {
@@ -819,12 +886,11 @@ void server::OnBuildBVH(NetNode* node) {
         mesh_bounds.emplace_back(make_pair(id, mesh->bvh->Extents()));
         cout << "." << flush;
     });
-    cout << endl;
 
     // Build the mesh BVH from the mesh extents.
     BVH* mbvh = new BVH(mesh_bounds);
     lib->StoreMBVH(mbvh);
-    cout << "." << flush;
+    cout << "." << endl;
 
     // This worker's bounding box is the mesh BVH extents.
     BoundingBox worker_bounds = mbvh->Extents();
@@ -844,6 +910,8 @@ void server::OnSyncWBVH(NetNode* node) {
 
     // Unpack the worker BVH.
     node->ReceiveWBVH(lib);
+
+//    TOUTLN(ToString(lib->LookupWBVH()));
 
     // Reply with OK.
     Message reply(Message::Kind::OK);

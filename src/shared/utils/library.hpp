@@ -118,7 +118,7 @@ public:
 
     void ForEachEmissiveMesh(std::function<void (uint32_t id, Mesh* mesh)> func);
 
-    void Intersect(FatRay* ray, uint32_t me);
+    bool Intersect(FatRay* ray, uint32_t me);
 
     // Net nodes...
     void StoreNetNode(uint32_t id, NetNode* node);

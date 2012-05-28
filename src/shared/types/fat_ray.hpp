@@ -56,6 +56,12 @@ struct FatRay {
     /// The hit record of the closest intersection so far.
     HitRecord hit;
 
+    /// The current worker this ray is destined for.
+    uint32_t current_worker;
+
+    /// The number of workers this ray has touched for far. Purely for analysis.
+    uint32_t workers_touched;
+
     /// Next pointer for chaining rays together. Obviously not valid once the
     /// ray has been sent over the network.
     FatRay* next;

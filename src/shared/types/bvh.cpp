@@ -57,33 +57,55 @@ BVH::BVH(const vector<pair<uint32_t, BoundingBox>>& things) :
 BVH::BVH() :
  _nodes() {}
 
-bool BVH::Traverse(const SlimRay& ray, HitRecord* nearest,
- function<bool (uint32_t index, const SlimRay& ray, HitRecord* hit)> intersector) {
+TraversalState BVH::Traverse(const SlimRay& ray, HitRecord* nearest,
+ function<bool (uint32_t index, const SlimRay& ray, HitRecord* hit, bool* request_suspend)> intersector) {
+    // Initialize fresh state.
     TraversalState traversal;
-    bool hit = false;
-
-    // Precompute the inverse direction of the ray.
-    vec3 inv_dir(1.0f / ray.direction.x,
-                 1.0f / ray.direction.y,
-                 1.0f / ray.direction.z);
 
     // Start by going down the root's near child.
     traversal.current = NearChild(0, ray.direction);
     traversal.state = TraversalState::State::FROM_PARENT;
 
-    while (true) {
-        const LinearNode& node = _nodes[traversal.current];
+    return Traverse(traversal, ray, nearest, intersector, false);
+}
 
+TraversalState BVH::Traverse(TraversalState state, const SlimRay& ray, HitRecord* nearest,
+ function<bool (uint32_t index, const SlimRay& ray, HitRecord* hit, bool* request_suspend)> intersector,
+ bool resume) {
+    // Precompute the inverse direction of the ray.
+    vec3 inv_dir(1.0f / ray.direction.x,
+                 1.0f / ray.direction.y,
+                 1.0f / ray.direction.z);
+
+    // Initialize traversal based on passed state.
+    TraversalState traversal = state;
+    bool request_suspend = false;
+
+    if (resume) {
+        if (traversal.state == TraversalState::State::FROM_PARENT) {
+//            TOUTLN("RESUMING FROM_PARENT");
+            goto resume_parent;
+        } else if (traversal.state == TraversalState::State::FROM_SIBLING) {
+//            TOUTLN("RESUMING FROM_SIBLING");
+            goto resume_sibling;
+        } else {
+//            TERRLN("Must be in FROM_PARENT or FROM_SIBLING state to resume traversal!");
+        }
+    }
+
+    while (true) {
         switch (traversal.state) {
             case TraversalState::State::FROM_PARENT:
-                if (!BoundingHit(node.bounds, ray, inv_dir, nearest->t)) {
+                if (!BoundingHit(_nodes[traversal.current].bounds, ray, inv_dir, nearest->t)) {
                     // Ray missed the near child, try the far child.
-                    traversal.current = Sibling(traversal.current, node);
+                    traversal.current = Sibling(traversal.current);
                     traversal.state = TraversalState::State::FROM_SIBLING;
-                } else if (node.leaf) {
+                } else if (_nodes[traversal.current].leaf) {
                     // Ray hit the near child and it's a leaf node.
-                    hit = intersector(node.index, ray, nearest) || hit;
-                    traversal.current = Sibling(traversal.current, node);
+                    request_suspend = false;
+                    traversal.hit = intersector(_nodes[traversal.current].index, ray, nearest, &request_suspend) || traversal.hit;
+                    if (request_suspend) goto suspend_traversal;
+resume_parent:      traversal.current = Sibling(traversal.current);
                     traversal.state = TraversalState::State::FROM_SIBLING;
                 } else {
                     // Ray hit the near child and it's an interior node.
@@ -93,14 +115,16 @@ bool BVH::Traverse(const SlimRay& ray, HitRecord* nearest,
                 break;
 
             case TraversalState::State::FROM_SIBLING:
-                if (!BoundingHit(node.bounds, ray, inv_dir, nearest->t)) {
+                if (!BoundingHit(_nodes[traversal.current].bounds, ray, inv_dir, nearest->t)) {
                     // Ray missed the far child, backtrack to the parent.
-                    traversal.current = node.parent;
+                    traversal.current = _nodes[traversal.current].parent;
                     traversal.state = TraversalState::State::FROM_CHILD;
-                } else if (node.leaf) {
+                } else if (_nodes[traversal.current].leaf) {
                     // Ray hit the far child and it's a leaf node.
-                    hit = intersector(node.index, ray, nearest) || hit;
-                    traversal.current = node.parent;
+                    request_suspend = false;
+                    traversal.hit = intersector(_nodes[traversal.current].index, ray, nearest, &request_suspend) || traversal.hit;
+                    if (request_suspend) goto suspend_traversal;
+resume_sibling:     traversal.current = _nodes[traversal.current].parent;
                     traversal.state = TraversalState::State::FROM_CHILD;
                 } else {
                     // Ray hit the far child and it's an interior node.
@@ -112,17 +136,18 @@ bool BVH::Traverse(const SlimRay& ray, HitRecord* nearest,
             case TraversalState::State::FROM_CHILD:
                 if (traversal.current == 0) {
                     // Traversal has finished.
-                    return hit;
+//                    TOUTLN("==> Traversal complete.");
+                    return traversal;
                 }
-                if (traversal.current == NearChild(node.parent, ray.direction)) {
+                if (traversal.current == NearChild(_nodes[traversal.current].parent, ray.direction)) {
                     // Coming back up through the near child, so traverse
                     // to the far child.
-                    traversal.current = Sibling(traversal.current, node);
+                    traversal.current = Sibling(traversal.current);
                     traversal.state = TraversalState::State::FROM_SIBLING;
                 } else {
                     // Coming back up through the far child, so continue
                     // backtracking through the parent.
-                    traversal.current = node.parent;
+                    traversal.current = _nodes[traversal.current].parent;
                     traversal.state = TraversalState::State::FROM_CHILD;
                 }
                 break;
@@ -136,7 +161,11 @@ bool BVH::Traverse(const SlimRay& ray, HitRecord* nearest,
 
     /// Shouldn't ever get here...
     TERRLN("Unexpected exit path in BVH traversal.");
-    return false;
+    return TraversalState();
+
+suspend_traversal:
+//    TOUTLN("SUSPENDING!");
+    return traversal;
 }
 
 void BVH::Build(vector<PrimitiveInfo>& build_data) {

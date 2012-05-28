@@ -9,6 +9,7 @@
 #include "msgpack.hpp"
 
 #include "types/linear_node.hpp"
+#include "types/traversal_state.hpp"
 #include "utils/tostring.hpp"
 
 namespace fr {
@@ -23,7 +24,8 @@ struct HitRecord;
  * The construction implementation is based on the one presented in Physically
  * Based Rendering, Section 4.4, pages 208-227, with some modifications to
  * support stackless traversal. The stackless traversal algorithm is as
- * described in Hapala et al [2011].
+ * described in Hapala et al [2011], with modifications for suspension on one
+ * worker and resuming on another without a restart.
  */
 
 class BVH {
@@ -45,10 +47,19 @@ public:
     /**
      * Traverses the BVH by testing the given SlimRay against the bounding
      * volumes. If a leaf node is hit, the passed primitive intersector
-     * function will be called.
+     * function will be called. Returns the current traversal state when the
+     * function exits.
      */
-    bool Traverse(const SlimRay& ray, HitRecord* nearest,
-     std::function<bool (uint32_t index, const SlimRay& ray, HitRecord* hit)> intersector);
+    TraversalState Traverse(const SlimRay& ray, HitRecord* nearest,
+     std::function<bool (uint32_t index, const SlimRay& ray, HitRecord* hit, bool* request_suspend)> intersector);
+
+    /**
+     * Also traverses the BVH, but resumes traversal where we left off using
+     * the given TraversalState packet. Returns the current traversal state
+     * when the function exits.
+     */
+    TraversalState Traverse(TraversalState state, const SlimRay& ray, HitRecord* nearest,
+     std::function<bool (uint32_t index, const SlimRay& ray, HitRecord* hit, bool* request_suspend)> intersector, bool resume = true);
 
     /**
      * Returns the extents of the area contained by the BVH.
@@ -103,9 +114,10 @@ private:
     void DeleteLinked(LinkedNode* node);
 
     /// Returns the index of the sibling of the current node.
-    inline size_t Sibling(size_t current, const LinearNode& node) {
-        size_t right = _nodes[node.parent].right;
-        return (right == current) ? node.parent + 1 : right;
+    inline size_t Sibling(size_t current) {
+        size_t parent = _nodes[current].parent;
+        size_t right = _nodes[parent].right;
+        return (right == current) ? parent + 1 : right;
     }
 
     /// The near child is defined to be the left-hand child.

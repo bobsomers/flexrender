@@ -11,7 +11,8 @@ namespace fr {
 
 TraversalState::TraversalState() :
  current(0),
- state(State::NONE) {}
+ state(State::NONE),
+ hit(0) {}
 
 string ToString(const TraversalState& state, const string& indent) {
     stringstream stream;
@@ -39,7 +40,8 @@ string ToString(const TraversalState& state, const string& indent) {
             stream << "UNKNOWN";
             break;
     }
-    stream << endl << indent << "}";
+    stream << endl << indent << "| hit = " << (state.hit ? "YES" : "NO") << endl <<
+     indent << "}";
     return stream.str();
 }
 
