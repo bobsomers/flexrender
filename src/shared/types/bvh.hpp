@@ -113,6 +113,12 @@ private:
      */
     void DeleteLinked(LinkedNode* node);
 
+    /// Special case constructor for building a tree with nothing in it.
+    void ZeroThings();
+
+    /// Special case constructor for building a tree with one thing in it.
+    void OneThing(uint32_t id, const BoundingBox& bounds);
+
     /// Returns the index of the sibling of the current node.
     inline size_t Sibling(size_t current) {
         size_t parent = _nodes[current].parent;

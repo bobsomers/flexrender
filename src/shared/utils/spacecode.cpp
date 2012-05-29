@@ -21,7 +21,7 @@ uint64_t SpaceEncode(vec3 point, vec3 min, vec3 max) {
     uint32_t discrete_y = scaled.y * factor;
     uint32_t discrete_z = scaled.z * factor;
 
-    // Interleave the bits by shifting in the x/y/z components
+    // Interleave the bits by shifting in the x/z/y components
     // bits_per_component times.
     uint64_t morton = 0;
     for (int32_t bit = bits_per_component - 1; bit >= 0; bit--) {
@@ -37,7 +37,7 @@ uint64_t SpaceEncode(vec3 point, vec3 min, vec3 max) {
         morton = morton << 3;
 
         // Set the x/y/z components.
-        morton |= ((bit_x << 2) | (bit_y << 1) | (bit_z << 0));
+        morton |= ((bit_x << 2) | (bit_z << 1) | (bit_y << 0));
     }
 
     return morton;

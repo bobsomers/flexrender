@@ -42,51 +42,9 @@ BVH::BVH(const Mesh* mesh) :
 BVH::BVH(const vector<pair<uint32_t, BoundingBox>>& things) :
  _nodes() {
     if (things.size() == 0) {
-        LinearNode root;
-        root.leaf = 0;
-        root.index = numeric_limits<size_t>::max();
-        root.parent = -1;
-        root.right = 2;
-        root.axis = BoundingBox::Axis::X;
-        _nodes.push_back(root);
-
-        LinearNode left;
-        left.leaf = 1;
-        left.index = numeric_limits<size_t>::max();
-        left.parent = 0;
-        left.right = -1;
-        _nodes.push_back(left);
-
-        LinearNode right;
-        right.leaf = 1;
-        right.index = numeric_limits<size_t>::max();
-        right.parent = 0;
-        right.right = -1;
-        _nodes.push_back(right);
+        ZeroThings();
     } else if (things.size() == 1) {
-        LinearNode root;
-        root.bounds = things[0].second;
-        root.leaf = 0;
-        root.index = numeric_limits<size_t>::max();
-        root.parent = -1;
-        root.right = 2;
-        root.axis = BoundingBox::Axis::X;
-        _nodes.push_back(root);
-
-        LinearNode left;
-        left.bounds = things[0].second;
-        left.leaf = 1;
-        left.index = things[0].first;
-        left.parent = 0;
-        left.right = -1;
-        _nodes.push_back(left);
-
-        LinearNode right;
-        right.leaf = 1;
-        right.index = numeric_limits<size_t>::max();
-        right.parent = 0;
-        right.right = -1;
-        _nodes.push_back(right);
+        OneThing(things[0].first, things[0].second);
     } else {
         // Initialize the build data.
         vector<PrimitiveInfo> build_data;
@@ -99,8 +57,14 @@ BVH::BVH(const vector<pair<uint32_t, BoundingBox>>& things) :
             }
         }
 
-        // Actually build the tree.
-        Build(build_data);
+        if (build_data.size() == 0) {
+            ZeroThings();
+        } else if (build_data.size() == 1) {
+            OneThing(build_data[0].index, build_data[0].bounds);
+        } else {
+            // Actually build the tree.
+            Build(build_data);
+        }
     }
 }
 
@@ -391,6 +355,56 @@ void BVH::DeleteLinked(LinkedNode* node) {
         node->children[1] = nullptr;
     }
     delete node;
+}
+
+void BVH::ZeroThings() {
+    LinearNode root;
+    root.leaf = 0;
+    root.index = numeric_limits<size_t>::max();
+    root.parent = -1;
+    root.right = 2;
+    root.axis = BoundingBox::Axis::X;
+    _nodes.push_back(root);
+
+    LinearNode left;
+    left.leaf = 1;
+    left.index = numeric_limits<size_t>::max();
+    left.parent = 0;
+    left.right = -1;
+    _nodes.push_back(left);
+
+    LinearNode right;
+    right.leaf = 1;
+    right.index = numeric_limits<size_t>::max();
+    right.parent = 0;
+    right.right = -1;
+    _nodes.push_back(right);
+}
+
+void BVH::OneThing(uint32_t id, const BoundingBox& bounds) {
+    LinearNode root;
+    root.bounds = bounds;
+    root.leaf = 0;
+    root.index = numeric_limits<size_t>::max();
+    root.parent = -1;
+    root.right = 2;
+    root.axis = BoundingBox::Axis::X;
+    _nodes.push_back(root);
+
+    LinearNode left;
+    left.bounds = bounds;
+    left.leaf = 1;
+    left.index = id;
+    left.parent = 0;
+    left.right = -1;
+    _nodes.push_back(left);
+
+    LinearNode right;
+    right.leaf = 1;
+    right.index = numeric_limits<size_t>::max();
+    right.parent = 0;
+    right.right = -1;
+    _nodes.push_back(right);
 }
 
 string ToString(const BVH* bvh, const string& indent) {

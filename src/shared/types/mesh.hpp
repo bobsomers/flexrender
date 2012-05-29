@@ -21,6 +21,8 @@ struct Mesh {
     // FOR MSGPACK ONLY!
     explicit Mesh();
 
+    ~Mesh();
+
     /// Resource ID of the mesh.
     uint32_t id;
 

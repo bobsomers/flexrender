@@ -17,7 +17,7 @@ local width = 10
 
 camera {
     eye = vec3(20, 20, 20),
-    look = vec3(0, 0, 0)
+    look = vec3(5, 0, 5)
 }
 
 material {

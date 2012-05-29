@@ -77,6 +77,10 @@ Mesh::Mesh() :
     xform_inv_tr = mat4(xform_cols[0], xform_cols[1], xform_cols[2], xform_cols[3]);
 }
 
+Mesh::~Mesh() {
+    if (bvh != nullptr) delete bvh;
+}
+
 void Mesh::ComputeMatrices() {
     xform = mat4(xform_cols[0], xform_cols[1], xform_cols[2], xform_cols[3]);
     xform_inv = inverse(xform);

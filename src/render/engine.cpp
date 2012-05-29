@@ -5,6 +5,7 @@
 #include <limits>
 #include <vector>
 #include <utility>
+#include <ctime>
 #include <semaphore.h>
 #include <stdio.h>
 #include <errno.h>
@@ -75,6 +76,12 @@ static string scene;
 
 /// The bounding boxes of all participating workers.
 static vector<pair<uint32_t, BoundingBox>> worker_bounds;
+
+/// Timers for measuring total time.
+static time_t prep_start;
+static time_t prep_stop;
+static time_t render_start;
+static time_t render_stop;
 
 // Callbacks, handlers, and helpers for client functionality.
 namespace client {
@@ -224,6 +231,8 @@ void client::OnConnect(uv_connect_t* req, int status) {
     if (num_workers_connected < lib->LookupConfig()->workers.size()) {
         return;
     }
+
+    prep_start = time(NULL);
 
     // Send init messages to each server.
     lib->ForEachNetNode([](uint32_t id, NetNode* node) {
@@ -494,6 +503,10 @@ void client::OnSyncImage(NetNode* node) {
     final->ToEXRFile(config->name + ".exr");
     TOUTLN("Wrote " << config->name << ".exr.");
 
+    // Dump out timers.
+    TOUTLN("Time spent prepping: " << (prep_stop - prep_start) << " seconds.");
+    TOUTLN("Time spent rendering: " << (render_stop - render_start) << " seconds.");
+
     // Disconnect from each worker.
     lib->ForEachNetNode([config](uint32_t id, NetNode* node) {
         uv_close(reinterpret_cast<uv_handle_t*>(&node->socket), OnClose);
@@ -565,6 +578,9 @@ void client::StartRender() {
 
     Config* config = lib->LookupConfig();
 
+    prep_stop = time(NULL);
+    render_start = time(NULL);
+
     // Send render start messages to each server.
     lib->ForEachNetNode([config](uint32_t id, NetNode* node) {
         uint16_t chunk_size = config->width / config->workers.size();
@@ -598,6 +614,8 @@ void client::StartRender() {
 
 void client::StopRender() {
     int result = 0;
+
+    render_stop = time(NULL);
 
     // Stop the interesting timer.
     result = uv_timer_stop(&interesting_timer);

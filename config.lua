@@ -9,14 +9,16 @@ local vec3 = fr.vec3
 network {
     workers = {
         "127.0.0.1",
-        "127.0.0.1:19401"
+        "127.0.0.1:19401",
+        "127.0.0.1:19402",
+        "127.0.0.1:19403"
     },
     runaway = 5 -- percent
 }
 
 output {
-    size = vec2(1280, 720),
-    name = "bunnies",
+    size = vec2(640, 360),
+    name = "test",
     buffers = {
         -- none
     }
@@ -31,4 +33,6 @@ render {
     max = vec3(50, 25, 50),
     --min = vec3(-10, -10, -10),
     --max = vec3(10, 10, 10),
+    --min = vec3(-5, -5, -5),
+    --max = vec3(15, 15, 15)
 }

@@ -46,7 +46,7 @@ struct BoundingBox {
 
     /// Returns true of the bounding box extents are valid.
     bool inline IsValid() const {
-        return min.x < max.x && min.y < max.y && min.z < max.z;
+        return min.x <= max.x && min.y <= max.y && min.z <= max.z;
     }
 
     /// Performs an intersection check to see if the slim ray intersects
