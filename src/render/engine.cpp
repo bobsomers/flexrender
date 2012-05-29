@@ -78,8 +78,10 @@ static string scene;
 static vector<pair<uint32_t, BoundingBox>> worker_bounds;
 
 /// Timers for measuring total time.
-static time_t prep_start;
-static time_t prep_stop;
+static time_t sync_start;
+static time_t sync_stop;
+static time_t build_start;
+static time_t build_stop;
 static time_t render_start;
 static time_t render_stop;
 
@@ -232,7 +234,7 @@ void client::OnConnect(uv_connect_t* req, int status) {
         return;
     }
 
-    prep_start = time(NULL);
+    sync_start = time(NULL);
 
     // Send init messages to each server.
     lib->ForEachNetNode([](uint32_t id, NetNode* node) {
@@ -504,7 +506,10 @@ void client::OnSyncImage(NetNode* node) {
     TOUTLN("Wrote " << config->name << ".exr.");
 
     // Dump out timers.
-    TOUTLN("Time spent prepping: " << (prep_stop - prep_start) << " seconds.");
+    TOUTLN("Time spent syncing: " << (sync_stop - sync_start) << " seconds.");
+    if (!use_linear_scan) {
+        TOUTLN("Time spent building: " << (build_stop - build_start) << " seconds.");
+    }
     TOUTLN("Time spent rendering: " << (render_stop - render_start) << " seconds.");
 
     // Disconnect from each worker.
@@ -569,6 +574,8 @@ void client::BuildWBVH() {
         node->SendWBVH(wbvh);
     });
 
+    build_stop = time(NULL);
+
     // We don't need it anymore.
     delete wbvh;
 }
@@ -578,7 +585,7 @@ void client::StartRender() {
 
     Config* config = lib->LookupConfig();
 
-    prep_stop = time(NULL);
+    sync_stop = time(NULL);
     render_start = time(NULL);
 
     // Send render start messages to each server.
@@ -723,6 +730,9 @@ void client::OnSyncIdle(uv_idle_t* handle, int status) {
             TOUTLN("[" << node->ip << "] Syncing camera.");
             node->SendCamera(lib);
         });
+
+        build_start = time(NULL);
+
         return;
     }
 

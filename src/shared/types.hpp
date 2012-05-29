@@ -22,6 +22,7 @@
 #include "types/slim_ray.hpp"
 #include "types/texture.hpp"
 #include "types/traversal_state.hpp"
+#include "types/traversal_stats.hpp"
 #include "types/triangle.hpp"
 #include "types/vertex.hpp"
 #include "types/work_results.hpp"

@@ -66,6 +66,9 @@ static uint32_t active_jobs = 0;
 /// Render stats for this worker.
 static RenderStats stats;
 
+/// Traversal stats for this worker.
+static TraversalStats trav_stats;
+
 // Callbacks, handlers, and helpers for server functionality.
 namespace server {
 
@@ -406,6 +409,7 @@ void server::IntersectWBVH(FatRay* ray, WorkResults* results, BVH* wbvh) {
         if (ray->traversal.current == 0) {
             // Yes it is. Illuminate the nearest intersection and kill the ray.
             IlluminateIntersection(ray, results);
+            results->workers_touched[ray->workers_touched]++;
             delete ray;
             results->intersects_killed++;
             return;
@@ -427,6 +431,7 @@ void server::IntersectWBVH(FatRay* ray, WorkResults* results, BVH* wbvh) {
             ForwardRay(ray, results, ray->hit.worker);
         } else {
             // No it did not. Kill the ray.
+            results->workers_touched[ray->workers_touched]++;
             delete ray;
             results->intersects_killed++;
         }
@@ -457,6 +462,7 @@ void server::IntersectLinear(FatRay* ray, WorkResults* results) {
         if (ray->hit.worker == me) {
             // Yes, let's illuminate the intersection and kill the ray.
             IlluminateIntersection(ray, results);
+            results->workers_touched[ray->workers_touched]++;
             delete ray;
             results->intersects_killed++;
         } else if (ray->hit.worker != 0) {
@@ -464,6 +470,7 @@ void server::IntersectLinear(FatRay* ray, WorkResults* results) {
             ForwardRay(ray, results, ray->hit.worker);
         } else {
             // There was no hit. Kill the ray.
+            results->workers_touched[ray->workers_touched]++;
             delete ray;
             results->intersects_killed++;
         }
@@ -549,6 +556,7 @@ void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
     });
 
     // Kill the ray.
+    results->workers_touched[ray->workers_touched]++;
     delete ray;
     results->illuminates_killed++;
 }
@@ -573,6 +581,7 @@ void server::LightWBVH(FatRay* ray, WorkResults* results, BVH* wbvh) {
         if (ray->traversal.current == 0) {
             // Yes it is. Shade the nearest intersection and kill the ray.
             ShadeIntersection(ray, results);
+            results->workers_touched[ray->workers_touched]++;
             delete ray;
             results->lights_killed++;
             return;
@@ -594,6 +603,7 @@ void server::LightWBVH(FatRay* ray, WorkResults* results, BVH* wbvh) {
             ForwardRay(ray, results, ray->hit.worker);
         } else {
             // No it did not. Kill the ray.
+            results->workers_touched[ray->workers_touched]++;
             delete ray;
             results->lights_killed++;
         }
@@ -624,6 +634,7 @@ void server::LightLinear(FatRay* ray, WorkResults* results) {
         if (ray->hit.worker == me) {
             // Yes, shade the intersection and kill the ray.
             ShadeIntersection(ray, results);
+            results->workers_touched[ray->workers_touched]++;
             delete ray;
             results->lights_killed++;
         } else if (ray->hit.worker != 0) {
@@ -631,6 +642,7 @@ void server::LightLinear(FatRay* ray, WorkResults* results) {
             ForwardRay(ray, results, ray->hit.worker);
         } else {
             // There was no hit. Kill the ray.
+            results->workers_touched[ray->workers_touched]++;
             delete ray;
             results->lights_killed++;
         }
@@ -696,6 +708,7 @@ void server::IlluminateIntersection(FatRay* ray, WorkResults* results) {
     LightList* lights = lib->LookupLightList();
     lights->ForEachEmissiveWorker([ray, results](uint32_t id) {
         FatRay* illum = new FatRay(*ray);
+        illum->workers_touched = 1;
         illum->kind = FatRay::Kind::ILLUMINATE;
         results->illuminates_produced++;
         ForwardRay(illum, results, id);
@@ -775,6 +788,7 @@ void server::AfterWork(uv_work_t* req) {
             rayq->Push(forward.ray);
         } else {
             // Send it and kill the local copy.
+            forward.ray->workers_touched++;
             forward.node->SendRay(forward.ray);
             delete forward.ray;
         }
@@ -787,6 +801,9 @@ void server::AfterWork(uv_work_t* req) {
     stats.intersects_killed += results->intersects_killed;
     stats.illuminates_killed += results->illuminates_killed;
     stats.lights_killed += results->lights_killed;
+    for (const auto& kv : results->workers_touched) {
+        trav_stats.workers_touched[kv.first] += kv.second;
+    }
 
     delete results;
     free(req);
@@ -1029,6 +1046,11 @@ void server::OnRenderStop(NetNode* node) {
     node->SendImage(lib);
 
     TOUTLN("[" << node->ip << "] Sending image to renderer.");
+
+    TOUTLN("Traversal stats:");
+    for (const auto& kv : trav_stats.workers_touched) {
+        TOUTLN("\t" << kv.first << " worker(s): " << kv.second);
+    }
 }
 
 void server::OnRenderPause(NetNode* node) {

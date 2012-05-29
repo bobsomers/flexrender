@@ -34,7 +34,7 @@ public:
         READY,
         RENDERING,
         PAUSED,
-        SYNCING_IMAGES,
+        SYNCING_IMAGES
     };
 
     enum class ReadMode {

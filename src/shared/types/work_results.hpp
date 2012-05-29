@@ -25,6 +25,9 @@ struct WorkResults {
     /// Buffer operations we need to do.
     std::vector<BufferOp> ops;
 
+    /// Workers touched.
+    std::map<uint32_t, uint64_t> workers_touched;
+
     /// Intersect rays produced.
     uint64_t intersects_produced;
 

@@ -25,7 +25,7 @@ FatRay::FatRay(Kind kind, int16_t x, int16_t y) :
  traversal(),
  hit(),
  current_worker(0),
- workers_touched(0),
+ workers_touched(1),
  next(nullptr) {
     bounces = numeric_limits<int16_t>::min();
 
@@ -46,7 +46,7 @@ FatRay::FatRay(Kind kind) :
  traversal(),
  hit(),
  current_worker(0),
- workers_touched(0),
+ workers_touched(1),
  next(nullptr) {
     x = numeric_limits<int16_t>::min();
     y = numeric_limits<int16_t>::min();
@@ -70,7 +70,7 @@ FatRay::FatRay() :
  traversal(),
  hit(),
  current_worker(0),
- workers_touched(0),
+ workers_touched(1),
  next(nullptr) {
     x = numeric_limits<int16_t>::min();
     y = numeric_limits<int16_t>::min();
