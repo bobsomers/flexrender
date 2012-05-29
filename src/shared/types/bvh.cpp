@@ -41,17 +41,67 @@ BVH::BVH(const Mesh* mesh) :
 
 BVH::BVH(const vector<pair<uint32_t, BoundingBox>>& things) :
  _nodes() {
-    // Initialize the build data.
-    vector<PrimitiveInfo> build_data;
-    build_data.reserve(things.size());
-    for (size_t i = 0; i < things.size(); i++) {
-        uint32_t id = things[i].first;
-        const BoundingBox& bounds = things[i].second;
-        build_data.emplace_back(id, bounds);
-    }
+    if (things.size() == 0) {
+        LinearNode root;
+        root.leaf = 0;
+        root.index = numeric_limits<size_t>::max();
+        root.parent = -1;
+        root.right = 2;
+        root.axis = BoundingBox::Axis::X;
+        _nodes.push_back(root);
 
-    // Actually build the tree.
-    Build(build_data);
+        LinearNode left;
+        left.leaf = 1;
+        left.index = numeric_limits<size_t>::max();
+        left.parent = 0;
+        left.right = -1;
+        _nodes.push_back(left);
+
+        LinearNode right;
+        right.leaf = 1;
+        right.index = numeric_limits<size_t>::max();
+        right.parent = 0;
+        right.right = -1;
+        _nodes.push_back(right);
+    } else if (things.size() == 1) {
+        LinearNode root;
+        root.bounds = things[0].second;
+        root.leaf = 0;
+        root.index = numeric_limits<size_t>::max();
+        root.parent = -1;
+        root.right = 2;
+        root.axis = BoundingBox::Axis::X;
+        _nodes.push_back(root);
+
+        LinearNode left;
+        left.bounds = things[0].second;
+        left.leaf = 1;
+        left.index = things[0].first;
+        left.parent = 0;
+        left.right = -1;
+        _nodes.push_back(left);
+
+        LinearNode right;
+        right.leaf = 1;
+        right.index = numeric_limits<size_t>::max();
+        right.parent = 0;
+        right.right = -1;
+        _nodes.push_back(right);
+    } else {
+        // Initialize the build data.
+        vector<PrimitiveInfo> build_data;
+        build_data.reserve(things.size());
+        for (size_t i = 0; i < things.size(); i++) {
+            uint32_t id = things[i].first;
+            const BoundingBox& bounds = things[i].second;
+            if (bounds.IsValid()) {
+                build_data.emplace_back(id, bounds);
+            }
+        }
+
+        // Actually build the tree.
+        Build(build_data);
+    }
 }
 
 BVH::BVH() :
@@ -61,6 +111,13 @@ TraversalState BVH::Traverse(const SlimRay& ray, HitRecord* nearest,
  function<bool (uint32_t index, const SlimRay& ray, HitRecord* hit, bool* request_suspend)> intersector) {
     // Initialize fresh state.
     TraversalState traversal;
+
+    // Quick test for special cases.
+    if (!_nodes[0].bounds.IsValid()) {
+        traversal.current = 0;
+        traversal.state = TraversalState::State::FROM_CHILD;
+        return traversal;
+    }
 
     // Start by going down the root's near child.
     traversal.current = NearChild(0, ray.direction);

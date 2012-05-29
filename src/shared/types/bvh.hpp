@@ -135,6 +135,7 @@ private:
     /// Performs a quick bounding box check against the given bounds and ray.
     inline bool BoundingHit(const BoundingBox& bounds, const SlimRay& ray,
      glm::vec3 inv_dir, float max) {
+        if (!bounds.IsValid()) return false;
         float t = -1.0f;
         return bounds.Intersect(ray, inv_dir, &t) && t < max;
     }
