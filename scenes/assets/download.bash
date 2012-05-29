@@ -25,6 +25,7 @@ fetch "bunny-hi.obj"
 fetch "bunny-lo.obj"
 fetch "dragon-hi.obj"
 fetch "dragon-lo.obj"
+fetch "tile1.tga"
 
 echo ""
 echo "======================================================================"
