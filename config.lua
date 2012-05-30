@@ -8,8 +8,10 @@ local vec3 = fr.vec3
 
 network {
     workers = {
-        "127.0.0.1",
-        "127.0.0.1:19401"
+        "129.65.51.112",
+        "129.65.51.113",
+        "129.65.51.114",
+        "129.65.51.115"
     },
     runaway = 5 -- percent
 }
@@ -25,7 +27,7 @@ output {
 render {
     antialiasing = 1,
     samples = 1,
-    bounces = 2,
+    bounces = 3,
     threshold = 0.0001,
     min = vec3(-75, -5, -75),
     max = vec3(75, 25, 75),

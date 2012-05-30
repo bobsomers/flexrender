@@ -13,11 +13,11 @@ local scale = fr.scale
 local rotate = fr.rotate
 local translate = fr.translate
 
-local width = 16
+local width = 25
 
 camera {
-    eye = vec3(0, 50, 40),
-    look = vec3(0, 0, 5)
+    eye = vec3(0, 70, 60),
+    look = vec3(0, 0, 15)
 }
 
 material {
@@ -34,11 +34,17 @@ mesh {
 
 local tile_r, tile_g, tile_b = fre.targa("scenes/assets/tile1.tga")
 
-function draw_model(model, xform, suffix)
+function draw_model(model, xform, suffix, mirror)
     local color = vec3(math.random() * 0.5 + 0.25,
                        math.random() * 0.5 + 0.25,
                        math.random() * 0.5 + 0.25)
     local data = nil
+
+    local shader = fre.phong(0.6, color, 0.2, color, 0.2, 8)
+    if mirror then
+        shader = fre.frsl("scenes/mirror_shader.lua")
+    end
+
 
     if model == 1 then
         data = fre.obj("scenes/assets/bunny-lo.obj", true)
@@ -53,7 +59,7 @@ function draw_model(model, xform, suffix)
     material {
         name = mesh_mat,
         emissive = false,
-        shader = fre.phong(0.6, color, 0.2, color, 0.2, 8)
+        shader = shader
     }
 
     mesh {
@@ -107,7 +113,7 @@ for i = -width, width do
         }
 
         local model_xform = translate(vec3(i * 2, size, j * 2)) * rotate(radians(facing), vec3(0, 1, 0)) * scale(size)
-        draw_model(model, model_xform, suffix)
+        draw_model(model, model_xform, suffix, ((i * width + j) % 2 == 0))
 
         local tile_xform = translate(vec3(i * 2, 0, j * 2))
         draw_tile(tile_xform, suffix)
