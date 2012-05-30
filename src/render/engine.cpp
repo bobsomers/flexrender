@@ -234,7 +234,7 @@ void client::OnConnect(uv_connect_t* req, int status) {
         return;
     }
 
-    sync_start = time(NULL);
+    sync_start = time(nullptr);
 
     // Send init messages to each server.
     lib->ForEachNetNode([](uint32_t id, NetNode* node) {
@@ -574,7 +574,7 @@ void client::BuildWBVH() {
         node->SendWBVH(wbvh);
     });
 
-    build_stop = time(NULL);
+    build_stop = time(nullptr);
 
     // We don't need it anymore.
     delete wbvh;
@@ -585,8 +585,8 @@ void client::StartRender() {
 
     Config* config = lib->LookupConfig();
 
-    sync_stop = time(NULL);
-    render_start = time(NULL);
+    sync_stop = time(nullptr);
+    render_start = time(nullptr);
 
     // Send render start messages to each server.
     lib->ForEachNetNode([config](uint32_t id, NetNode* node) {
@@ -622,7 +622,7 @@ void client::StartRender() {
 void client::StopRender() {
     int result = 0;
 
-    render_stop = time(NULL);
+    render_stop = time(nullptr);
 
     // Stop the interesting timer.
     result = uv_timer_stop(&interesting_timer);
@@ -731,7 +731,7 @@ void client::OnSyncIdle(uv_idle_t* handle, int status) {
             node->SendCamera(lib);
         });
 
-        build_start = time(NULL);
+        build_start = time(nullptr);
 
         return;
     }
