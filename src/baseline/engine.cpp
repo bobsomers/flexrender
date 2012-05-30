@@ -197,14 +197,11 @@ void OnStatsTimeout(uv_timer_t* timer, int status) {
     assert(timer == &stats_timer);
     assert(status == 0);
 
-    Camera* cam = lib->LookupCamera();
-    assert(cam != nullptr);
-    stats.primary_progress = cam->Progress();
+    uint64_t total_produced = stats.intersects_produced + stats.lights_produced;
+    uint64_t total_killed = stats.intersects_killed + stats.lights_killed;
+    TOUTLN("RAYS:  +" << total_produced << "  -" << total_killed);
 
     stats.Reset();
-
-    // TODO
-    TOUTLN("Stats!");
 }
 
 void ScheduleJob() {
@@ -220,12 +217,16 @@ void ScheduleJob() {
     assert(cam != nullptr);
     FatRay* ray = new FatRay;
     if (cam->GeneratePrimary(ray)) {
+        stats.intersects_produced++;
+
         // Queue it for work.
         uv_work_t* req = reinterpret_cast<uv_work_t*>(malloc(sizeof(uv_work_t)));
         req->data = ray;
         result = uv_queue_work(uv_default_loop(), req, OnWork, AfterWork);
         CheckUVResult(result, "queue_work");
         active_jobs++;
+    } else {
+        if (active_jobs == 0) StopRender();
     }
 }
 
@@ -240,10 +241,10 @@ void OnWork(uv_work_t* req) {
     // Allocate results of this work.
     WorkResults* results = new WorkResults;
 
-    //// Dispatch the ray.
+    // Dispatch the ray.
     ProcessRay(ray, results);
 
-    //// Pass the work results back through the data baton.
+    // Pass the work results back through the data baton.
     req->data = results;
 }
 
@@ -269,20 +270,7 @@ void AfterWork(uv_work_t* req) {
         }
     }
 
-    //// Forward rays and kill them off.
-    //for (auto& forward : results->forwards) {
-    //    if (forward.node == nullptr) {
-    //        // We didn't know where to send it, so queue it for processing.
-    //        rayq->Push(forward.ray);
-    //    } else {
-    //        // Send it and kill the local copy.
-    //        forward.ray->workers_touched++;
-    //        forward.node->SendRay(forward.ray);
-    //        delete forward.ray;
-    //    }
-    //}
-
-    //// Merge render stats.
+    // Merge render stats.
     stats.intersects_produced += results->intersects_produced;
     stats.illuminates_produced += results->illuminates_produced;
     stats.lights_produced += results->lights_produced;
@@ -295,11 +283,7 @@ void AfterWork(uv_work_t* req) {
 
     // This job is done. Schedule more work.
     active_jobs--;
-    if (active_jobs == 0) {
-        StopRender();
-    } else {
-        ScheduleJob();
-    }
+    ScheduleJob();
 }
 
 void StopRender() {
