@@ -101,3 +101,27 @@ solution "flexrender"
             "uv",
             "msgpack"
         }
+
+    project "baseline"
+        kind "ConsoleApp"
+        language "C++"
+        targetdir "bin"
+        targetname "baseline"
+        files {
+            "src/baseline/**.cpp"
+        }
+        includedirs {
+            "src/baseline",
+            "src/shared",
+            "3p/build/include",
+        }
+        libdirs {
+            "bin",
+            "3p/build/lib"
+        }
+        links {
+            "libfr",
+            "rt",
+            "uv",
+            "msgpack"
+        }
