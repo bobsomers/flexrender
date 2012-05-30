@@ -20,7 +20,12 @@ using std::endl;
 using std::vector;
 using std::pair;
 using std::make_pair;
+using glm::vec2;
 using glm::vec3;
+using glm::vec4;
+using glm::normalize;
+using glm::dot;
+using glm::distance;
 
 namespace fr {
 
@@ -61,6 +66,8 @@ void ProcessRay(FatRay* ray, WorkResults* results);
 void ProcessIntersect(FatRay* ray, WorkResults* results);
 void ProcessLight(FatRay* ray, WorkResults* results);
 void IlluminateIntersection(FatRay* ray, WorkResults* work);
+void ShadeIntersection(FatRay* ray, WorkResults* results);
+void Recurse(WorkResults* results);
 
 void OnStatsTimeout(uv_timer_t* timer, int status);
 void OnWork(uv_work_t* req);
@@ -351,7 +358,7 @@ void ProcessIntersect(FatRay* ray, WorkResults* results) {
 
     // Did it hit anything?
     if (ray->hit.worker > 0) {
-        // Yes it did. Illuminate the intersection and kill the ray.
+        // Yes it did. Illuminate the intersection.
         IlluminateIntersection(ray, results);
     }
 
@@ -365,14 +372,29 @@ void ProcessLight(FatRay* ray, WorkResults* results) {
     // !!! WARNING !!!
     // Everything this function does and calls must be thread-safe. This
     // function will NOT run in the main thread, it runs on the thread pool.
+    
+    // Test geometry for intersection.
+    ray->traversal.hit = lib->Intersect(ray, 1);
 
-    // TODO
+    // Did it hit anything?
+    if (ray->hit.worker > 0) {
+        // Yes it did, shade the intersection.
+        ShadeIntersection(ray, results);
+    }
+
+    // Kill the ray.
+    delete ray;
+    results->lights_killed++;
+    return;
 }
 
 void IlluminateIntersection(FatRay* ray, WorkResults* results) {
     // !!! WARNING !!!
     // Everything this function does and calls must be thread-safe. This
     // function will NOT run in the main thread, it runs on the thread pool.
+    
+    Config* config = lib->LookupConfig();
+    assert(config != nullptr);
 
     // Where did we hit?
     vec3 hit = ray->EvaluateAt(ray->hit.t);
@@ -390,10 +412,119 @@ void IlluminateIntersection(FatRay* ray, WorkResults* results) {
 
     shader->script->Indirect(ray, hit, results);
 
-    // TODO: process traced rays in results immediately (recursive)
+    // Process traced rays immediately.
+    Recurse(results);
+
+    // Light this intersection by generating light rays.
+    lib->ForEachEmissiveMesh([ray, results, config](uint32_t id, Mesh* mesh) {
+        // The target we're trying to hit is the original intersection.
+        vec3 target = ray->EvaluateAt(ray->hit.t);
+
+        // Find the shader.
+        Material* mat = lib->LookupMaterial(mesh->material);
+        assert(mat != nullptr);
+
+        Shader* shader = lib->LookupShader(mat->shader);
+        assert(shader != nullptr);
+        assert(shader->script != nullptr);
+
+        for (const auto& tri : mesh->tris) {
+            for (uint16_t i = 0; i < config->samples; i++) {
+                // Sample the triangle.
+                vec3 position, normal;
+                vec2 texcoord;
+                tri.Sample(&position, &normal, &texcoord);
+
+                // Transform the position and normal into world space.
+                position = vec3(mesh->xform * vec4(position, 1.0f));
+                normal = vec3(mesh->xform_inv_tr * vec4(normal, 0.0f));
+
+                // The direction is toward the target.
+                vec3 direction = normalize(target - position);
+
+                // Lights only emit in the hemisphere that their normal defines.
+                if (dot(normal, direction) < 0) {
+                    continue;
+                }
+
+                // Create a new light ray that inherits the source <x, y> pixel.
+                FatRay* light = new FatRay(FatRay::Kind::LIGHT, ray->x, ray->y);
+                results->lights_produced++;
+
+                // The origin is at the sample position.
+                light->slim.origin = position;
+
+                light->slim.direction = direction;
+                light->target = target;
+
+                // Run the shader's emissive() function.
+                light->emission = shader->script->Emissive(texcoord);
+
+                // Scale the transmittance by the number of samples.
+                light->transmittance = ray->transmittance / config->samples;
+
+                // Add it to the list.
+                results->forwards.emplace_back(light, nullptr);
+            }
+        }
+    });
+
+    // Process the light rays immediately.
+    Recurse(results);
+}
+
+void ShadeIntersection(FatRay* ray, WorkResults* results) {
+    // !!! WARNING !!!
+    // Everything this function does and calls must be thread-safe. This
+    // function will NOT run in the main thread, it runs on the thread pool.
     
-    // TODO: light this intersection by generating light rays and processing
-    // them immediately (recursive)
+    // Did it hit close enough to the target?
+    vec3 hit = ray->EvaluateAt(ray->hit.t);
+    if (distance(hit, ray->target) > TARGET_INTERSECT_EPSILON) {
+        // Nope, ignore.
+        return;
+    }
+
+    // Find the shader and run the direct() function.
+    Mesh* mesh = lib->LookupMesh(ray->hit.mesh);
+    assert(mesh != nullptr);
+
+    Material* mat = lib->LookupMaterial(mesh->material);
+    assert(mat != nullptr);
+
+    Shader* shader = lib->LookupShader(mat->shader);
+    assert(shader != nullptr);
+    assert(shader->script != nullptr);
+
+    shader->script->Direct(ray, hit, results);
+
+    // Process traced rays immediately.
+    Recurse(results);
+}
+
+void Recurse(WorkResults* results) {
+    for (const auto& forward : results->forwards) {
+        WorkResults* tracer_results = new WorkResults;
+
+        // Trace the ray.
+        ProcessRay(forward.ray, tracer_results);
+
+        // Merge the buffer ops.
+        for (const auto& op : tracer_results->ops) {
+            results->ops.emplace_back(op);
+        }
+        
+        // Merge the stats.
+        results->intersects_produced += tracer_results->intersects_produced;
+        results->illuminates_produced += tracer_results->illuminates_produced;
+        results->lights_produced += tracer_results->lights_produced;
+        results->intersects_killed += tracer_results->intersects_killed;
+        results->illuminates_killed += tracer_results->illuminates_killed;
+        results->lights_killed += tracer_results->lights_killed;
+
+        delete tracer_results;
+    }
+    results->forwards.clear();
 }
 
 } // namespace fr
