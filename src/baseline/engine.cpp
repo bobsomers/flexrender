@@ -48,6 +48,12 @@ static uv_timer_t stats_timer;
 /// The scene file we're rendering.
 static string scene;
 
+/// The X offset to start rendering at.
+static int16_t camera_offset;
+
+/// The X chunk size to render.
+static uint16_t camera_chunk_size;
+
 /// Render stats for this worker.
 static RenderStats stats;
 
@@ -74,12 +80,14 @@ void OnWork(uv_work_t* req);
 void AfterWork(uv_work_t* req);
 
 void EngineInit(const string& config_file, const string& scene_file,
- uint32_t intervals, uint32_t jobs) {
+ uint32_t intervals, uint32_t jobs, int16_t offset, uint16_t chunk_size) {
     lib = new Library;
 
     scene = scene_file;
     max_intervals = intervals;
     max_jobs = jobs;
+    camera_offset = offset;
+    camera_chunk_size = chunk_size;
 
     // Randomize the world.
     srand(time(0));
@@ -137,7 +145,10 @@ void EngineInit(const string& config_file, const string& scene_file,
     // Set the camera range.
     Camera* camera = lib->LookupCamera();
     assert(camera != nullptr);
-    camera->SetRange(0, config->width);
+    if (camera_chunk_size == 0) {
+        camera_chunk_size = config->width - camera_offset;
+    }
+    camera->SetRange(camera_offset, camera_chunk_size);
 
     // Start the stats timer.
     int result = 0;

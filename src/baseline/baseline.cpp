@@ -41,9 +41,27 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    int16_t offset = 0;
+    {
+        string offset_str = FlagValue(argc, argv, "-o", "--offset");
+        if (offset_str != "") {
+            stringstream stream(offset_str);
+            stream >> offset;
+        }
+    }
+
+    uint16_t chunk_size = 0;
+    {
+        string chunk_size_str = FlagValue(argc, argv, "-c", "--chunk-size");
+        if (chunk_size_str != "") {
+            stringstream stream(chunk_size_str);
+            stream >> chunk_size;
+        }
+    }
+
     TOUTLN("Baseline starting.");
 
-    EngineInit(config_file, scene_file, intervals, jobs);
+    EngineInit(config_file, scene_file, intervals, jobs, offset, chunk_size);
     EngineRun();
 
     TOUTLN("Baseline done.");
