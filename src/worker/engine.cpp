@@ -556,7 +556,6 @@ void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
     });
 
     // Kill the ray.
-    results->workers_touched[ray->workers_touched]++;
     delete ray;
     results->illuminates_killed++;
 }
@@ -708,7 +707,6 @@ void server::IlluminateIntersection(FatRay* ray, WorkResults* results) {
     LightList* lights = lib->LookupLightList();
     lights->ForEachEmissiveWorker([ray, results](uint32_t id) {
         FatRay* illum = new FatRay(*ray);
-        illum->workers_touched = 1;
         illum->kind = FatRay::Kind::ILLUMINATE;
         results->illuminates_produced++;
         ForwardRay(illum, results, id);
