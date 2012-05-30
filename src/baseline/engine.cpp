@@ -20,6 +20,7 @@ using std::endl;
 using std::vector;
 using std::pair;
 using std::make_pair;
+using glm::vec3;
 
 namespace fr {
 
@@ -56,6 +57,10 @@ static time_t render_stop;
 uint32_t SyncMesh(Mesh* mesh);
 void ScheduleJob();
 void StopRender();
+void ProcessRay(FatRay* ray, WorkResults* results);
+void ProcessIntersect(FatRay* ray, WorkResults* results);
+void ProcessLight(FatRay* ray, WorkResults* results);
+void IlluminateIntersection(FatRay* ray, WorkResults* work);
 
 void OnStatsTimeout(uv_timer_t* timer, int status);
 void OnWork(uv_work_t* req);
@@ -80,6 +85,16 @@ void EngineInit(const string& config_file, const string& scene_file,
         exit(EXIT_FAILURE);
     }
     TOUTLN("Config loaded.");
+
+    Config* config = lib->LookupConfig();
+    assert(config != nullptr);
+
+    // Create the image with all the requested buffers.
+    Image* image = new Image(config->width, config->height);
+    for (const auto& buffer : config->buffers) {
+        image->AddBuffer(buffer);
+    }
+    lib->StoreImage(image);
 
     load_start = time(nullptr);
 
@@ -113,8 +128,6 @@ void EngineInit(const string& config_file, const string& scene_file,
     TOUTLN("Local BVH ready.");
 
     // Set the camera range.
-    Config* config = lib->LookupConfig();
-    assert(config != nullptr);
     Camera* camera = lib->LookupCamera();
     assert(camera != nullptr);
     camera->SetRange(0, config->width);
@@ -145,6 +158,29 @@ uint32_t SyncMesh(Mesh* mesh) {
         id = lib->NextMeshID();
         mesh->id = id;
         lib->StoreMesh(id, mesh);
+
+        uint32_t mat_id = mesh->material;
+        Material* mat = lib->LookupMaterial(mat_id);
+        assert(mat != nullptr);
+
+        uint32_t shader_id = mat->shader;
+        Shader* shader = lib->LookupShader(shader_id);
+        assert(shader != nullptr);
+
+        // Prep the shader if we haven't already.
+        if (shader->script == nullptr) {
+            shader->script = new ShaderScript(shader->code, lib);
+        }
+
+        // Prep any procedural textures for execution.
+        for (const auto& kv : mat->textures) {
+            uint32_t tex_id = kv.second;
+            Texture* tex = lib->LookupTexture(tex_id);
+            assert(mat != nullptr);
+            if (tex->kind == Texture::Kind::PROCEDURAL && tex->script == nullptr) {
+                tex->script = new TextureScript(tex->code);
+            }
+        }
     }
 
     return id;
@@ -198,8 +234,7 @@ void OnWork(uv_work_t* req) {
     WorkResults* results = new WorkResults;
 
     //// Dispatch the ray.
-    //ProcessRay(ray, results);
-    delete ray; // TODO
+    ProcessRay(ray, results);
 
     //// Pass the work results back through the data baton.
     req->data = results;
@@ -209,24 +244,24 @@ void AfterWork(uv_work_t* req) {
     assert(req != nullptr);
     assert(req->data != nullptr);
 
-    //// Pull the work result out of the data baton.
+    // Pull the work result out of the data baton.
     WorkResults* results = reinterpret_cast<WorkResults*>(req->data);
 
     //// Do buffer operations.
-    //Image* image = lib->LookupImage();
-    //assert(image != nullptr);
-    //for (auto& op : results->ops) {
-    //    switch (op.kind) {
-    //        case BufferOp::Kind::WRITE:
-    //            image->Write(op.buffer, op.x, op.y, op.value);
-    //            break;
+    Image* image = lib->LookupImage();
+    assert(image != nullptr);
+    for (auto& op : results->ops) {
+        switch (op.kind) {
+            case BufferOp::Kind::WRITE:
+                image->Write(op.buffer, op.x, op.y, op.value);
+                break;
 
-    //        case BufferOp::Kind::ACCUMULATE:
-    //            image->Accumulate(op.buffer, op.x, op.y, op.value);
-    //            break;
-    //    }
-    //}
-    //
+            case BufferOp::Kind::ACCUMULATE:
+                image->Accumulate(op.buffer, op.x, op.y, op.value);
+                break;
+        }
+    }
+
     //// Forward rays and kill them off.
     //for (auto& forward : results->forwards) {
     //    if (forward.node == nullptr) {
@@ -241,15 +276,12 @@ void AfterWork(uv_work_t* req) {
     //}
 
     //// Merge render stats.
-    //stats.intersects_produced += results->intersects_produced;
-    //stats.illuminates_produced += results->illuminates_produced;
-    //stats.lights_produced += results->lights_produced;
-    //stats.intersects_killed += results->intersects_killed;
-    //stats.illuminates_killed += results->illuminates_killed;
-    //stats.lights_killed += results->lights_killed;
-    //for (const auto& kv : results->workers_touched) {
-    //    trav_stats.workers_touched[kv.first] += kv.second;
-    //}
+    stats.intersects_produced += results->intersects_produced;
+    stats.illuminates_produced += results->illuminates_produced;
+    stats.lights_produced += results->lights_produced;
+    stats.intersects_killed += results->intersects_killed;
+    stats.illuminates_killed += results->illuminates_killed;
+    stats.lights_killed += results->lights_killed;
 
     delete results;
     free(req);
@@ -266,6 +298,12 @@ void AfterWork(uv_work_t* req) {
 void StopRender() {
     int result = 0;
 
+    Config* config = lib->LookupConfig();
+    assert(config != nullptr);
+
+    Image* final = lib->LookupImage();
+    assert(final != nullptr);
+
     render_stop = time(nullptr);
 
     // Stop the stats timer.
@@ -273,10 +311,89 @@ void StopRender() {
     CheckUVResult(result, "timer_stop");
     uv_close(reinterpret_cast<uv_handle_t*>(&stats_timer), nullptr);
 
+    // Write out the final image.
+    final->ToEXRFile(config->name + ".exr");
+    TOUTLN("Wrote " << config->name << ".exr.");
+
     // Dump out timers.
     TOUTLN("Time spent loading: " << (load_stop - load_start) << " seconds.");
     TOUTLN("Time spent building: " << (build_stop - build_start) << " seconds.");
     TOUTLN("Time spent rendering: " << (render_stop - render_start) << " seconds.");
+}
+
+void ProcessRay(FatRay* ray, WorkResults* results) {
+    // !!! WARNING !!!
+    // Everything this function does and calls must be thread-safe. This
+    // function will NOT run in the main thread, it runs on the thread pool.
+
+    switch (ray->kind) {
+        case FatRay::Kind::INTERSECT:
+            ProcessIntersect(ray, results);
+            break;
+
+        case FatRay::Kind::LIGHT:
+            ProcessLight(ray, results);
+            break;
+
+        default:
+            TERRLN("Unknown ray kind " << ray->kind << ".");
+            break;
+    }
+}
+
+void ProcessIntersect(FatRay* ray, WorkResults* results) {
+    // !!! WARNING !!!
+    // Everything this function does and calls must be thread-safe. This
+    // function will NOT run in the main thread, it runs on the thread pool.
+
+    // Test geometry for intersection.
+    ray->traversal.hit = lib->Intersect(ray, 1);
+
+    // Did it hit anything?
+    if (ray->hit.worker > 0) {
+        // Yes it did. Illuminate the intersection and kill the ray.
+        IlluminateIntersection(ray, results);
+    }
+
+    // Kill the ray.
+    delete ray;
+    results->intersects_killed++;
+    return;
+}
+
+void ProcessLight(FatRay* ray, WorkResults* results) {
+    // !!! WARNING !!!
+    // Everything this function does and calls must be thread-safe. This
+    // function will NOT run in the main thread, it runs on the thread pool.
+
+    // TODO
+}
+
+void IlluminateIntersection(FatRay* ray, WorkResults* results) {
+    // !!! WARNING !!!
+    // Everything this function does and calls must be thread-safe. This
+    // function will NOT run in the main thread, it runs on the thread pool.
+
+    // Where did we hit?
+    vec3 hit = ray->EvaluateAt(ray->hit.t);
+
+    // Find the shader and run the indirect() function.
+    Mesh* mesh = lib->LookupMesh(ray->hit.mesh);
+    assert(mesh != nullptr);
+
+    Material* mat = lib->LookupMaterial(mesh->material);
+    assert(mat != nullptr);
+
+    Shader* shader = lib->LookupShader(mat->shader);
+    assert(shader != nullptr);
+    assert(shader->script != nullptr);
+
+    shader->script->Indirect(ray, hit, results);
+
+    // TODO: process traced rays in results immediately (recursive)
+    
+    // TODO: light this intersection by generating light rays and processing
+    // them immediately (recursive)
 }
 
 } // namespace fr
