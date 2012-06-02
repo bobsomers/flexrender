@@ -16,21 +16,21 @@ network {
 
 output {
     size = vec2(512, 512),
-    name = "cornel-models",
+    name = "toystore",
     buffers = {
         -- none
     }
 }
 
 render {
-    antialiasing = 2,
-    samples = 32,
+    antialiasing = 1,
+    samples = 1,
     bounces = 3,
     threshold = 0.0001,
     --min = vec3(-75, -5, -75),
     --max = vec3(75, 25, 75),
-    min = vec3(-10, -10, -10),
-    max = vec3(10, 10, 10),
+    min = vec3(-1, -1, -1),
+    max = vec3(31, 31, 31),
     --min = vec3(-5, -5, -5),
     --max = vec3(15, 15, 15)
 }
