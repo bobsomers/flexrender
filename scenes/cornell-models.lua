@@ -44,12 +44,12 @@ camera {
 material {
     name = "white",
     emissive = false,
-    shader = fre.montecarlo(0.6, vec3(0.730, 0.739, 0.729),
-                            0.2, 32,
-                            0.2, 8)
-    --shader = fre.phong(0.6, vec3(0.730, 0.739, 0.729),
-    --                   0.2, vec3(0.730, 0.739, 0.729),
-    --                   0.2, 8)
+    --shader = fre.montecarlo(0.6, vec3(0.730, 0.739, 0.729),
+    --                        0.2, 32,
+    --                        0.2, 8)
+    shader = fre.phong(0.6, vec3(0.730, 0.739, 0.729),
+                       0.2, vec3(0.730, 0.739, 0.729),
+                       0.2, 8)
 }
 
 material {
