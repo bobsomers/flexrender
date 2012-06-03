@@ -21,28 +21,8 @@ end
 math.randomseed(42)
 
 camera {
-    eye = vec3(50, 25, 50),
-    look = vec3(0, 0, 0)
-}
-
---material {
---    name = "light",
---    emissive = true,
---    shader = fre.light(vec3(1/9, 1/9, 1/9))
---}
---
---mesh {
---    material = "light",
---    transform = translate(vec3(0, 50, 50)) * rotate(radians(135), vec3(1, 0, 0)),
---    data = fre.plane(1)
---}
-
-material {
-    name = "red",
-    emissive = false,
-    shader = fre.phong(0.6, vec3(1, 0, 0),
-                       0.2, vec3(1, 0, 0),
-                       0.2, 8)
+    eye = vec3(30, 17, 43),
+    look = vec3(2, 0, 0)
 }
 
 function place_light(x, y, floor)
@@ -51,7 +31,7 @@ function place_light(x, y, floor)
     material {
         name = mat,
         emissive = true,
-        shader = fre.light(vec3(1/9, 1/9, 1/9))
+        shader = fre.light(vec3(1/14, 1/14, 1/14))
     }
 
     mesh {
@@ -61,7 +41,7 @@ function place_light(x, y, floor)
     }
 end
 
--- Lights.
+-- Downstairs lights.
 place_light(7, 8, 1)
 place_light(7, 16, 1)
 place_light(7, 24, 1)
@@ -69,12 +49,45 @@ place_light(15, 9, 1)
 place_light(15, 17, 1)
 place_light(15, 25, 1)
 place_light(23, 8, 1)
-place_light(23, 16, 1)
-place_light(23, 24, 1)
+
+-- Upstairs lights.
+place_light(7, 8, 2)
+place_light(7, 16, 2)
+place_light(7, 24, 2)
+place_light(15, 9, 2)
+place_light(15, 17, 2)
+place_light(15, 25, 2)
+place_light(23, 8, 2)
 
 local tile_r, tile_g, tile_b = fre.targa("scenes/assets/tile1.tga")
 local wood_r, wood_g, wood_b = fre.targa("scenes/assets/wood1.tga")
 local marble_r, marble_g, marble_b = fre.targa("scenes/assets/marble1.tga")
+local brick_r, brick_g, brick_b = fre.targa("scenes/assets/brick1.tga")
+
+function draw_wall_tile(i, j, side)
+    local mat = next_mat()
+    local xform = translate(vec3(3 * i + 1.5, 3 * j + 1.5, 0))
+    if side then
+        xform = translate(vec3(0, 3 * j + 1.5, 3 * i + 1.5)) * rotate(radians(90), vec3(0, 1, 0))
+    end
+
+    material {
+        name = mat,
+        emissive = false,
+        shader = fre.frsl("scenes/wood_shader.lua"),
+        textures = {
+            wood_r = brick_r,
+            wood_g = brick_g,
+            wood_b = brick_b,
+        }
+    }
+
+    mesh {
+        material = mat,
+        transform = xform,
+        data = fre.plane(3)
+    }
+end
 
 function draw_floor_tile(i, j, y)
     local mat = next_mat()
@@ -113,7 +126,7 @@ function draw_stair(n, y)
 
     mesh {
         material = mat,
-        transform = translate(vec3(27.5, y + 0.5 * n - 0.25, 21 - 0.5 * n - 0.25)) * scale(vec3(4, 0.5, 0.5)),
+        transform = translate(vec3(27.5, y + 0.5 * n - 0.25, 22 - 0.5 * n + 0.25)) * scale(vec3(4, 0.5, 0.5)),
         data = fre.cube(1)
     }
 end
@@ -211,6 +224,11 @@ function draw_shelf(xform)
     --]]
 end
 
+-- Stairs.
+for i = 1, 20 do
+    draw_stair(i, 0)
+end
+
 -- ==== FIRST FLOOR ====
 
 -- Floor.
@@ -220,36 +238,75 @@ for i = 0, 9 do
     end
 end
 
+-- Back wall.
+for i = 0, 9 do
+    for j = 0, 2 do
+        draw_wall_tile(i, j, false)
+    end
+end
+
+-- Side wall.
+for i = 0, 10 do
+    for j = 0, 2 do
+        draw_wall_tile(i, j, true)
+    end
+end
+
 -- Shelves.
 for j = 0, 6 do
-    draw_shelf(translate(vec3(3, 0, j * 4 + 4)))
+    draw_shelf(translate(vec3(3, 0, j * 4 + 5)))
 end
 for j = 0, 6 do
-    draw_shelf(translate(vec3(11, 0, j * 4 + 3)))
+    draw_shelf(translate(vec3(11, 0, j * 4 + 6)))
 end
 for j = 0, 6 do
-    draw_shelf(translate(vec3(19, 0, j * 4 + 4)))
+    draw_shelf(translate(vec3(19, 0, j * 4 + 5)))
 end
 for j = 0, 1 do
-    draw_shelf(translate(vec3(27, 0, j * 4 + 3)))
+    draw_shelf(translate(vec3(27, 0, j * 4 + 6)))
 end
 
--- ==== STAIRS ====
+-- ==== SECOND FLOOR ====
 
-for i = 1, 20 do
-    draw_stair(i, 0)
+-- Floor.
+for i = 0, 4 do
+    for j = 0, 10 do
+        draw_floor_tile(i, j, 10)
+    end
+end
+for i = 5, 9 do
+    for j = 0, 3 do
+        draw_floor_tile(i, j, 10)
+    end
 end
 
--- ==== FLOORS ====
+-- Back wall.
+for i = 0, 9 do
+    for j = 3, 6 do
+        draw_wall_tile(i, j, false)
+    end
+end
 
--- Second floor.
---for i = 0, 15 do
---    for j = 0, 30 do
---        draw_floor_tile(i, j, 10)
---    end
---end
---for i = 16, 30 do
---    for j = 0, 10 do
---        draw_floor_tile(i, j, 10)
---    end
---end
+-- Side wall.
+for i = 0, 10 do
+    for j = 3, 6 do
+        draw_wall_tile(i, j, true)
+    end
+end
+
+-- Shelves.
+for j = 0, 7 do
+    draw_shelf(translate(vec3(3, 10, j * 4 + 2.5)))
+end
+for j = 0, 4 do
+    draw_shelf(translate(vec3(11, 10, j * 4 + 13.5)))
+end
+for j = 0, 1 do
+    draw_shelf(translate(vec3(11, 10, j * 4 + 2.5)))
+end
+for j = 0, 1 do
+    draw_shelf(translate(vec3(19, 10, j * 4 + 2.5)))
+end
+for j = 0, 1 do
+    draw_shelf(translate(vec3(27, 10, j * 4 + 2.5)))
+end

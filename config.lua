@@ -9,13 +9,19 @@ local vec3 = fr.vec3
 network {
     workers = {
         "127.0.0.1",
-        "127.0.0.1:19401"
+        "127.0.0.1:19401",
+        "127.0.0.1:19402",
+        "127.0.0.1:19403",
+        "127.0.0.1:19404",
+        "127.0.0.1:19405",
+        "127.0.0.1:19406",
+        "127.0.0.1:19407"
     },
     runaway = 5 -- percent
 }
 
 output {
-    size = vec2(512, 512),
+    size = vec2(640, 480),
     name = "toystore",
     buffers = {
         -- none
@@ -24,13 +30,9 @@ output {
 
 render {
     antialiasing = 1,
-    samples = 1,
-    bounces = 3,
+    samples = 10,
+    bounces = 2,
     threshold = 0.0001,
-    --min = vec3(-75, -5, -75),
-    --max = vec3(75, 25, 75),
     min = vec3(-1, -1, -1),
-    max = vec3(31, 31, 31),
-    --min = vec3(-5, -5, -5),
-    --max = vec3(15, 15, 15)
+    max = vec3(34, 21, 34),
 }
