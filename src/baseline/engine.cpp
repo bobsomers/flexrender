@@ -3,9 +3,11 @@
 #include <ctime>
 #include <cstdlib>
 #include <iostream>
+#include <fstream>
 #include <cassert>
 #include <vector>
 #include <utility>
+#include <deque>
 
 #include "uv.h"
 
@@ -20,6 +22,8 @@ using std::endl;
 using std::vector;
 using std::pair;
 using std::make_pair;
+using std::deque;
+using std::ofstream;
 using glm::vec2;
 using glm::vec3;
 using glm::vec4;
@@ -28,6 +32,9 @@ using glm::dot;
 using glm::distance;
 
 namespace fr {
+
+/// Holds information about the number of rays processed.
+deque<uint64_t> rays_processed;
 
 /// The library for the current render.
 static Library* lib = nullptr;
@@ -212,6 +219,8 @@ void OnStatsTimeout(uv_timer_t* timer, int status) {
     uint64_t total_killed = stats.intersects_killed + stats.lights_killed;
     TOUTLN("RAYS:  +" << total_produced << "  -" << total_killed);
 
+    rays_processed.push_back(total_killed);
+
     stats.Reset();
 }
 
@@ -321,6 +330,17 @@ void StopRender() {
     TOUTLN("Time spent loading: " << (load_stop - load_start) << " seconds.");
     TOUTLN("Time spent building: " << (build_stop - build_start) << " seconds.");
     TOUTLN("Time spent rendering: " << (render_stop - render_start) << " seconds.");
+
+    // Dump out rays processed.
+    ofstream file;
+    file.open(config->name + ".csv");
+    file << "Tick (1 Hz),Rays Processed" << endl;
+    uint64_t tick = 1;
+    for (const auto record : rays_processed) {
+        file << tick << "," << record << endl;
+        tick++;
+    }
+    file.close();
 }
 
 void ProcessRay(FatRay* ray, WorkResults* results) {

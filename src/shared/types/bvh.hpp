@@ -68,6 +68,9 @@ public:
         return _nodes[0].bounds;
     }
 
+    inline uint64_t GetSizeInBytes() const { return _nodes.size() * sizeof(LinearNode); }
+    inline float GetSizeInMB() const { return (_nodes.size() * sizeof(LinearNode)) / (1024.0f * 1024.0f); }
+
     MSGPACK_DEFINE(_nodes);
 
     TOSTRINGABLEBYPTR(BVH);

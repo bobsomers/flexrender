@@ -30,12 +30,15 @@ public:
     FR_SCRIPT_DECLARE(Mesh);
     FR_SCRIPT_DECLARE(Triangle);
 
+    inline uint64_t TotalTris() const { return _total_tris; }
+
 private:
     Library* _lib;
     Mesh *_active_mesh;
     glm::vec3 _centroid_num;
     float _centroid_denom;
     SyncCallback _syncer;
+    uint64_t _total_tris;
 };
 
 } // namespace fr

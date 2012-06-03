@@ -19,7 +19,8 @@ SceneScript::SceneScript(SyncCallback syncer) :
  _active_mesh(nullptr),
  _centroid_num(0.0f, 0.0f, 0.0f),
  _centroid_denom(0.0f),
- _syncer(syncer) {
+ _syncer(syncer),
+ _total_tris(0) {
     // Scene scripts should have access to the entire standard library.
     FR_SCRIPT_INIT(SceneScript, ScriptLibs::STANDARD_LIBS);
 
@@ -256,6 +257,13 @@ FR_SCRIPT_FUNCTION(SceneScript, Mesh) {
                   _centroid_num.z / _centroid_denom,
                   1.0f);
     mesh->centroid = vec3(mesh->xform * centroid);
+
+    uint64_t num_tris = mesh->tris.size();
+    uint64_t num_bytes = num_tris * sizeof(Triangle);
+    _total_tris += num_tris;
+    float total_mb = (_total_tris * sizeof(Triangle)) / (1024.0f * 1024.0f);
+
+    TOUTLN("Loaded " << num_tris << " tris, " << num_bytes << " bytes (" << _total_tris << " tris, " << total_mb << " MB total)");
 
     // Sync the mesh.
     uint32_t id = _syncer(mesh);

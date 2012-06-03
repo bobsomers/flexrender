@@ -33,6 +33,12 @@ using glm::dot;
 
 namespace fr {
 
+/// The number of triangles on this worker.
+uint64_t num_tris;
+
+/// The size of the BVH data on this worker.
+float bvh_size_mb;
+
 /// The library for the current render.
 static Library* lib = nullptr;
 
@@ -879,6 +885,8 @@ void server::OnSyncMesh(NetNode* node) {
     // Unpack the mesh.
     uint32_t id = node->ReceiveMesh(lib);
 
+    num_tris += lib->LookupMesh(id)->tris.size();
+
     // Reply with OK.
     Message reply(Message::Kind::OK);
     node->Send(reply);
@@ -966,12 +974,14 @@ void server::OnBuildBVH(NetNode* node) {
     TOUT("Building local BVH" << flush);
     lib->ForEachMesh([&mesh_bounds](uint32_t id, Mesh* mesh) {
         mesh->bvh = new BVH(mesh);
+        bvh_size_mb += mesh->bvh->GetSizeInMB();
         mesh_bounds.emplace_back(make_pair(id, mesh->bvh->Extents()));
         cout << "." << flush;
     });
 
     // Build the mesh BVH from the mesh extents.
     BVH* mbvh = new BVH(mesh_bounds);
+    bvh_size_mb += mbvh->GetSizeInMB();
     lib->StoreMBVH(mbvh);
     cout << "." << endl;
 
@@ -993,6 +1003,8 @@ void server::OnSyncWBVH(NetNode* node) {
 
     // Unpack the worker BVH.
     node->ReceiveWBVH(lib);
+
+    bvh_size_mb += lib->LookupWBVH()->GetSizeInMB();
 
     // Reply with OK.
     Message reply(Message::Kind::OK);
@@ -1049,6 +1061,11 @@ void server::OnRenderStop(NetNode* node) {
     for (const auto& kv : trav_stats.workers_touched) {
         TOUTLN("\t" << kv.first << " worker(s): " << kv.second);
     }
+
+    TOUTLN("Scene stats:");
+    TOUTLN("\tNumber of tris: " << num_tris);
+    TOUTLN("\tSize of tris: " << (num_tris * sizeof(Triangle) / (1024.0f * 1024.0f)) << " MB");
+    TOUTLN("\tBVH size: " << bvh_size_mb << " MB");
 }
 
 void server::OnRenderPause(NetNode* node) {

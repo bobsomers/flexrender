@@ -724,7 +724,7 @@ void NetNode::StatsToCSVFile(const string& filename) const {
     file.open(filename);
 
     // Write header.
-    file << "Tick," <<
+    file << "Tick (10 Hz)," <<
      "Primary Ray Casting Progress," <<
      "Intersection Rays Produced," <<
      "Illumination Rays Produced," <<

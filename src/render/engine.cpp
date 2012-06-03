@@ -567,6 +567,7 @@ void client::BuildWBVH() {
 
     // Build the worker BVH from the worker extents.
     BVH* wbvh = new BVH(worker_bounds);
+    TOUTLN("Worker BVH size: " << wbvh->GetSizeInBytes() << " bytes");
 
     lib->ForEachNetNode([wbvh](uint32_t id, NetNode* node) {
         node->state = NetNode::State::SYNCING_WBVH;
