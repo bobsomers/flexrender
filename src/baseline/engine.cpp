@@ -443,12 +443,12 @@ void IlluminateIntersection(FatRay* ray, WorkResults* results) {
         assert(shader != nullptr);
         assert(shader->script != nullptr);
 
-        for (const auto& tri : mesh->tris) {
+        for (const auto& tri : mesh->faces) {
             for (uint16_t i = 0; i < config->samples; i++) {
                 // Sample the triangle.
                 vec3 position, normal;
                 vec2 texcoord;
-                tri.Sample(&position, &normal, &texcoord);
+                tri.Sample(mesh->vertices, &position, &normal, &texcoord);
 
                 // Transform the position and normal into world space.
                 position = vec3(mesh->xform * vec4(position, 1.0f));

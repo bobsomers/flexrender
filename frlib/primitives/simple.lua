@@ -15,32 +15,30 @@ local vec3 = types.vec3
 local function plane(n)
     return function()
         local h = n / 2
-        triangle {{
+        
+        vertex {
             v = vec3(-h, -h, 0),
             n = vec3(0, 0, 1),
             t = vec2(0, 0)
-        }, {
+        }
+        vertex {
             v = vec3(-h, h, 0),
             n = vec3(0, 0, 1),
             t = vec2(0, 1)
-        }, {
+        }
+        vertex {
             v = vec3(h, -h, 0),
             n = vec3(0, 0, 1),
             t = vec2(1, 0)
-        }}
-        triangle {{
+        }
+        vertex {
             v = vec3(h, h, 0),
             n = vec3(0, 0, 1),
             t = vec2(1, 1)
-        }, {
-            v = vec3(h, -h, 0),
-            n = vec3(0, 0, 1),
-            t = vec2(1, 0)
-        }, {
-            v = vec3(-h, h, 0),
-            n = vec3(0, 0, 1),
-            t = vec2(0, 1)
-        }}
+        }
+
+        triangle {0, 1, 2}
+        triangle {3, 2, 1}
     end
 end
 
@@ -51,172 +49,149 @@ local function cube(n)
         local h = n / 2
 
         -- Front face.
-        triangle {{
+        vertex {
             v = vec3(-h, -h, h),
             n = vec3(0, 0, 1),
             t = vec2(0, 0)
-        }, {
+        }
+        vertex {
             v = vec3(-h, h, h),
             n = vec3(0, 0, 1),
             t = vec2(0, 1)
-        }, {
+        }
+        vertex {
             v = vec3(h, -h, h),
             n = vec3(0, 0, 1),
             t = vec2(1, 0)
-        }}
-        triangle {{
+        }
+        vertex {
             v = vec3(h, h, h),
             n = vec3(0, 0, 1),
             t = vec2(1, 1)
-        }, {
-            v = vec3(h, -h, h),
-            n = vec3(0, 0, 1),
-            t = vec2(1, 0)
-        }, {
-            v = vec3(-h, h, h),
-            n = vec3(0, 0, 1),
-            t = vec2(0, 1)
-        }}
+        }
+        triangle {0, 1, 2}
+        triangle {3, 2, 1}
 
         -- Back face.
-        triangle {{
+        vertex {
             v = vec3(h, -h, -h),
             n = vec3(0, 0, -1),
             t = vec2(0, 0)
-        }, {
+        }
+        vertex {
             v = vec3(h, h, -h),
             n = vec3(0, 0, -1),
             t = vec2(0, 1)
-        }, {
+        }
+        vertex {
             v = vec3(-h, -h, -h),
             n = vec3(0, 0, -1),
             t = vec2(1, 0)
-        }}
-        triangle {{
+        }
+        vertex {
             v = vec3(-h, h, -h),
             n = vec3(0, 0, -1),
             t = vec2(1, 1)
-        }, {
-            v = vec3(-h, -h, -h),
-            n = vec3(0, 0, -1),
-            t = vec2(1, 0)
-        }, {
-            v = vec3(h, h, -h),
-            n = vec3(0, 0, -1),
-            t = vec2(0, 1)
-        }}
+        }
+        triangle {4, 5, 6}
+        triangle {7, 6, 5}
 
         -- Left face.
-        triangle {{
+        vertex {
             v = vec3(-h, -h, -h),
             n = vec3(-1, 0, 0),
             t = vec2(0, 0)
-        }, {
+        }
+        vertex {
             v = vec3(-h, h, -h),
             n = vec3(-1, 0, 0),
             t = vec2(0, 1)
-        }, {
+        }
+        vertex {
             v = vec3(-h, -h, h),
             n = vec3(-1, 0, 0),
             t = vec2(1, 0)
-        }}
-        triangle {{
+        }
+        vertex {
             v = vec3(-h, h, h),
             n = vec3(-1, 0, 0),
             t = vec2(1, 1)
-        }, {
-            v = vec3(-h, -h, h),
-            n = vec3(-1, 0, 0),
-            t = vec2(1, 0)
-        }, {
-            v = vec3(-h, h, -h),
-            n = vec3(-1, 0, 0),
-            t = vec2(0, 1)
-        }}
+        }
+        triangle {8, 9, 10}
+        triangle {11, 10, 9}
 
         -- Right face.
-        triangle {{
+        vertex {
             v = vec3(h, -h, h),
             n = vec3(1, 0, 0),
             t = vec2(0, 0)
-        }, {
+        }
+        vertex {
             v = vec3(h, h, h),
             n = vec3(1, 0, 0),
             t = vec2(0, 1)
-        }, {
+        }
+        vertex {
             v = vec3(h, -h, -h),
             n = vec3(1, 0, 0),
             t = vec2(1, 0)
-        }}
-        triangle {{
+        }
+        vertex {
             v = vec3(h, h, -h),
             n = vec3(1, 0, 0),
             t = vec2(1, 1)
-        }, {
-            v = vec3(h, -h, -h),
-            n = vec3(1, 0, 0),
-            t = vec2(1, 0)
-        }, {
-            v = vec3(h, h, h),
-            n = vec3(1, 0, 0),
-            t = vec2(0, 1)
-        }}
+        }
+        triangle {12, 13, 14}
+        triangle {15, 14, 13}
 
         -- Top face.
-        triangle {{
+        vertex {
             v = vec3(-h, h, h),
             n = vec3(0, 1, 0),
             t = vec2(0, 0)
-        }, {
+        }
+        vertex {
             v = vec3(-h, h, -h),
             n = vec3(0, 1, 0),
             t = vec2(0, 1)
-        }, {
+        }
+        vertex {
             v = vec3(h, h, h),
             n = vec3(0, 1, 0),
             t = vec2(1, 0)
-        }}
-        triangle {{
+        }
+        vertex {
             v = vec3(h, h, -h),
             n = vec3(0, 1, 0),
             t = vec2(1, 1)
-        }, {
-            v = vec3(h, h, h),
-            n = vec3(0, 1, 0),
-            t = vec2(1, 0)
-        }, {
-            v = vec3(-h, h, -h),
-            n = vec3(0, 1, 0),
-            t = vec2(0, 1)
-        }}
+        }
+        triangle {16, 17, 18}
+        triangle {19, 18, 17}
 
         -- Bottom face.
-        triangle {{
+        vertex {
             v = vec3(-h, -h, -h),
             n = vec3(0, -1, 0),
             t = vec2(0, 0)
-        }, {
+        }
+        vertex {
             v = vec3(-h, -h, h),
             n = vec3(0, -1, 0),
             t = vec2(0, 1)
-        }, {
+        }
+        vertex {
             v = vec3(h, -h, -h),
             n = vec3(0, -1, 0),
             t = vec2(1, 0)
-        }}
-        triangle {{
+        }
+        vertex {
             v = vec3(h, -h, h),
             n = vec3(0, -1, 0),
             t = vec2(1, 1)
-        }, {
-            v = vec3(h, -h, -h),
-            n = vec3(0, -1, 0),
-            t = vec2(1, 0)
-        }, {
-            v = vec3(-h, -h, h),
-            n = vec3(0, -1, 0),
-            t = vec2(0, 1)
-        }}
+        }
+        triangle {20, 21, 22}
+        triangle {23, 22, 21}
+    
     end
 end
 

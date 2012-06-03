@@ -33,8 +33,11 @@ using glm::dot;
 
 namespace fr {
 
-/// The number of triangles on this worker.
-uint64_t num_tris;
+/// The number of vertices on this worker.
+uint64_t num_verts = 0;
+
+/// The number of faces on this worker.
+uint64_t num_faces = 0;
 
 /// The size of the BVH data on this worker.
 float bvh_size_mb;
@@ -520,12 +523,12 @@ void server::ProcessIlluminate(FatRay* ray, WorkResults* results) {
         assert(shader != nullptr);
         assert(shader->script != nullptr);
 
-        for (const auto& tri : mesh->tris) {
+        for (const auto& tri : mesh->faces) {
             for (uint16_t i = 0; i < config->samples; i++) {
                 // Sample the triangle.
                 vec3 position, normal;
                 vec2 texcoord;
-                tri.Sample(&position, &normal, &texcoord);
+                tri.Sample(mesh->vertices, &position, &normal, &texcoord);
 
                 // Transform the position and normal into world space.
                 position = vec3(mesh->xform * vec4(position, 1.0f));
@@ -885,7 +888,10 @@ void server::OnSyncMesh(NetNode* node) {
     // Unpack the mesh.
     uint32_t id = node->ReceiveMesh(lib);
 
-    num_tris += lib->LookupMesh(id)->tris.size();
+    Mesh* mesh = lib->LookupMesh(id);
+    assert(mesh != nullptr);
+    num_verts += mesh->vertices.size();
+    num_faces += mesh->faces.size();
 
     // Reply with OK.
     Message reply(Message::Kind::OK);
@@ -1063,8 +1069,9 @@ void server::OnRenderStop(NetNode* node) {
     }
 
     TOUTLN("Scene stats:");
-    TOUTLN("\tNumber of tris: " << num_tris);
-    TOUTLN("\tSize of tris: " << (num_tris * sizeof(Triangle) / (1024.0f * 1024.0f)) << " MB");
+    TOUTLN("\tNumber of vertices: " << num_verts);
+    TOUTLN("\tNumber of faces: " << num_faces);
+    TOUTLN("\tSize of geometry: " << ((num_verts * sizeof(Vertex) + num_faces * sizeof(Triangle)) / (1024.0f * 1024.0f)) << " MB");
     TOUTLN("\tBVH size: " << bvh_size_mb << " MB");
 }
 

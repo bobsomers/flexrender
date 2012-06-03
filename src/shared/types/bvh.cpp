@@ -29,9 +29,9 @@ BVH::BVH(const Mesh* mesh) :
  _nodes() {
     // Initialize build data from mesh triangles.
     vector<PrimitiveInfo> build_data;
-    build_data.reserve(mesh->tris.size());
-    for (size_t i = 0; i < mesh->tris.size(); i++) {
-        BoundingBox bounds = mesh->tris[i].WorldBounds(mesh->xform);
+    build_data.reserve(mesh->faces.size());
+    for (size_t i = 0; i < mesh->faces.size(); i++) {
+        BoundingBox bounds = mesh->faces[i].WorldBounds(mesh->vertices, mesh->xform);
         build_data.emplace_back(i, bounds);
     }
 

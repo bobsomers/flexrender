@@ -7,6 +7,7 @@
 #include "msgpack.hpp"
 
 #include "types/triangle.hpp"
+#include "types/vertex.hpp"
 #include "utils/tostring.hpp"
 
 namespace fr {
@@ -32,8 +33,11 @@ struct Mesh {
     /// Columns of the 4x4 transform matrix. Only used for syncing.
     glm::vec4 xform_cols[4];
 
-    /// The raw triangle data.
-    std::vector<Triangle> tris;
+    /// Indexed vertices.
+    std::vector<Vertex> vertices;
+
+    /// Indexed face sets.
+    std::vector<Triangle> faces;
 
     /// Centroid of the mesh in WORLD space. Only used for scene distribution.
     /// Not synced.
@@ -59,7 +63,7 @@ struct Mesh {
     void ComputeMatrices();
 
     MSGPACK_DEFINE(id, material, xform_cols[0], xform_cols[1], xform_cols[2],
-     xform_cols[3], tris);
+     xform_cols[3], vertices, faces);
 
     TOSTRINGABLE(Mesh);
 };

@@ -20,7 +20,8 @@ namespace fr {
 
 Mesh::Mesh(uint32_t id) :
  id(id),
- tris(),
+ vertices(),
+ faces(),
  bvh(nullptr) {
     material = numeric_limits<uint32_t>::max();
 
@@ -41,7 +42,8 @@ Mesh::Mesh(uint32_t id) :
 Mesh::Mesh(uint32_t id, uint32_t material) :
  id(id),
  material(material),
- tris(),
+ vertices(),
+ faces(),
  bvh(nullptr) {
     centroid.x = numeric_limits<float>::quiet_NaN();
     centroid.y = numeric_limits<float>::quiet_NaN();
@@ -58,7 +60,8 @@ Mesh::Mesh(uint32_t id, uint32_t material) :
 }
 
 Mesh::Mesh() :
- tris(),
+ vertices(),
+ faces(),
  bvh(nullptr) {
     id = numeric_limits<uint32_t>::max();
     material = numeric_limits<uint32_t>::max();
@@ -98,8 +101,12 @@ string ToString(const Mesh& mesh, const string& indent) {
      indent << "| xform_cols[1] = " << ToString(mesh.xform_cols[1]) << endl <<
      indent << "| xform_cols[2] = " << ToString(mesh.xform_cols[2]) << endl <<
      indent << "| xform_cols[3] = " << ToString(mesh.xform_cols[3]) << endl <<
-     indent << "| tris = {" << endl;
-    for (const auto& tri : mesh.tris) {
+     indent << "| vertices = {" << endl;
+    for (const auto& vertex : mesh.vertices) {
+        stream << pad << ToString(vertex, pad2) << endl;
+    }
+    stream << indent << "| faces = {" << endl;
+    for (const auto& tri : mesh.faces) {
         stream << pad << ToString(tri, pad2) << endl;
     }
     stream << indent << "| }" << endl <<

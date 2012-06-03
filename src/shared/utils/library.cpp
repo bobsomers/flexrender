@@ -198,8 +198,8 @@ bool Library::Intersect(FatRay* ray, uint32_t me) {
             // Transform the ray to object space.
             SlimRay xformed_ray = tri_ray.TransformTo(mesh->xform_inv);
 
-            const Triangle& tri = mesh->tris[tri_index];
-            if (tri.Intersect(xformed_ray, &t, &local) && t < tri_hit->t) {
+            const Triangle& tri = mesh->faces[tri_index];
+            if (tri.Intersect(mesh->vertices, xformed_ray, &t, &local) && t < tri_hit->t) {
                 tri_hit->worker = me;
                 tri_hit->mesh = mesh_index;
                 tri_hit->t = t;

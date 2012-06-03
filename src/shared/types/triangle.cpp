@@ -7,10 +7,12 @@
 
 #include "types/slim_ray.hpp"
 #include "types/local_geometry.hpp"
+#include "types/vertex.hpp"
 
 using std::string;
 using std::stringstream;
 using std::endl;
+using std::vector;
 using glm::vec2;
 using glm::vec3;
 using glm::vec4;
@@ -21,19 +23,20 @@ using glm::normalize;
 
 namespace fr {
 
-Triangle::Triangle(const Vertex& v1, const Vertex& v2, const Vertex& v3) {
+Triangle::Triangle(const uint32_t v1, const uint32_t v2, const uint32_t v3) {
     verts[0] = v1;
     verts[1] = v2;
     verts[2] = v3;
 }
 
 Triangle::Triangle() {
-    verts[0] = Vertex();
-    verts[1] = Vertex();
-    verts[2] = Vertex();
+    verts[0] = 0;
+    verts[1] = 0;
+    verts[2] = 0;
 }
 
-void Triangle::Sample(vec3* position, vec3* normal, vec2* texcoord) const {
+void Triangle::Sample(const vector<Vertex>& vertices, vec3* position,
+ vec3* normal, vec2* texcoord) const {
     assert(position != nullptr);
 
     // Credit: Physically Based Rendering, page 671.
@@ -44,31 +47,37 @@ void Triangle::Sample(vec3* position, vec3* normal, vec2* texcoord) const {
     float u = 1.0f - sqr1;
     float v = r2 * sqr1;
 
-    *position = InterpolatePosition(u, v);
+    *position = InterpolatePosition(vertices, u, v);
 
     if (normal != nullptr) {
-        *normal = InterpolateNormal(u, v);
+        *normal = InterpolateNormal(vertices, u, v);
     }
 
     if (texcoord != nullptr) {
-        *texcoord = InterpolateTexCoord(u, v);
+        *texcoord = InterpolateTexCoord(vertices, u, v);
     }
 }
 
-BoundingBox Triangle::WorldBounds(const mat4& xform) const {
+BoundingBox Triangle::WorldBounds(const vector<Vertex>& vertices,
+ const mat4& xform) const {
     BoundingBox bounds;
-    bounds.Absorb(vec3(xform * vec4(verts[0].v, 1.0f)));
-    bounds.Absorb(vec3(xform * vec4(verts[1].v, 1.0f)));
-    bounds.Absorb(vec3(xform * vec4(verts[2].v, 1.0f)));
+    bounds.Absorb(vec3(xform * vec4(vertices[verts[0]].v, 1.0f)));
+    bounds.Absorb(vec3(xform * vec4(vertices[verts[1]].v, 1.0f)));
+    bounds.Absorb(vec3(xform * vec4(vertices[verts[2]].v, 1.0f)));
     return bounds;
 }
 
-bool Triangle::Intersect(const SlimRay& ray, float* t, LocalGeometry* local) const {
+bool Triangle::Intersect(const vector<Vertex>& vertices, const SlimRay& ray,
+ float* t, LocalGeometry* local) const {
     // Credit: Physically Based Rendering, page 141, with modifications.
+    
+    vec3 v1 = vertices[verts[0]].v;
+    vec3 v2 = vertices[verts[1]].v;
+    vec3 v3 = vertices[verts[2]].v;
 
     // First compute s1, edge vectors, and denominator.
-    vec3 e1 = verts[1].v - verts[0].v;
-    vec3 e2 = verts[2].v - verts[0].v;
+    vec3 e1 = v2 - v1;
+    vec3 e2 = v3 - v1;
     vec3 s1 = cross(ray.direction, e2);
     float divisor = dot(s1, e1);
     if (divisor == 0.0f) {
@@ -77,7 +86,7 @@ bool Triangle::Intersect(const SlimRay& ray, float* t, LocalGeometry* local) con
     float inv_divisor = 1.0f / divisor;
 
     // Next, compute the first barycentric coordinate, b1.
-    vec3 d = ray.origin - verts[0].v;
+    vec3 d = ray.origin - v1;
     float b1 = dot(d, s1) * inv_divisor;
     if (b1 < 0.0f || b1 > 1.0f) {
         return false;
@@ -99,7 +108,7 @@ bool Triangle::Intersect(const SlimRay& ray, float* t, LocalGeometry* local) con
     }
 
     // Compute the interpolated normal from the barycentric coordinates.
-    local->n = InterpolateNormal(b1, b2);
+    local->n = InterpolateNormal(vertices, b1, b2);
 
     // Check the interpolated normal against the ray normal to cull back-facing
     // intersections.
@@ -108,54 +117,69 @@ bool Triangle::Intersect(const SlimRay& ray, float* t, LocalGeometry* local) con
     }
 
     // Compute the interpolated texture coordinate from the barycentric coords.
-    local->t = InterpolateTexCoord(b1, b2);
+    local->t = InterpolateTexCoord(vertices, b1, b2);
 
     // Intersection succeeded.
     return true;
 }
 
-vec3 Triangle::InterpolatePosition(float u, float v) const {
+vec3 Triangle::InterpolatePosition(const vector<Vertex>& vertices, float u,
+ float v) const {
+    vec3 v1 = vertices[verts[0]].v;
+    vec3 v2 = vertices[verts[1]].v;
+    vec3 v3 = vertices[verts[2]].v;
+
     float w = 1.0f - u - v;
 
     return vec3(
-        (w * verts[0].v.x) + // first coordinate (x)
-        (u * verts[1].v.x) +
-        (v * verts[2].v.x),
-        (w * verts[0].v.y) + // second coordinate (y)
-        (u * verts[1].v.y) +
-        (v * verts[2].v.y),
-        (w * verts[0].v.z) + // third coordinate (z)
-        (u * verts[1].v.z) +
-        (v * verts[2].v.z)
+        (w * v1.x) + // first coordinate (x)
+        (u * v2.x) +
+        (v * v3.x),
+        (w * v1.y) + // second coordinate (y)
+        (u * v2.y) +
+        (v * v3.y),
+        (w * v1.z) + // third coordinate (z)
+        (u * v2.z) +
+        (v * v3.z)
     );
 }
 
-vec3 Triangle::InterpolateNormal(float u, float v) const {
+vec3 Triangle::InterpolateNormal(const vector<Vertex>& vertices, float u,
+ float v) const {
+    vec3 n1 = vertices[verts[0]].n;
+    vec3 n2 = vertices[verts[1]].n;
+    vec3 n3 = vertices[verts[2]].n;
+
     float w = 1.0f - u - v;
 
     return normalize(vec3(
-        (w * verts[0].n.x) + // first coordinate (x)
-        (u * verts[1].n.x) +
-        (v * verts[2].n.x),
-        (w * verts[0].n.y) + // second coordinate (y)
-        (u * verts[1].n.y) +
-        (v * verts[2].n.y),
-        (w * verts[0].n.z) + // third coordinate (z)
-        (u * verts[1].n.z) +
-        (v * verts[2].n.z)
+        (w * n1.x) + // first coordinate (x)
+        (u * n2.x) +
+        (v * n3.x),
+        (w * n1.y) + // second coordinate (y)
+        (u * n2.y) +
+        (v * n3.y),
+        (w * n1.z) + // third coordinate (z)
+        (u * n2.z) +
+        (v * n3.z)
     ));
 }
 
-vec2 Triangle::InterpolateTexCoord(float u, float v) const {
+vec2 Triangle::InterpolateTexCoord(const vector<Vertex>& vertices, float u,
+ float v) const {
+    vec2 t1 = vertices[verts[0]].t;
+    vec2 t2 = vertices[verts[1]].t;
+    vec2 t3 = vertices[verts[2]].t;
+
     float w = 1.0f - u - v;
 
     return vec2(
-        (w * verts[0].t.x) + // first coordinate (u)
-        (u * verts[1].t.x) +
-        (v * verts[2].t.x),
-        (w * verts[0].t.y) + // second coordinate (v)
-        (u * verts[1].t.y) +
-        (v * verts[2].t.y)
+        (w * t1.x) + // first coordinate (u)
+        (u * t2.x) +
+        (v * t3.x),
+        (w * t1.y) + // second coordinate (v)
+        (u * t2.y) +
+        (v * t3.y)
     );
 }
 
@@ -163,9 +187,9 @@ string ToString(const Triangle& tri, const string& indent) {
     stringstream stream;
     string pad = indent + "| ";
     stream << "Triangle {" << endl <<
-     indent << "| v1 = " << ToString(tri.verts[0], pad) << endl << 
-     indent << "| v2 = " << ToString(tri.verts[1], pad) << endl <<
-     indent << "| v3 = " << ToString(tri.verts[2], pad) << endl <<
+     indent << "| v1 = " << tri.verts[0] << endl <<
+     indent << "| v2 = " << tri.verts[1] << endl <<
+     indent << "| v3 = " << tri.verts[2] << endl <<
      indent << "}";
     return stream.str();
 }

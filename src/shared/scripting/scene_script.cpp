@@ -1,11 +1,13 @@
 #include "scripting/scene_script.hpp"
 
 #include <cstdint>
+#include <limits>
 
 #include "types.hpp"
 #include "utils.hpp"
 
 using std::string;
+using std::numeric_limits;
 using glm::vec2;
 using glm::vec3;
 using glm::vec4;
@@ -20,7 +22,9 @@ SceneScript::SceneScript(SyncCallback syncer) :
  _centroid_num(0.0f, 0.0f, 0.0f),
  _centroid_denom(0.0f),
  _syncer(syncer),
- _total_tris(0) {
+ _total_verts(0),
+ _total_faces(0),
+ _total_bytes(0) {
     // Scene scripts should have access to the entire standard library.
     FR_SCRIPT_INIT(SceneScript, ScriptLibs::STANDARD_LIBS);
 
@@ -30,6 +34,7 @@ SceneScript::SceneScript(SyncCallback syncer) :
     FR_SCRIPT_REGISTER("shader", SceneScript, Shader);
     FR_SCRIPT_REGISTER("material", SceneScript, Material);
     FR_SCRIPT_REGISTER("mesh", SceneScript, Mesh);
+    FR_SCRIPT_REGISTER("vertex", SceneScript, Vertex);
     FR_SCRIPT_REGISTER("triangle", SceneScript, Triangle);
 }
 
@@ -258,12 +263,15 @@ FR_SCRIPT_FUNCTION(SceneScript, Mesh) {
                   1.0f);
     mesh->centroid = vec3(mesh->xform * centroid);
 
-    uint64_t num_tris = mesh->tris.size();
-    uint64_t num_bytes = num_tris * sizeof(Triangle);
-    _total_tris += num_tris;
-    float total_mb = (_total_tris * sizeof(Triangle)) / (1024.0f * 1024.0f);
+    uint64_t num_verts = mesh->vertices.size();
+    uint64_t num_faces = mesh->faces.size();
+    uint64_t num_bytes = num_verts * sizeof(Vertex) + num_faces * sizeof(Triangle);
+    _total_verts += num_verts;
+    _total_faces += num_faces;
+    _total_bytes += num_bytes;
+    float total_kb = _total_bytes / 1024.0f;
 
-    TOUTLN("Loaded " << num_tris << " tris, " << num_bytes << " bytes (" << _total_tris << " tris, " << total_mb << " MB total)");
+    TOUTLN("Loaded " << num_verts << "v, " << num_faces << "f, " << num_bytes << " bytes (" << _total_verts << "v, " << _total_faces << "f, " << total_kb << " KB total)");
 
     // Sync the mesh.
     uint32_t id = _syncer(mesh);
@@ -272,89 +280,71 @@ FR_SCRIPT_FUNCTION(SceneScript, Mesh) {
     return ReturnResourceID(id);
 }
 
+FR_SCRIPT_FUNCTION(SceneScript, Vertex) {
+    BeginTableCall();
+
+    vec3 v(numeric_limits<float>::quiet_NaN(),
+           numeric_limits<float>::quiet_NaN(),
+           numeric_limits<float>::quiet_NaN());
+    vec3 n(numeric_limits<float>::quiet_NaN(),
+           numeric_limits<float>::quiet_NaN(),
+           numeric_limits<float>::quiet_NaN());
+    vec2 t(numeric_limits<float>::quiet_NaN(),
+           numeric_limits<float>::quiet_NaN());
+
+    // vertex.v is a required float3.
+    if (!PushField("v", LUA_TTABLE)) {
+        ScriptError("vertex.v is required");
+    }
+    v = FetchFloat3();
+    PopField();
+
+    // vertex.n is a required float3.
+    if (!PushField("n", LUA_TTABLE)) {
+        ScriptError("vertex.n is required");
+    }
+    n = normalize(FetchFloat3());
+    PopField();
+
+    // vertex.t is an optional float2.
+    if (PushField("t", LUA_TTABLE)) {
+        t = FetchFloat2();
+    }
+    PopField();
+
+    // Track the centroid of the mesh.
+    _centroid_num += v;
+    _centroid_denom++;
+
+    _active_mesh->vertices.emplace_back(v, n, t);
+
+    EndTableCall();
+    return 0;
+}
+
 FR_SCRIPT_FUNCTION(SceneScript, Triangle) {
     BeginTableCall();
 
-    Triangle tri;
+    uint32_t v1 = numeric_limits<uint32_t>::max();
+    uint32_t v2 = numeric_limits<uint32_t>::max();
+    uint32_t v3 = numeric_limits<uint32_t>::max();
 
-    // This *could* have been written using ForEachIndex() again, and it
-    // actually originally was, but I believe there might be a bug in GCC
-    // 4.6.3's implementation of nested lambdas with respect to freeing
-    // allocated memory for captures. Can't take the time to confirm, and I'm
-    // not about to divert my effort solving GCC's bug, so this is more verbose
-    // but works fine.
-
-    PushIndex(1, LUA_TTABLE);
-        // "triangle[1].v" is a required float3.
-        if (!PushField("v", LUA_TTABLE)) {
-            ScriptError("triangle[1].v is required");
-        }
-        tri.verts[0].v = FetchFloat3();
-        PopField();
-
-        // "triangle[1].n" is a required float3.
-        if (!PushField("n", LUA_TTABLE)) {
-            ScriptError("triangle[1].n is required");
-        }
-        tri.verts[0].n = normalize(FetchFloat3());
-        PopField();
-
-        // "triangle[1].t" is an optional float2.
-        if (PushField("t", LUA_TTABLE)) {
-            tri.verts[0].t = FetchFloat2();
-        }
-        PopField();
+    // "triangle[1]" is a required uint32.
+    PushIndex(1, LUA_TNUMBER);
+    v1 = static_cast<uint32_t>(FetchFloat());
     PopIndex();
 
-    PushIndex(2, LUA_TTABLE);
-        // "triangle[2].v" is a required float3.
-        if (!PushField("v", LUA_TTABLE)) {
-            ScriptError("triangle[2].v is required");
-        }
-        tri.verts[1].v = FetchFloat3();
-        PopField();
-
-        // "triangle[2].n" is a required float3.
-        if (!PushField("n", LUA_TTABLE)) {
-            ScriptError("triangle[2].n is required");
-        }
-        tri.verts[1].n = normalize(FetchFloat3());
-        PopField();
-
-        // "triangle[2].t" is an optional float2.
-        if (PushField("t", LUA_TTABLE)) {
-            tri.verts[1].t = FetchFloat2();
-        }
-        PopField();
+    // "triangle[2]" is a required uint32.
+    PushIndex(2, LUA_TNUMBER);
+    v2 = static_cast<uint32_t>(FetchFloat());
     PopIndex();
 
-    PushIndex(3, LUA_TTABLE);
-        // "triangle[3].v" is a required float3.
-        if (!PushField("v", LUA_TTABLE)) {
-            ScriptError("triangle[3].v is required");
-        }
-        tri.verts[2].v = FetchFloat3();
-        PopField();
-
-        // "triangle[3].n" is a required float3.
-        if (!PushField("n", LUA_TTABLE)) {
-            ScriptError("triangle[3].n is required");
-        }
-        tri.verts[2].n = normalize(FetchFloat3());
-        PopField();
-
-        // "triangle[3].t" is an optional float2.
-        if (PushField("t", LUA_TTABLE)) {
-            tri.verts[2].t = FetchFloat2();
-        }
-        PopField();
+    // "triangle[3]" is a required uint32.
+    PushIndex(3, LUA_TNUMBER);
+    v3 = static_cast<uint32_t>(FetchFloat());
     PopIndex();
 
-    // Track the centroid of the mesh.
-    _centroid_num += tri.verts[0].v + tri.verts[1].v + tri.verts[2].v;
-    _centroid_denom += 3;
-
-    _active_mesh->tris.push_back(tri);
+    _active_mesh->faces.emplace_back(v1, v2, v3);
     EndTableCall();
     return 0;
 }

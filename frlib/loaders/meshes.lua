@@ -29,6 +29,8 @@ local function obj(filename, adjust)
     local normals = {}
     local texcoords = {}
     local faces = {}
+    local translator = {}
+    local vert_num = 0
 
     local f = assert(io.open(filename, "r"))
 
@@ -99,24 +101,40 @@ local function obj(filename, adjust)
 
     local mesh = function()
         for _, face in ipairs(faces) do
-            local v1 = vertices[face[1][1]]
-            local v2 = vertices[face[2][1]]
-            local v3 = vertices[face[3][1]]
-            local n1 = normals[face[1][3]]
-            local n2 = normals[face[2][3]]
-            local n3 = normals[face[3][3]]
-            local t1 = face[1][2]
-            if t1 < 0 then t1 = vec2(0, 0) else t1 = texcoords[t1] end
-            local t2 = face[2][2]
-            if t2 < 0 then t2 = vec2(0, 1) else t2 = texcoords[t2] end
-            local t3 = face[3][2]
-            if t3 < 0 then t3 = vec2(1, 0) else t3 = texcoords[t3] end
+            local v1 = translator[face[1][1]]
+            if v1 == nil then
+                vertex {
+                    v = vertices[face[1][1]],
+                    n = normals[face[1][1]]
+                }
+                v1 = vert_num
+                vert_num = vert_num + 1
+                translator[face[1][1]] = v1
+            end
 
-            triangle {
-                {v = v1, n = n1, t = t1},
-                {v = v2, n = n2, t = t2},
-                {v = v3, n = n3, t = t3}
-            }
+            local v2 = translator[face[2][1]]
+            if v2 == nil then
+                vertex {
+                    v = vertices[face[2][1]],
+                    n = normals[face[2][1]]
+                }
+                v2 = vert_num
+                vert_num = vert_num + 1
+                translator[face[2][1]] = v2
+            end
+
+            local v3 = translator[face[3][1]]
+            if v3 == nil then
+                vertex {
+                    v = vertices[face[3][1]],
+                    n = normals[face[3][1]]
+                }
+                v3 = vert_num
+                vert_num = vert_num + 1
+                translator[face[3][1]] = v3
+            end
+
+            triangle {v1, v2, v3}
         end
     end
 
