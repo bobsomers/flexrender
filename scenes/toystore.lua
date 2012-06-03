@@ -20,16 +20,9 @@ end
 
 math.randomseed(42)
 
---[[
 camera {
     eye = vec3(50, 30, 50),
     look = vec3(0, 0, 0)
-}
-]]
-
-camera {
-    eye = vec3(7, 7, 7),
-    look = vec3(0, 2, 0)
 }
 
 material {
@@ -53,9 +46,10 @@ material {
 }
 
 local tile_r, tile_g, tile_b = fre.targa("scenes/assets/tile1.tga")
+local wood_r, wood_g, wood_b = fre.targa("scenes/assets/wood1.tga")
 
 function draw_floor_tile(i, j, y)
-    local mat = table.concat {"floor-", y, "-", i, "-", j}
+    local mat = next_mat()
 
     material {
         name = mat,
@@ -121,30 +115,43 @@ function draw_toy(xform, i, j, shelf)
 
     mesh {
         material = mat,
-        transform = translate(vec3(i - 2, shelf * 2 + 0.5 + size, j - 0.5)) * rotate(facing, vec3(0, 1, 0)) * scale(size),
+        transform = xform * translate(vec3(i - 2, shelf * 2 + 0.5 + size, j - 0.5)) * rotate(facing, vec3(0, 1, 0)) * scale(size),
         data = data
     }
 end
 
-function draw_shelf()
+function draw_shelf(xform)
+    local mat = next_mat()
+
+    material {
+        name = mat,
+        emissive = false,
+        shader = fre.frsl("scenes/wood_shader.lua"),
+        textures = {
+            wood_r = wood_r,
+            wood_g = wood_g,
+            wood_b = wood_b,
+        }
+    }
+
     -- Bottom shelf.
     mesh {
-        material = "red",
-        transform = translate(vec3(0, 0.5, 0)) * rotate(radians(-90), vec3(1, 0, 0)) * scale(vec3(5, 2, 2)),
+        material = mat,
+        transform = xform * translate(vec3(0, 0.5, 0)) * rotate(radians(-90), vec3(1, 0, 0)) * scale(vec3(5, 2, 2)),
         data = fre.plane(1)
     }
 
     -- Middle shelf.
     mesh {
-        material = "red",
-        transform = translate(vec3(0, 2.5, 0)) * rotate(radians(-90), vec3(1, 0, 0)) * scale(vec3(5, 2, 2)),
+        material = mat,
+        transform = xform * translate(vec3(0, 2.5, 0)) * rotate(radians(-90), vec3(1, 0, 0)) * scale(vec3(5, 2, 2)),
         data = fre.plane(1)
     }
 
     -- Top shelf.
     mesh {
-        material = "red",
-        transform = translate(vec3(0, 4.5, 0)) * rotate(radians(-90), vec3(1, 0, 0)) * scale(vec3(5, 2, 2)),
+        material = mat,
+        transform = xform * translate(vec3(0, 4.5, 0)) * rotate(radians(-90), vec3(1, 0, 0)) * scale(vec3(5, 2, 2)),
         data = fre.plane(1)
     }
 
@@ -152,24 +159,34 @@ function draw_shelf()
     for i = -1, 1, 2 do
         for j = -1, 1, 2 do
             mesh {
-                material = "red",
-                transform = translate(vec3(i * 2.5, 2.5, j)) * scale(vec3(0.25, 5, 0.25)),
+                material = mat,
+                transform = xform * translate(vec3(i * 2.5, 2.5, j)) * scale(vec3(0.25, 5, 0.25)),
                 data = fre.cube(1)
             }
         end
     end
-end
 
-draw_shelf()
-for i = 0, 4 do
-    for j = 0, 1 do
-        for shelf = 0, 2 do
-            draw_toy(mat4(), i, j, shelf)
+    -- Draw toys.
+    for i = 0, 4 do
+        for j = 0, 1 do
+            for shelf = 0, 2 do
+                draw_toy(xform, i, j, shelf)
+            end
         end
     end
 end
 
---[[
+-- ==== FIRST FLOOR ====
+
+-- Floor.
+for i = 0, 30 do
+    for j = 0, 30 do
+        draw_floor_tile(i, j, 0)
+    end
+end
+
+-- Shelves.
+draw_shelf(translate(vec3(2.5, 0, 28)))
 
 -- ==== STAIRS ====
 
@@ -190,12 +207,3 @@ for i = 16, 30 do
         draw_floor_tile(i, j, 10)
     end
 end
-
--- First floor.
-for i = 0, 30 do
-    for j = 0, 30 do
-        draw_floor_tile(i, j, 0)
-    end
-end
-
-]]
