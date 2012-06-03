@@ -21,21 +21,21 @@ end
 math.randomseed(42)
 
 camera {
-    eye = vec3(50, 30, 50),
+    eye = vec3(50, 25, 50),
     look = vec3(0, 0, 0)
 }
 
-material {
-    name = "light",
-    emissive = true,
-    shader = fre.light(vec3(1, 1, 1))
-}
-
-mesh {
-    material = "light",
-    transform = translate(vec3(0, 50, 50)) * rotate(radians(135), vec3(1, 0, 0)),
-    data = fre.plane(1)
-}
+--material {
+--    name = "light",
+--    emissive = true,
+--    shader = fre.light(vec3(1/9, 1/9, 1/9))
+--}
+--
+--mesh {
+--    material = "light",
+--    transform = translate(vec3(0, 50, 50)) * rotate(radians(135), vec3(1, 0, 0)),
+--    data = fre.plane(1)
+--}
 
 material {
     name = "red",
@@ -45,8 +45,36 @@ material {
                        0.2, 8)
 }
 
+function place_light(x, y, floor)
+    local mat = next_mat()
+
+    material {
+        name = mat,
+        emissive = true,
+        shader = fre.light(vec3(1/9, 1/9, 1/9))
+    }
+
+    mesh {
+        material = mat,
+        transform = translate(vec3(x, 10 * floor - 0.25, y)) * rotate(radians(90), vec3(1, 0, 0)) * scale(vec3(1, 5, 1)),
+        data = fre.plane(1)
+    }
+end
+
+-- Lights.
+place_light(7, 8, 1)
+place_light(7, 16, 1)
+place_light(7, 24, 1)
+place_light(15, 9, 1)
+place_light(15, 17, 1)
+place_light(15, 25, 1)
+place_light(23, 8, 1)
+place_light(23, 16, 1)
+place_light(23, 24, 1)
+
 local tile_r, tile_g, tile_b = fre.targa("scenes/assets/tile1.tga")
 local wood_r, wood_g, wood_b = fre.targa("scenes/assets/wood1.tga")
+local marble_r, marble_g, marble_b = fre.targa("scenes/assets/marble1.tga")
 
 function draw_floor_tile(i, j, y)
     local mat = next_mat()
@@ -64,23 +92,28 @@ function draw_floor_tile(i, j, y)
 
     mesh {
         material = mat,
-        transform = translate(vec3(i, y, j)) * rotate(radians(-90), vec3(1, 0, 0)),
-        data = fre.plane(1)
+        transform = translate(vec3(3 * i + 1.5, y, 3 * j + 1.5)) * rotate(radians(-90), vec3(1, 0, 0)),
+        data = fre.plane(3)
     }
 end
 
 function draw_stair(n, y)
-    local mat = table.concat {"stair-", y, "-", n}
+    local mat = next_mat()
 
     material {
         name = mat,
         emissive = false,
-        shader = fre.phong(0.6, vec3(1, 0, 0), 0.2, vec3(1, 0, 0), 0.2, 8)
+        shader = fre.frsl("scenes/wood_shader.lua"),
+        textures = {
+            wood_r = marble_r,
+            wood_g = marble_g,
+            wood_b = marble_b,
+        }
     }
 
     mesh {
         material = mat,
-        transform = translate(vec3(27.5, y + n - 0.5, 21 - n)) * scale(vec3(5, 1, 1)),
+        transform = translate(vec3(27.5, y + 0.5 * n - 0.25, 21 - 0.5 * n - 0.25)) * scale(vec3(4, 0.5, 0.5)),
         data = fre.cube(1)
     }
 end
@@ -167,6 +200,7 @@ function draw_shelf(xform)
     end
 
     -- Draw toys.
+    --[[
     for i = 0, 4 do
         for j = 0, 1 do
             for shelf = 0, 2 do
@@ -174,36 +208,48 @@ function draw_shelf(xform)
             end
         end
     end
+    --]]
 end
 
 -- ==== FIRST FLOOR ====
 
 -- Floor.
-for i = 0, 30 do
-    for j = 0, 30 do
+for i = 0, 9 do
+    for j = 0, 10 do
         draw_floor_tile(i, j, 0)
     end
 end
 
 -- Shelves.
-draw_shelf(translate(vec3(2.5, 0, 28)))
+for j = 0, 6 do
+    draw_shelf(translate(vec3(3, 0, j * 4 + 4)))
+end
+for j = 0, 6 do
+    draw_shelf(translate(vec3(11, 0, j * 4 + 3)))
+end
+for j = 0, 6 do
+    draw_shelf(translate(vec3(19, 0, j * 4 + 4)))
+end
+for j = 0, 1 do
+    draw_shelf(translate(vec3(27, 0, j * 4 + 3)))
+end
 
 -- ==== STAIRS ====
 
-for i = 1, 10 do
+for i = 1, 20 do
     draw_stair(i, 0)
 end
 
 -- ==== FLOORS ====
 
 -- Second floor.
-for i = 0, 15 do
-    for j = 0, 30 do
-        draw_floor_tile(i, j, 10)
-    end
-end
-for i = 16, 30 do
-    for j = 0, 10 do
-        draw_floor_tile(i, j, 10)
-    end
-end
+--for i = 0, 15 do
+--    for j = 0, 30 do
+--        draw_floor_tile(i, j, 10)
+--    end
+--end
+--for i = 16, 30 do
+--    for j = 0, 10 do
+--        draw_floor_tile(i, j, 10)
+--    end
+--end
