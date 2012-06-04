@@ -95,7 +95,7 @@ function draw_floor_tile(i, j, y)
     material {
         name = mat,
         emissive = false,
-        shader = fre.frsl("scenes/tile_shader.lua"),
+        shader = fre.frsl("scenes/shiny_tile_shader.lua"),
         textures = {
             tile_r = tile_r,
             tile_g = tile_g,
@@ -143,13 +143,13 @@ function draw_toy(xform, i, j, shelf)
     local facing = radians(math.random(0, 359))
     local model = math.random(1, 3)
     if model == 1 then
-        data = fre.obj("scenes/assets/bunny-lo.obj", true)
+        data = fre.obj("scenes/assets/bunny-hi.obj", true)
         size = 0.3
     elseif model == 2 then
-        data = fre.obj("scenes/assets/buddha-lo.obj", true)
+        data = fre.obj("scenes/assets/buddha-hi.obj", true)
         size = 0.6
     else
-        data = fre.obj("scenes/assets/dragon-lo.obj", true)
+        data = fre.obj("scenes/assets/dragon-hi.obj", true)
         size = 0.3
     end
 
@@ -213,7 +213,6 @@ function draw_shelf(xform)
     end
 
     -- Draw toys.
-    --[[
     for i = 0, 4 do
         for j = 0, 1 do
             for shelf = 0, 2 do
@@ -221,7 +220,6 @@ function draw_shelf(xform)
             end
         end
     end
-    --]]
 end
 
 -- Stairs.
