@@ -143,13 +143,13 @@ function draw_toy(xform, i, j, shelf)
     local facing = radians(math.random(0, 359))
     local model = math.random(1, 3)
     if model == 1 then
-        data = fre.obj("scenes/assets/bunny-hi.obj", true)
+        data = fre.obj("scenes/assets/bunny-med.obj", true)
         size = 0.3
     elseif model == 2 then
-        data = fre.obj("scenes/assets/buddha-hi.obj", true)
+        data = fre.obj("scenes/assets/buddha-med.obj", true)
         size = 0.6
     else
-        data = fre.obj("scenes/assets/dragon-hi.obj", true)
+        data = fre.obj("scenes/assets/dragon-med.obj", true)
         size = 0.3
     end
 
