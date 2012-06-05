@@ -20,10 +20,13 @@ echo "    DOWNLOADING ASSETS @ "`date`
 echo "======================================================================"
 
 fetch "buddha-hi.obj"
+fetch "buddha-med.obj"
 fetch "buddha-lo.obj"
 fetch "bunny-hi.obj"
+fetch "bunny-med.obj"
 fetch "bunny-lo.obj"
 fetch "dragon-hi.obj"
+fetch "dragon-med.obj"
 fetch "dragon-lo.obj"
 fetch "tile1.tga"
 fetch "wood1.tga"
