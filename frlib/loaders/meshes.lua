@@ -29,8 +29,6 @@ local function obj(filename, adjust)
     local normals = {}
     local texcoords = {}
     local faces = {}
-    local translator = {}
-    local vert_num = 0
 
     local f = assert(io.open(filename, "r"))
 
@@ -100,39 +98,18 @@ local function obj(filename, adjust)
     end
 
     local mesh = function()
+        for i, vert in ipairs(vertices) do
+            vertex {
+                v = vertices[i],
+                n = normals[i],
+                t = texcoords[i]
+            }
+        end
+
         for _, face in ipairs(faces) do
-            local v1 = translator[face[1][1]]
-            if v1 == nil then
-                vertex {
-                    v = vertices[face[1][1]],
-                    n = normals[face[1][1]]
-                }
-                v1 = vert_num
-                vert_num = vert_num + 1
-                translator[face[1][1]] = v1
-            end
-
-            local v2 = translator[face[2][1]]
-            if v2 == nil then
-                vertex {
-                    v = vertices[face[2][1]],
-                    n = normals[face[2][1]]
-                }
-                v2 = vert_num
-                vert_num = vert_num + 1
-                translator[face[2][1]] = v2
-            end
-
-            local v3 = translator[face[3][1]]
-            if v3 == nil then
-                vertex {
-                    v = vertices[face[3][1]],
-                    n = normals[face[3][1]]
-                }
-                v3 = vert_num
-                vert_num = vert_num + 1
-                translator[face[3][1]] = v3
-            end
+            local v1 = face[1][1] - 1
+            local v2 = face[2][1] - 1
+            local v3 = face[3][1] - 1
 
             triangle {v1, v2, v3}
         end
