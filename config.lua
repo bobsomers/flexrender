@@ -17,7 +17,7 @@ network {
         "129.65.51.119",
         "129.65.51.120"
     },
-    runaway = 5 -- percent
+    runaway = 2 -- percent
 }
 
 output {

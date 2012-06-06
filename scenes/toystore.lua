@@ -25,6 +25,30 @@ camera {
     look = vec3(2, 0, 0)
 }
 
+material {
+    name = "topfill",
+    emissive = true,
+    shader = fre.light(vec3(0.25, 0.25, 0.25))
+}
+
+mesh {
+    material = "topfill",
+    transform = translate(vec3(30, 18, 30)) * rotate(radians(45), vec3(0, 1, 0)) * rotate(radians(135), vec3(1, 0, 0)) * scale(3),
+    data = fre.plane(1)
+}
+
+material {
+    name = "bottomfill",
+    emissive = true,
+    shader = fre.light(vec3(0.25, 0.25, 0.25))
+}
+
+mesh {
+    material = "bottomfill",
+    transform = translate(vec3(30, 8, 30)) * rotate(radians(45), vec3(0, 1, 0)) * rotate(radians(135), vec3(1, 0, 0)) * scale(3),
+    data = fre.plane(1)
+}
+
 function place_light(x, y, floor)
     local mat = next_mat()
 
@@ -36,7 +60,7 @@ function place_light(x, y, floor)
 
     mesh {
         material = mat,
-        transform = translate(vec3(x, 10 * floor - 0.25, y)) * rotate(radians(90), vec3(1, 0, 0)) * scale(vec3(1, 5, 1)),
+        transform = translate(vec3(x, 10 * floor - 0.05, y)) * rotate(radians(90), vec3(1, 0, 0)) * scale(vec3(1, 5, 1)),
         data = fre.plane(1)
     }
 end
@@ -90,10 +114,10 @@ function draw_wall_tile(i, j, side)
 end
 
 function draw_floor_tile(i, j, y)
-    local mat = next_mat()
+    local floormat = next_mat()
 
     material {
-        name = mat,
+        name = floormat,
         emissive = false,
         shader = fre.frsl("scenes/shiny_tile_shader.lua"),
         textures = {
@@ -104,8 +128,23 @@ function draw_floor_tile(i, j, y)
     }
 
     mesh {
-        material = mat,
+        material = floormat,
         transform = translate(vec3(3 * i + 1.5, y, 3 * j + 1.5)) * rotate(radians(-90), vec3(1, 0, 0)),
+        data = fre.plane(3)
+    }
+
+    local ceilingmat = next_mat()
+    material {
+        name = ceilingmat,
+        emissive = false,
+        shader = fre.phong(0.8, vec3(0.8, 0.8, 0.8),
+                           0.2, vec3(0.8, 0.8, 0.8),
+                           0.0, 8)
+    }
+
+    mesh {
+        material = ceilingmat,
+        transform = translate(vec3(3 * i + 1.5, y - 0.01, 3 * j + 1.5)) * rotate(radians(90), vec3(1, 0, 0)),
         data = fre.plane(3)
     }
 end
@@ -183,22 +222,22 @@ function draw_shelf(xform)
     -- Bottom shelf.
     mesh {
         material = mat,
-        transform = xform * translate(vec3(0, 0.5, 0)) * rotate(radians(-90), vec3(1, 0, 0)) * scale(vec3(5, 2, 2)),
-        data = fre.plane(1)
+        transform = xform * translate(vec3(0, 0.5, 0)) * scale(vec3(5, 0.1, 2)),
+        data = fre.cube(1)
     }
 
     -- Middle shelf.
     mesh {
         material = mat,
-        transform = xform * translate(vec3(0, 2.5, 0)) * rotate(radians(-90), vec3(1, 0, 0)) * scale(vec3(5, 2, 2)),
-        data = fre.plane(1)
+        transform = xform * translate(vec3(0, 2.5, 0)) * scale(vec3(5, 0.1, 2)),
+        data = fre.cube(1)
     }
 
     -- Top shelf.
     mesh {
         material = mat,
-        transform = xform * translate(vec3(0, 4.5, 0)) * rotate(radians(-90), vec3(1, 0, 0)) * scale(vec3(5, 2, 2)),
-        data = fre.plane(1)
+        transform = xform * translate(vec3(0, 4.5, 0)) * scale(vec3(5, 0.1, 2)),
+        data = fre.cube(1)
     }
 
     -- Posts.
