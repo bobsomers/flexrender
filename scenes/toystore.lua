@@ -174,12 +174,11 @@ function draw_toy(xform, i, j, shelf)
     local color = vec3(math.random() * 0.5 + 0.25,
                        math.random() * 0.5 + 0.25,
                        math.random() * 0.5 + 0.25)
-    local shader = fre.phong(0.6, color, 0.2, color, 0.2, 8)
-    local mat = next_mat()
 
     local size = 1
     local data = nil
     local facing = radians(math.random(0, 359))
+
     local model = math.random(1, 3)
     if model == 1 then
         data = fre.obj("scenes/assets/bunny-med.obj", true)
@@ -192,6 +191,12 @@ function draw_toy(xform, i, j, shelf)
         size = 0.3
     end
 
+    local shader = fre.phong(0.6, color, 0.2, color, 0.2, 8)
+    if (math.random(0, 3) % 4) == 0 then
+        shader = fre.frsl("scenes/mirror_shader.lua")
+    end
+
+    local mat = next_mat()
     material {
         name = mat,
         emissive = false,
