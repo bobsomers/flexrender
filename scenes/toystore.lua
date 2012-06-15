@@ -257,6 +257,7 @@ function draw_shelf(xform)
     end
 
     -- Draw toys.
+    --[[
     for i = 0, 4 do
         for j = 0, 1 do
             for shelf = 0, 2 do
@@ -264,6 +265,7 @@ function draw_shelf(xform)
             end
         end
     end
+    ]]
 end
 
 -- Stairs.
