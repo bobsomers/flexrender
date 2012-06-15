@@ -8,14 +8,13 @@ local vec3 = fr.vec3
 
 network {
     workers = {
-        "127.0.0.1",
-        "10.11.12.1"
+        -- TODO
     },
     runaway = 2 -- percent
 }
 
 output {
-    size = vec2(800, 600),
+    size = vec2(1024, 768),
     name = "toystore",
     buffers = {
         -- none
