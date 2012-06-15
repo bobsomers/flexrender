@@ -201,7 +201,31 @@ bool Camera::GeneratePrimary(FatRay* ray) {
         TOUTLN(fixed << setprecision(3) << _progress << "% of primary rays cast.");
     }
 
+    // Throttle primary ray creation to one every thousandth of a second.
+    while (!ReadyToCast());
+
     return true;
+}
+
+bool Camera::ReadyToCast() {
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+    
+    uint64_t duration = 0;
+    if (now.tv_nsec < _last_gen_time.tv_nsec) {
+        duration += (now.tv_sec - _last_gen_time.tv_sec - 1) * 1000000000;
+        duration += (now.tv_nsec + 1000000000) - _last_gen_time.tv_nsec;
+    } else {
+        duration += (now.tv_sec - _last_gen_time.tv_sec) * 1000000000;
+        duration += now.tv_nsec - _last_gen_time.tv_nsec;
+    }
+
+    if (duration > 1000000) {
+        _last_gen_time = now;
+        return true;
+    }
+
+    return false;
 }
 
 string ToString(const Camera& camera, const string& indent) {

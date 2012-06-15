@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctime>
+
 #include "glm/glm.hpp"
 #include "msgpack.hpp"
 
@@ -69,6 +71,9 @@ private:
     glm::vec3 _u, _v, _w;
     bool _initialized;
     float _progress;
+    struct timespec _last_gen_time;
+
+    bool ReadyToCast();
 };
 
 std::string ToString(const Camera& camera, const std::string& indent = "");
