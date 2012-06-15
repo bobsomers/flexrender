@@ -201,7 +201,7 @@ bool Camera::GeneratePrimary(FatRay* ray) {
         TOUTLN(fixed << setprecision(3) << _progress << "% of primary rays cast.");
     }
 
-    // Throttle primary ray creation to one every thousandth of a second.
+    // Throttle primary ray creation.
     while (!ReadyToCast());
 
     return true;
@@ -220,7 +220,7 @@ bool Camera::ReadyToCast() {
         duration += now.tv_nsec - _last_gen_time.tv_nsec;
     }
 
-    if (duration > 1000000) {
+    if (duration > 200000) {
         _last_gen_time = now;
         return true;
     }
