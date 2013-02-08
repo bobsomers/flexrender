@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
-function build_glm {
-    PACKAGENAME="glm-0.9.3.2"
+function build_luajit {
+    PACKAGENAME="LuaJIT-2.0.0"
 
     echo ""
     echo "======================================================================"
@@ -10,13 +10,13 @@ function build_glm {
 
     echo ""
     echo "==> Unpacking $PACKAGENAME."
-    tar xvf $BASEPATH/src/$PACKAGENAME.tar.xz --directory=$BASEPATH/tmp
+    tar xvf $BASEPATH/src/$PACKAGENAME.tar.gz --directory=$BASEPATH/tmp
 
     echo ""
     echo "==> Patching $PACKAGENAME."
-    patch --directory=$BASEPATH/tmp/$PACKAGENAME -p1 < $BASEPATH/patches/glm-vec-msgpack.patch
+    patch --directory=$BASEPATH/tmp/$PACKAGENAME -p1 < $BASEPATH/patches/luajit-tweaks.patch
 
     echo ""
-    echo "==> Copying $PACKAGENAME."
-    cp --recursive $BASEPATH/tmp/$PACKAGENAME/glm $BASEPATH/build/include
+    echo "==> Making $PACKAGENAME."
+    make --directory=$BASEPATH/tmp/$PACKAGENAME --jobs=12 install PREFIX=$BASEPATH/build
 }

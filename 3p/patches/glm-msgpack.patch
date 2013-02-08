@@ -1,0 +1,84 @@
+diff -Naur glm-0.9.4.1/glm/core/type_vec1.hpp glm-0.9.4.1-patch/glm/core/type_vec1.hpp
+--- glm-0.9.4.1/glm/core/type_vec1.hpp	2013-02-07 22:47:56.645812699 -0800
++++ glm-0.9.4.1-patch/glm/core/type_vec1.hpp	2013-02-07 22:47:22.609425392 -0800
+@@ -35,6 +35,8 @@
+ #include "type_size.hpp"
+ #include "_swizzle.hpp"
+ 
++#include "msgpack.hpp"
++
+ namespace glm{
+ namespace detail
+ {
+@@ -68,6 +70,8 @@
+ 			union {value_type x, r, s;};
+ #		endif//GLM_COMPONENT
+ 
++        MSGPACK_DEFINE(x);
++
+ 		//////////////////////////////////////
+ 		// Accesses
+ 
+diff -Naur glm-0.9.4.1/glm/core/type_vec2.hpp glm-0.9.4.1-patch/glm/core/type_vec2.hpp
+--- glm-0.9.4.1/glm/core/type_vec2.hpp	2013-02-07 22:48:00.485781101 -0800
++++ glm-0.9.4.1-patch/glm/core/type_vec2.hpp	2013-02-07 22:47:30.846024575 -0800
+@@ -35,6 +35,8 @@
+ #include "type_size.hpp"
+ #include "_swizzle.hpp"
+ 
++#include "msgpack.hpp"
++
+ namespace glm{
+ namespace detail
+ {
+@@ -97,6 +99,8 @@
+ #		endif//(defined(GLM_SWIZZLE))
+ #	endif//GLM_COMPONENT
+ 
++        MSGPACK_DEFINE(x, y);
++
+ 		//////////////////////////////////////
+ 		// Accesses
+ 
+diff -Naur glm-0.9.4.1/glm/core/type_vec3.hpp glm-0.9.4.1-patch/glm/core/type_vec3.hpp
+--- glm-0.9.4.1/glm/core/type_vec3.hpp	2013-02-07 22:48:02.502431166 -0800
++++ glm-0.9.4.1-patch/glm/core/type_vec3.hpp	2013-02-07 22:47:33.256004815 -0800
+@@ -35,6 +35,8 @@
+ #include "type_size.hpp"
+ #include "_swizzle.hpp"
+ 
++#include "msgpack.hpp"
++
+ namespace glm{
+ namespace detail
+ {
+@@ -98,6 +100,8 @@
+ #		endif//(defined(GLM_SWIZZLE))
+ #	endif//GLM_COMPONENT
+ 
++        MSGPACK_DEFINE(x, y, z);
++
+ 		//////////////////////////////////////
+ 		// Accesses
+ 
+diff -Naur glm-0.9.4.1/glm/core/type_vec4.hpp glm-0.9.4.1-patch/glm/core/type_vec4.hpp
+--- glm-0.9.4.1/glm/core/type_vec4.hpp	2013-02-07 22:48:04.375749075 -0800
++++ glm-0.9.4.1-patch/glm/core/type_vec4.hpp	2013-02-07 22:47:35.792650676 -0800
+@@ -35,6 +35,8 @@
+ #include "type_size.hpp"
+ #include "_swizzle.hpp"
+ 
++#include "msgpack.hpp"
++
+ namespace glm{
+ namespace detail
+ {
+@@ -99,6 +101,8 @@
+ #		endif//(defined(GLM_SWIZZLE))
+ #	endif//GLM_COMPONENT
+ 
++        MSGPACK_DEFINE(x, y, z, w);
++
+ 		//////////////////////////////////////
+ 		// Accesses
+ 

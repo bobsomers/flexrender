@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
-function build_lpack {
-    PACKAGENAME="lpack"
+function build_glm {
+    PACKAGENAME="glm-0.9.4.1"
 
     echo ""
     echo "======================================================================"
@@ -14,10 +14,9 @@ function build_lpack {
 
     echo ""
     echo "==> Patching $PACKAGENAME."
-    patch --directory=$BASEPATH/tmp/pack -p1 < $BASEPATH/patches/lpack.patch
+    patch --directory=$BASEPATH/tmp/$PACKAGENAME -p1 < $BASEPATH/patches/glm-msgpack.patch
 
     echo ""
-    echo "==> Making $PACKAGENAME."
-    make --directory=$BASEPATH/tmp/pack BASEPATH=$BASEPATH
-    cp $BASEPATH/tmp/pack/pack.so $BASEPATH/build/lib
+    echo "==> Copying $PACKAGENAME."
+    cp --recursive $BASEPATH/tmp/$PACKAGENAME/glm $BASEPATH/build/include
 }

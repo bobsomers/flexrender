@@ -6,7 +6,7 @@ diff -Naur pack/Makefile pack-patch/Makefile
  
  # change these to reflect your Lua installation
 -LUA= /tmp/lhf/lua-5.1.2
-+LUA= $(BASEPATH)/tmp/LuaJIT-2.0.0-beta9
++LUA= $(BASEPATH)/tmp/LuaJIT-2.0.0
  LUAINC= $(LUA)/src
  LUALIB= $(LUA)/src
  LUABIN= $(LUA)/src

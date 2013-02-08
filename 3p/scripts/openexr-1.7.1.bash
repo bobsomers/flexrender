@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 function build_openexr {
-    PACKAGENAME="openexr-1.7.0"
+    PACKAGENAME="openexr-1.7.1"
 
     echo ""
     echo "======================================================================"
@@ -10,11 +10,7 @@ function build_openexr {
 
     echo ""
     echo "==> Unpacking $PACKAGENAME."
-    tar xvf $BASEPATH/src/$PACKAGENAME.tar.xz --directory=$BASEPATH/tmp
-
-    echo ""
-    echo "==> Patching $PACKAGENAME."
-    patch --directory=$BASEPATH/tmp/$PACKAGENAME -p1 < $BASEPATH/patches/openexr-memcpy-fix.patch
+    tar xvf $BASEPATH/src/$PACKAGENAME.tar.gz --directory=$BASEPATH/tmp
 
     echo ""
     echo "==> Configuring $PACKAGENAME."
@@ -24,5 +20,5 @@ function build_openexr {
 
     echo ""
     echo "==> Making $PACKAGENAME."
-    make --directory=$BASEPATH/tmp/$PACKAGENAME --jobs=4 install
+    make --directory=$BASEPATH/tmp/$PACKAGENAME --jobs=12 install
 }

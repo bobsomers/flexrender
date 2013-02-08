@@ -10,7 +10,7 @@ function build_msgpack {
 
     echo ""
     echo "==> Unpacking $PACKAGENAME."
-    tar xvf $BASEPATH/src/$PACKAGENAME.tar.xz --directory=$BASEPATH/tmp
+    tar xvf $BASEPATH/src/$PACKAGENAME.tar.gz --directory=$BASEPATH/tmp
 
     echo ""
     echo "==> Patching $PACKAGENAME."
@@ -24,5 +24,5 @@ function build_msgpack {
 
     echo ""
     echo "==> Making $PACKAGENAME."
-    make --directory=$BASEPATH/tmp/$PACKAGENAME --jobs=4 install
+    make --directory=$BASEPATH/tmp/$PACKAGENAME --jobs=12 install
 }
