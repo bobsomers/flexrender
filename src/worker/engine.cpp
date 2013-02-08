@@ -100,7 +100,7 @@ void OnConnection(uv_stream_t* stream, int status);
 uv_buf_t OnAlloc(uv_handle_t* handle, size_t suggested_size);
 void OnRead(uv_stream_t* stream, ssize_t nread, uv_buf_t buf);
 void OnWork(uv_work_t* req);
-void AfterWork(uv_work_t* req);
+void AfterWork(uv_work_t* req, int status);
 void OnStatsTimeout(uv_timer_t* timer, int status);
 void OnClose(uv_handle_t* handle);
 
@@ -160,7 +160,7 @@ void EngineInit(const string& ip, uint16_t port, uint32_t jobs) {
 }
 
 void EngineRun() {
-    uv_run(uv_default_loop());
+    uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 }
 
 void server::Init(const string& ip, uint16_t port) {
@@ -766,7 +766,7 @@ void server::OnWork(uv_work_t* req) {
     req->data = results;
 }
 
-void server::AfterWork(uv_work_t* req) {
+void server::AfterWork(uv_work_t* req, int status) {
     assert(req != nullptr);
     assert(req->data != nullptr);
 

@@ -84,7 +84,7 @@ void Recurse(WorkResults* results);
 
 void OnStatsTimeout(uv_timer_t* timer, int status);
 void OnWork(uv_work_t* req);
-void AfterWork(uv_work_t* req);
+void AfterWork(uv_work_t* req, int status);
 
 void EngineInit(const string& config_file, const string& scene_file,
  uint32_t intervals, uint32_t jobs, int16_t offset, uint16_t chunk_size) {
@@ -173,7 +173,7 @@ void EngineInit(const string& config_file, const string& scene_file,
 }
 
 void EngineRun() {
-    uv_run(uv_default_loop());
+    uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 }
 
 uint32_t SyncMesh(Mesh* mesh) {
@@ -268,7 +268,7 @@ void OnWork(uv_work_t* req) {
     req->data = results;
 }
 
-void AfterWork(uv_work_t* req) {
+void AfterWork(uv_work_t* req, int status) {
     assert(req != nullptr);
     assert(req->data != nullptr);
 

@@ -104,7 +104,7 @@ void OnFlushTimeout(uv_timer_t* timer, int status);
 void OnInterestingTimeout(uv_timer_t* timer, int status);
 void OnRunawayTimeout(uv_timer_t* timer, int status);
 void OnSyncStart(uv_work_t* req);
-void AfterSync(uv_work_t* req);
+void AfterSync(uv_work_t* req, int status);
 void OnSyncIdle(uv_idle_t* handle, int status);
 
 void OnOK(NetNode* node);
@@ -135,7 +135,7 @@ void EngineInit(const string& config_file, const string& scene_file,
 }
 
 void EngineRun() {
-    uv_run(uv_default_loop());
+    uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 }
 
 void client::Init() {
@@ -666,7 +666,7 @@ void client::OnSyncStart(uv_work_t* req) {
     TOUTLN("Scene distributed.");
 }
 
-void client::AfterSync(uv_work_t* req) {
+void client::AfterSync(uv_work_t* req, int status) {
     assert(req != nullptr);
     free(req);
 }
