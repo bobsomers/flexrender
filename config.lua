@@ -8,16 +8,17 @@ local vec3 = fr.vec3
 
 network {
     workers = {
-        -- TODO
+        "127.0.0.1:19400",
+        "127.0.0.1:19401"
     },
     runaway = 2 -- percent
 }
 
 output {
     size = vec2(1024, 768),
-    name = "toystore",
+    name = "cornell",
     buffers = {
-        -- none
+        -- no auxilliary image buffers
     }
 }
 
@@ -26,6 +27,6 @@ render {
     samples = 10,
     bounces = 3,
     threshold = 0.0001,
-    min = vec3(-1, -1, -1),
-    max = vec3(34, 21, 34),
+    min = vec3(-10, -10, -10),
+    max = vec3(10, 10, 10),
 }
