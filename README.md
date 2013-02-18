@@ -21,32 +21,32 @@ with reasonable C++11 support (GCC 4.7+ is known to work) and
 
 First, check out the source code and run the dependency build script. This only
 needs to be done once. (No packages are installed, everything is built and
-linked within the 3p/ directory so no root privileges are required.)
+linked within the `3p/` directory so no root privileges are required.)
 
     git clone https://github.com/bobsomers/flexrender.git
     cd flexrender/3p
     ./make.bash
 
 Next, generate GNU Makefiles for building FlexRender by running Premake. Then,
-run make (optionally with config=release for a release build).
+run make (optionally with `config=release` for a release build).
 
     cd ..
     premake4 gmake
     make config=release
 
-This should leave you with 3 binaries in the bin/ directory. The flexrender and
-flexworker executables are the renderer and worker respectively. The baseline
-is the image plane decomposition.
+This should leave you with 3 binaries in the `bin/` directory. The `flexrender`
+and `flexworker` executables are the renderer and worker respectively. The
+`baseline` is the image plane decomposition.
 
 ## Directory Layout
 
-* **3p/** All third-party libraries and build scripts.
-* **frlib/** Lua libraries for scene files and FlexRender shaders.
-* **scenes/** Some example scenes and shaders.
-* **scripts/** Handy scripts for profiling.
-* **src/[baseline|render|worker]** Code specific to the baseline, renderer, and worker executables.
-* **src/shared** Shared code for the libfr static library.
-* **config.lua** Example renderer configuration.
+* `3p/` All third-party libraries and build scripts.
+* `frlib/` Lua libraries for scene files and FlexRender shaders.
+* `scenes/` Some example scenes and shaders.
+* `scripts/` Handy scripts for profiling.
+* `src/[baseline|render|worker]` Code specific to the baseline, renderer, and worker executables.
+* `src/shared` Shared code for the libfr static library.
+* `config.lua` Example renderer configuration.
 
 ## Example Run
 
@@ -70,5 +70,5 @@ rendering statistics.
 The FlexRender source code is licensed under the MIT license. We encourage you
 to use the code, ideas, and techniques to enhance your own research.
 
-If anythng from FlexRender does aid your research, please cite the paper
+If anything from FlexRender does aid your research, please cite the paper
 appropriately.
