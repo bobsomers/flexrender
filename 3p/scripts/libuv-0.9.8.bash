@@ -14,7 +14,7 @@ function build_libuv {
 
     echo ""
     echo "==> Making $PACKAGENAME."
-    make --directory=$BASEPATH/tmp/$PACKAGENAME --jobs=12
+    make --directory=$BASEPATH/tmp/$PACKAGENAME --jobs=4
     cp $BASEPATH/tmp/$PACKAGENAME/libuv.a $BASEPATH/build/lib/libuv.a
     cp -R $BASEPATH/tmp/$PACKAGENAME/include/* $BASEPATH/build/include
 }

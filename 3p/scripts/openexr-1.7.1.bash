@@ -20,5 +20,5 @@ function build_openexr {
 
     echo ""
     echo "==> Making $PACKAGENAME."
-    make --directory=$BASEPATH/tmp/$PACKAGENAME --jobs=12 install
+    make --directory=$BASEPATH/tmp/$PACKAGENAME --jobs=4 install
 }

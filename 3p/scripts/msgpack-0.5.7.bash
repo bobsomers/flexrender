@@ -24,5 +24,5 @@ function build_msgpack {
 
     echo ""
     echo "==> Making $PACKAGENAME."
-    make --directory=$BASEPATH/tmp/$PACKAGENAME --jobs=12 install
+    make --directory=$BASEPATH/tmp/$PACKAGENAME --jobs=4 install
 }

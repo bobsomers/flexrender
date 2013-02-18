@@ -18,5 +18,5 @@ function build_luajit {
 
     echo ""
     echo "==> Making $PACKAGENAME."
-    make --directory=$BASEPATH/tmp/$PACKAGENAME --jobs=12 install PREFIX=$BASEPATH/build
+    make --directory=$BASEPATH/tmp/$PACKAGENAME --jobs=4 install PREFIX=$BASEPATH/build
 }
